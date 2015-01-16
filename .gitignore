@@ -1,0 +1,8 @@
+*.pyc
+*~
+*.swp
+*.temp
+analyzer/tmva
+analyzer/results/
+analyzer/old
+old/

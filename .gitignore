@@ -6,3 +6,12 @@ analyzer/tmva
 analyzer/results/
 analyzer/old
 old/
+plots/CPData.conf
+plots/CPDataSig_effth.conf
+plots/CPData_effth.conf
+plots/CPData_shape.conf
+plots/CPPlots.conf
+plots/CPPlots_shape.conf
+plots/control_plots/
+plots/control_plots_shapes/
+plots/control_plots_weights/

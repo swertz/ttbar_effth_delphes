@@ -80,14 +80,14 @@ def fitterMain(cfgFile, resultFile, dataFile, mode, option):
 
 	elif mode == "weightedLstSqCounting":
 		print "== Performing a weighted least-square fit on the branch yields."
-		result,res,nDoF,var,corr = weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, option)
+		result,res,nDoF,var,cov = weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, option)
 		print "== Fit results are:" 
 		for name,val in result.items():
 			print "=== {0}: {1:.2f} +- {2:.2f}".format(name, val, var[name])
 		print "=== With chi-sq./NDoF = {0:.2f}/{1}".format(res, nDoF)
-		print "=== Correlation matrix:"
-		for name,val in corr.items():
-			print "=== {0}: {1:.2f}".format(name, corr[name])
+		print "=== Covariance matrix:"
+		for name,val in cov.items():
+			print "=== {0}: {1:.2f}".format(name, cov[name])
 	
 	else:
 		print "== Fit mode not correctly specified!"
@@ -156,17 +156,17 @@ def weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 	nDoF = nBr - len(varVec)
 	result = {}
 	var = {}
-	corr = {}
+	cov = {}
 	for i,proc in enumerate(varVec):
 		result[proc] = x[i]
 		var[proc] = Atemp[i][i]
 		for j,proc2 in enumerate(varVec):
-			if j > i:
-				corr[proc+"/"+proc2] = Atemp[i][j]
+			cov[proc+"/"+proc2] = Atemp[i][j]
 
-	return result,res,nDoF,var,corr
+	return result,res,nDoF,var,cov
 	
-######## LEAST SQUARE COUNTING FIT #########################################################
+###### LEAST SQUARE COUNTING FIT #########################################################
+#(best not use this one!) 
 
 def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 
@@ -222,6 +222,9 @@ def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 
 	return result,float(res),nDoF
 	
+######## MAXIMUM LIKELIHOOD 1-TEMPLATE FIT ################################
+
+
 ######## MAIN #############################################################
 
 if __name__ == "__main__":

@@ -77,35 +77,39 @@ def mcStudyMain(mcStudyFile):
 
 			histDict = {}
 			corrList = {}
-			#normHist = ROOT.TH1D("Norm_hist", "Norm (GeV^{-2})", 100, 0, 5)
-			#dsquareHist = ROOT.TH1D("Norm_squared_hist", "Norm squared (GeV^{-4})", 100, 0, 5)
 			weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
 			resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 50)
 
-			nVar = 0
+			varVect = []
 			for i,data in enumerate(myConfig.dataCfg):
 				if data["signal"] == "1":
-					nVar += 1
 					myHist = ROOT.TH1D(data["name"]+"_hist",data["name"]+"/\Lambda^2 (GeV^{-2})", 100, -2, 2)
 					histDict[data["name"]] = myHist
 					myVarHist = ROOT.TH1D(data["name"]+"_StdDev_hist",data["name"]+" Std. Dev. (GeV^{-2})", 100, 0., 1.)
 					histDict[data["name"]+"_StdDev"] = myVarHist
 					
+					varVect.append(data["name"])
 					for j,data2 in enumerate(myConfig.dataCfg):
-						if data2["signal"] == "1" and j > i:
-							corrList[[data["name"]+"/"+data2["name"]] = []
+						if data2["signal"] == "1":
+							corrList[data["name"]+"/"+data2["name"]] = 0.
 
-			#histDict["norm"] = normHist
-			#histDict["dsquare"] = dsquareHist
 			histDict["weightedNorm"] = weightedNormHist
 			histDict["chisq"] = resHist
+			histDict["corrList"] = corrList
 
-			mcStudyCounting(myConfig, myMCResult, paramSet, histDict, int(myMCStudy.cfg["pseudoNumber"]))
+			pseudoNumber = int(myMCStudy.cfg["pseudoNumber"])
+			mcStudyCounting(myConfig, myMCResult, paramSet, histDict, pseudoNumber) 
 
-			corrHist = ROOT.TH2D("Correlations_hist","Correlations", nVar, nVar, 0, nVar, 0, nVar)
-			
+			nVar = len(varVect)
+			corrHist = ROOT.TH2D("Correlations_hist","Correlations", nVar, 0, nVar, nVar, 0, nVar)
+			for i,proc in enumerate(varVect):
+				for j,proc2 in enumerate(varVect):
+					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
+					corrHist.GetXaxis().SetBinLabel(i+1, proc)
+					corrHist.GetYaxis().SetBinLabel(j+1, proc2)
+			histDict["corrList"] = corrHist
 			for hist in histDict.values():
-				if hist.Integral() != 0:
+				if hist.Integral() != 0 and hist.GetDimension() == 1:
 					hist.Scale(1./hist.Integral())
 				hist.Write()
 
@@ -191,17 +195,15 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 		rdsRow = dataSet.get(i)
 		myDataResult = fitter.PResult()
 		myDataResult.iniFromRDS(myMCResult, rdsRow)
-		result,chisq,nDoF,var,corr = fitter.weightedLstSqCountingFit(myConfig, myMCResult, myDataResult)
-		dsquare = 0.
+		result,chisq,nDoF,var,cov = fitter.weightedLstSqCountingFit(myConfig, myMCResult, myDataResult)
 		weighteddsquare = 0.
 		for proc in result.keys():
-			dsquare += result[proc]**2
 			weighteddsquare += result[proc]**2/var[proc]
+			for proc2 in result.keys():
+				histDict["corrList"][proc+"/"+proc2] += cov[proc+"/"+proc2]/math.sqrt(abs(var[proc]*var[proc2]))
 		for proc in varVec:
 			histDict[proc].Fill(result[proc])
 			histDict[proc+"_StdDev"].Fill(math.sqrt(var[proc]))
-		#histDict["norm"].Fill(math.sqrt(dsquare))
-		#histDict["dsquare"].Fill(dsquare)
 		histDict["weightedNorm"].Fill(math.sqrt(weighteddsquare))
 		histDict["chisq"].Fill(chisq)
 	histDict["chisq"].SetTitle(histDict["chisq"].GetTitle() + " (" + str(nDoF) + " D.o.F.)")

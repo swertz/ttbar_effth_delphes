@@ -7,6 +7,7 @@
 #!/usr/bin/python2.6
 
 import copy
+import sys
 
 ######## CLEAN BLANKS #############################################################
 def cleanBlanks(item):
@@ -130,8 +131,8 @@ class PConfig:
 
 					self.mvaCfg = dict(cfgTable)
 					# there has to be at least twice as many events left as the number of events asked for training
-					if int(self.mvaCfg["minmcevents"]) < 2*int(self.mvaCfg["trainentries"]):
-						self.mvaCfg["minmcevents"] = str(2*int(self.mvaCfg["trainentries"]))
+					#if int(self.mvaCfg["minmcevents"]) < 2*int(self.mvaCfg["trainentries"]):
+					#	self.mvaCfg["minmcevents"] = str(2*int(self.mvaCfg["trainentries"]))
 
 				elif sectionTitle.find("data_") >= 0:
 
@@ -149,7 +150,7 @@ class PConfig:
 
 					self.dataCfg.append(dict(cfgTable))
 
-			if len(self.dataCfg) < 2 or len(self.mvaCfg) != 19:
+			if len(self.dataCfg) < 2:
 				print "== Config file has not the proper syntax."
 				sys.exit(1)
 

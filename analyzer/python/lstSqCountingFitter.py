@@ -15,45 +15,12 @@ import numpy as np
 import math
 import copy
 
-from driver import PConfig
-
-######## CLASS PRESULT #############################################################
-
-class PResult:
-
-	def __init__(self):
-		self.branches = []
-
-	def iniFromFile(self, cfgFileName):
-
-		with open(cfgFileName, "r") as cfgFile:
-			# splitting the lines, skipping empty lines and comment lines (starting with a "#")
-			cfgContent = cfgFile.read()
-			lines = [ line for line in cfgContent.split("\n") if line is not "" ]
-			lines = [ line for line in lines if line[0] is not "#" ]
-			# splitting between the ":"
-			self.branches = [ line.split(":") for line in lines ]
-			for branch in self.branches:
-				if len(self.branches) < 3:
-					print "== Error in the result file syntax."
-					sys.exit(1)
-				# splitting the data entries to get name and expected number of events
-				datae = branch[2].split(",")
-				datae = [ data for data in datae if data != "" ]
-				datae = [ data.split("=") for data in datae ]
-				datae = [ (data[0], float(data[1])) for data in datae ]
-				branch[2] = dict(datae)
-	
-	def iniFromRDS(self, mcResult, rdsRow):
-		self.branches = copy.deepcopy(mcResult.branches)
-
-		for branch in self.branches:
-			branch[2] = {}
-			branch[2]["data"] = rdsRow.find(branch[1] + "_var").getVal()
+from utils import PConfig
+from utils import PResult
 
 ######## FITTER MAIN #############################################################
 
-def fitterMain(cfgFile, resultFile, dataFile, mode, option):
+def lstSqCountingFitterMain(cfgFile, resultFile, dataFile, mode, option):
 	print "============================================="
 	print "================= MISchief =================="
 	print "============================================="
@@ -222,9 +189,6 @@ def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 
 	return result,float(res),nDoF
 	
-######## MAXIMUM LIKELIHOOD 1-TEMPLATE FIT ################################
-
-
 ######## MAIN #############################################################
 
 if __name__ == "__main__":
@@ -234,4 +198,4 @@ if __name__ == "__main__":
 	argMode = 4
 	argOption = 5
 
-	fitterMain(sys.argv[argConf], sys.argv[argMC], sys.argv[argData], sys.argv[argMode], sys.argv[argOption])
+	lstSqCountingFitterMain(sys.argv[argConf], sys.argv[argMC], sys.argv[argData], sys.argv[argMode], sys.argv[argOption])

@@ -14,42 +14,10 @@ import os
 import numpy as np
 import math
 
-import driver
-import fitter
-
-######## CLASS MC STUDY CONFIG #####################################################
-
-class PMCConfig:
-
-	def __init__(self, cfgFileName):
-
-		self.cfg = {}
-		self.params = []
-
-		with open(cfgFileName, "r") as cfgFile:
-			
-			# splitting the lines, skipping empty lines and comment lines (starting with a "#")
-			cfgContent = cfgFile.read()
-			lines = [ line for line in cfgContent.split("\n") if line is not "" ]
-			lines = [ line for line in lines if line[0] is not "#" ]
-			# splitting between the ":"
-			lines = [ line.split("=") for line in lines ]
-			for line in lines:
-				# removing blank spaces before and after the "="
-				line = [ driver.cleanBlanks(item) for item in line ]
-				if line[0].find("param") >= 0:
-						paramSet = {}
-						paramList = line[1].split(";")
-						for param in paramList:
-							name = param.split(":")[0]
-							name = driver.cleanBlanks(name)
-							value = param.split(":")[1]
-							value = driver.cleanBlanks(value)
-							value = float(value)
-							paramSet[name] = value
-						self.params.append(paramSet)
-				else:
-					self.cfg[line[0]] = line[1]
+from lstSqCountingFitter import weightedLstSqCountingFit
+from utils import PMCConfig
+from utils import PConfig
+from utils import PResult
 
 ######## MC STUDY MAIN #############################################################
 
@@ -60,10 +28,10 @@ def mcStudyMain(mcStudyFile):
 	print "== Reading configuration file {0}".format(mcStudyFile)
 	myMCStudy = PMCConfig(mcStudyFile)
 	print "== Reading analysis file {0}".format(myMCStudy.cfg["mvaCfg"])
-	myConfig = driver.PConfig(myMCStudy.cfg["mvaCfg"])
+	myConfig = PConfig(myMCStudy.cfg["mvaCfg"])
 	resultFile = myConfig.mvaCfg["outputdir"] + "/" + myConfig.mvaCfg["name"] + "_results.out"
 	print "== Reading MVA MC tree result file {0}".format(resultFile)
-	myMCResult = fitter.PResult()
+	myMCResult = PResult()
 	myMCResult.iniFromFile(resultFile)
 
 	if myMCStudy.cfg["mode"] == "counting":
@@ -193,9 +161,9 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 	# translate dataset element in a PResult and call fit on each pseudo-experiment
 	for i in range(pseudoNumber):
 		rdsRow = dataSet.get(i)
-		myDataResult = fitter.PResult()
+		myDataResult = PResult()
 		myDataResult.iniFromRDS(myMCResult, rdsRow)
-		result,chisq,nDoF,var,cov = fitter.weightedLstSqCountingFit(myConfig, myMCResult, myDataResult)
+		result,chisq,nDoF,var,cov = weightedLstSqCountingFit(myConfig, myMCResult, myDataResult)
 		weighteddsquare = 0.
 		for proc in result.keys():
 			weighteddsquare += result[proc]**2/var[proc]

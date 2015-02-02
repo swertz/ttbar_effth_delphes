@@ -87,14 +87,19 @@ def mcStudyMain(mcStudyFile):
 		print "== Mode not valid"
 		sys.exit(1)
 
-######## MC STUDY SHAPE #############################################################
+######## MC STUDY BRANCH TEMPLATES #####################################################
 # Pseudo-experiments on the MC histograms for each branch
 
-#def mcStudyShape():
+#def mcStudyBranchTemplates():
 	# get histograms for the processes for each branch
 
 
-######## MC STUDY SHAPE #############################################################
+######## MC STUDY SIMPLE TEMPLATES #####################################################
+# Pseudo-experiments on MC histograms for a particular kinematical variable
+
+def mcStudyTemplate():
+
+######## MC STUDY COUNTING #############################################################
 # Pseudo-experiments on the predicted number of events for each branch
 
 def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):

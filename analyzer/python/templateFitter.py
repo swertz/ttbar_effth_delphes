@@ -185,9 +185,10 @@ def fillHistos(cfg):
 
 	for proc in cfg.dataCfg:
 		
-		proc["histo"] = TH1D(proc["name"] + "_" + inputVar, \
+		hist = TH1D(proc["name"] + "_" + inputVar, \
 			proc["name"] + ": " + inputVar, \
 			nBins, varMin, varMax)
+		hist.Sumw2()
 		
 		dataFile = TFile(proc["path"])
 		dataTree = dataFile.Get(proc["treename"])
@@ -196,8 +197,10 @@ def fillHistos(cfg):
 		for event in dataTree:
 			
 			weight = dataTree.__getattr__(genWeight) * lumi * float(proc["xsection"]) / float(proc["genevents"])
-			proc["histo"].Fill(dataTree.__getattr__(inputVar), weight)
+			hist.Fill(dataTree.__getattr__(inputVar), weight)
 		
+		proc["histo"] = hist
+
 		dataFile.Close()
 
 ######## MAIN #############################################################

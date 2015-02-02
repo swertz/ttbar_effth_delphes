@@ -181,6 +181,7 @@ def fillHistos(cfg):
 	varMin = float(cfg.mvaCfg["varmin"])
 	varMax = float(cfg.mvaCfg["varmax"])
 	genWeight = cfg.mvaCfg["genweight"]
+	lumi = float(cfg.mvaCfg["lumi"])
 
 	for proc in cfg.dataCfg:
 		
@@ -191,11 +192,10 @@ def fillHistos(cfg):
 		dataFile = TFile(proc["path"])
 		dataTree = dataFile.Get(proc["treename"])
 		nEntries = dataTree.GetEntriesFast()
-		
+
 		for event in dataTree:
 			
-			weight = dataTree.__getattr__(genWeight) * float(proc["xsection"]) * \
-				nEntries / float(proc["genevents"])
+			weight = dataTree.__getattr__(genWeight) * lumi * float(proc["xsection"]) / float(proc["genevents"])
 			proc["histo"].Fill(dataTree.__getattr__(inputVar), weight)
 		
 		dataFile.Close()

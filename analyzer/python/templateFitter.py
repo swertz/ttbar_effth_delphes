@@ -22,16 +22,19 @@ def templateFitterMain(templateCfgFileName):
 	print "============================================="
 	
 	# Load configuration (same structure as analysis configuration => re-use class)
+
 	print "== Reading configuration file {0}".format(templateCfgFileName)
 	templateCfg = PConfig(templateCfgFileName)
 	outFile = ROOT.TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
 
 	# Fill histograms for different processes
+	
 	print "== Filling input histograms from trees."
 	fillHistos(templateCfg)
 	outFile.cd()
 
 	# generate pseudo-experiment
+	
 	inputVar = templateCfg.mvaCfg["inputvar"]
 	nBins = int(templateCfg.mvaCfg["nbins"])
 	varMin = float(templateCfg.mvaCfg["varmin"])
@@ -51,18 +54,23 @@ def templateFitterMain(templateCfgFileName):
 	dataHist.FillRandom(mcSumHist, nEvents)
 
 	# do the fit
+
 	histVar = ROOT.RooRealVar("histVar", "histVar", varMin, varMax)
 	procVars = {}
 	procRHists = {}
 	procPDFs = {}
+	
 	for data in templateCfg.dataCfg:
+
 		# for each signal, configure a variable and a PDF from the corresponding
 		# histogram
+	
 		dataExpect = float( data["histo"].Integral() )
 		if data["signal"] == "1":
+			range = float( data["range"] )
 			procVars[ data["name"] ] = ROOT.RooRealVar(data["name"] + "_var", \
 				"Variable for process " + data["name"], \
-				dataExpect, -5*dataExpect, 5*dataExpect)
+				0., -range*dataExpect, range*dataExpect)
 		else:
 			procVars[ data["name"] ] = ROOT.RooRealVar(data["name"] + "_var", \
 				"Variable for process " + data["name"], dataExpect) 
@@ -70,6 +78,7 @@ def templateFitterMain(templateCfgFileName):
 		procRHists[ data["name"] ] = ROOT.RooDataHist(data["name"] + "_hist", \
 			"Histogram for process " + data["name"], \
 			ROOT.RooArgList(histVar), data["histo"])
+		
 		procPDFs[ data["name"] ] = ROOT.RooHistPdf(data["name"] + "_histPdf", \
 			"Histogram PDF for process " + data["name"], \
 			ROOT.RooArgSet(histVar), procRHists[ data["name"] ])
@@ -85,11 +94,12 @@ def templateFitterMain(templateCfgFileName):
 
 	model = ROOT.RooAddPdf("Template_model", "Template model", PDFArgList, varArgList)
 
-	model.fitTo(dataRHist, ROOT.RooFit.SumW2Error(ROOT.kTRUE))	
+	model.fitTo(dataRHist, ROOT.RooFit.SumW2Error(ROOT.kTRUE), \
+		ROOT.RooFit.NumCPU(1) )
 
 	# Plot the fit results
-	# The built-in RooFit functions can't be used since some of the "PDFs" may have
-	# have negative values.
+	# The built-in RooFit functions can't be used since some of the "PDFs" may 
+	# have negative values (RooFit can't stomach it).
 
 	#frame = histVar.frame()
 	#dataRHist.plotOn(frame)
@@ -105,6 +115,7 @@ def templateFitterMain(templateCfgFileName):
 		data["histo"].Write()
 	dataHist.Write()
 	mcSumHist.Write()
+	
 	outFile.Close()
 
 ######## FILL HISTOGRAMS #############################################################

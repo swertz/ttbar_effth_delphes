@@ -9,10 +9,11 @@
 #### Preamble
 
 import sys
-import ROOT
+from ROOT import *
 
 from utils import PConfig
-from utils import convertColor 
+from utils import convertColor
+from math import sqrt
 
 ######## FITTER MAIN #############################################################
 
@@ -25,7 +26,7 @@ def templateFitterMain(templateCfgFileName):
 
 	print "== Reading configuration file {0}".format(templateCfgFileName)
 	templateCfg = PConfig(templateCfgFileName)
-	outFile = ROOT.TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
+	outFile = TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
 
 	# Fill histograms for different processes
 	
@@ -33,14 +34,14 @@ def templateFitterMain(templateCfgFileName):
 	fillHistos(templateCfg)
 	outFile.cd()
 
-	# generate pseudo-experiment
+	# Generate pseudo-experiment
 	
 	inputVar = templateCfg.mvaCfg["inputvar"]
 	nBins = int(templateCfg.mvaCfg["nbins"])
 	varMin = float(templateCfg.mvaCfg["varmin"])
 	varMax = float(templateCfg.mvaCfg["varmax"])
 	
-	dataHist = ROOT.TH1D("MCdata_" + inputVar, "MC data: " + inputVar, \
+	dataHist = TH1D("MCdata_" + inputVar, "MC data: " + inputVar, \
 		nBins, varMin, varMax)
 	mcSumHist = dataHist.Clone("MCsum_" + inputVar)
 	mcSumHist.SetTitle("MC sum: " + inputVar)
@@ -49,54 +50,106 @@ def templateFitterMain(templateCfgFileName):
 			mcSumHist.Add(proc["histo"])
 
 	mcExpect = mcSumHist.Integral()
-	rPoisson = ROOT.TRandom()
+	rPoisson = TRandom(0)
 	totEvents = rPoisson.Poisson(mcExpect)
 	dataHist.FillRandom(mcSumHist, totEvents)
 
-	# do the fit
+	# Configure the fit
 
-	histVar = ROOT.RooRealVar("histVar", "histVar", varMin, varMax)
+	histVar = RooRealVar("histVar", "histVar", varMin, varMax)
 	procVars = {}
 	procRHists = {}
 	procPDFs = {}
+	sigYields = {}
 	
 	for proc in templateCfg.dataCfg:
 
-		# for each signal, configure a variable and a PDF from the corresponding
-		# histogram
+		# For each signal, configure a variable and a PDF from the corresponding
+		# histogram.
 	
 		expect = float( proc["histo"].Integral() )
 		if proc["signal"] == "1":
 			range = float( proc["range"] )
-			procVars[ proc["name"] ] = ROOT.RooRealVar(proc["name"] + "_var", \
+			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
 				"Variable for process " + proc["name"], \
 				0., -range*expect, range*expect)
+			sigYields[ proc["name"] ] = expect
 		else:
-			procVars[ proc["name"] ] = ROOT.RooRealVar(proc["name"] + "_var", \
+			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
 				"Variable for process " + proc["name"], expect) 
 			
-		procRHists[ proc["name"] ] = ROOT.RooDataHist(proc["name"] + "_hist", \
+		procRHists[ proc["name"] ] = RooDataHist(proc["name"] + "_hist", \
 			"Histogram for process " + proc["name"], \
-			ROOT.RooArgList(histVar), proc["histo"])
+			RooArgList(histVar), proc["histo"])
 		
-		procPDFs[ proc["name"] ] = ROOT.RooHistPdf(proc["name"] + "_histPdf", \
+		procPDFs[ proc["name"] ] = RooHistPdf(proc["name"] + "_histPdf", \
 			"Histogram PDF for process " + proc["name"], \
-			ROOT.RooArgSet(histVar), procRHists[ proc["name"] ])
+			RooArgSet(histVar), procRHists[ proc["name"] ])
 
-	dataRHist = ROOT.RooDataHist("data_hist","Histogram for data", \
-		ROOT.RooArgList(histVar), dataHist)
+	dataRHist = RooDataHist("data_hist","Histogram for data", \
+		RooArgList(histVar), dataHist)
 	
-	varArgList = ROOT.RooArgList()
-	PDFArgList = ROOT.RooArgList()
+	varArgList = RooArgList()
+	PDFArgList = RooArgList()
+	varIndexes = {}
+	i = 0
 	for proc in procVars.keys():
 		varArgList.add( procVars[proc] )
 		PDFArgList.add( procPDFs[proc] )
+		if sigYields.keys().__contains__(proc):
+			varIndexes[proc] = i
+			i += 1
 
-	model = ROOT.RooAddPdf("Template_model", "Template model", PDFArgList, varArgList)
+	model = RooAddPdf("Template_model", "Template model", PDFArgList, varArgList)
 
-	model.fitTo(dataRHist, ROOT.RooFit.SumW2Error(ROOT.kTRUE), \
-		ROOT.RooFit.NumCPU(1) )
+	# Do the fit
 
+	fitResult = model.fitTo(dataRHist, \
+		RooFit.SumW2Error(kTRUE), \
+		RooFit.NumCPU(int(templateCfg.mvaCfg["numcpu"]), 1), \
+		RooFit.Save(kTRUE)\
+		)
+	fitResult.SetName("fitResult")
+
+	# Retrieve fit results
+
+	fittedEvtNum = {}
+	fittedVars = {}
+	corr = {}
+	evtNumErrors = {}
+	varErrors = {}
+
+	resultArgList = fitResult.floatParsFinal()
+	corrHist = fitResult.correlationHist()
+	minNLL = fitResult.minNll()
+	cov = fitResult.covarianceMatrix()
+	
+	for sig in sigYields.keys():
+		
+		fittedEvtNum[sig] = resultArgList.find(sig + "_var").getVal()
+		evtNumErrors[sig] = sqrt( cov[ varIndexes[sig] ][ varIndexes[sig] ] )
+
+		fittedVars[sig] = fittedEvtNum[sig] / sigYields[sig]
+		varErrors[sig] = evtNumErrors[sig] / sigYields[sig]
+
+		for sig2 in sigYields.keys():
+			corr[sig + "/" + sig2] = fitResult.correlation(sig + "_var", sig2 + "_var")
+
+	# Print the fit result
+	
+	print "\n== Fit results:"
+	for sig in sigYields.keys():
+		print "=== {0}: {1:.2f} +- {2:.2f} events =====> {3} = {4:.3f} +- {5:.3f}"\
+			.format(sig, fittedEvtNum[sig], evtNumErrors[sig], 
+			sig, fittedVars[sig], varErrors[sig])
+	
+	print "\n== Correlations:"
+	for i,sig in enumerate(sigYields.keys()):
+		for j,sig2 in enumerate(sigYields.keys()):
+			if j > i:
+				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
+	print ""
+	
 	# Plot the fit results
 	# The built-in RooFit functions can't be used since some of the "PDFs" may 
 	# have negative values (RooFit can't stomach it).
@@ -105,11 +158,13 @@ def templateFitterMain(templateCfgFileName):
 	#dataRHist.plotOn(frame)
 	#model.plotOn(frame)
 	#for data in templateCfg.dataCfg:
-	#	model.plotOn(frame, ROOT.RooFit.Components(data["name"] + "_histPdf"), \
-	#		ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor( convertColor(data["color"]) ) )
-	#cnv = ROOT.TCanvas("Template_fit","Template fit")
+	#	model.plotOn(frame, RooFit.Components(data["name"] + "_histPdf"), \
+	#		RooFit.LineStyle(kDashed), RooFit.LineColor( convertColor(data["color"]) ) )
+	#cnv = TCanvas("Template_fit","Template fit")
 	#cnv.cd()
 	#frame.Write()
+
+	corrHist.Write()
 
 	for proc in templateCfg.dataCfg:
 		proc["histo"].Write()
@@ -128,16 +183,21 @@ def fillHistos(cfg):
 	genWeight = cfg.mvaCfg["genweight"]
 
 	for proc in cfg.dataCfg:
-		proc["histo"] = ROOT.TH1D(proc["name"] + "_" + inputVar, \
+		
+		proc["histo"] = TH1D(proc["name"] + "_" + inputVar, \
 			proc["name"] + ": " + inputVar, \
 			nBins, varMin, varMax)
-		dataFile = ROOT.TFile(proc["path"])
+		
+		dataFile = TFile(proc["path"])
 		dataTree = dataFile.Get(proc["treename"])
 		nEntries = dataTree.GetEntriesFast()
+		
 		for event in dataTree:
+			
 			weight = dataTree.__getattr__(genWeight) * float(proc["xsection"]) * \
 				nEntries / float(proc["genevents"])
 			proc["histo"].Fill(dataTree.__getattr__(inputVar), weight)
+		
 		dataFile.Close()
 
 ######## MAIN #############################################################

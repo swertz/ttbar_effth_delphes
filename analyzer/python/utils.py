@@ -8,6 +8,7 @@
 
 import copy
 import sys
+import ROOT
 
 ######## CLEAN BLANKS #############################################################
 def cleanBlanks(item):
@@ -148,9 +149,40 @@ class PConfig:
 						tupleLine = [ cleanBlanks(item) for item in line ]
 						cfgTable.append(tuple(tupleLine))
 
-					self.dataCfg.append(dict(cfgTable))
+					if len(cfgTable) > 0:
+						self.dataCfg.append(dict(cfgTable))
 
-			if len(self.dataCfg) < 2:
-				print "== Config file has not the proper syntax."
-				sys.exit(1)
+######## CONVERT COLOR #####################################################
 
+def convertColor(name):
+	nameContent = name.split("+")
+	
+	if len(nameContent) > 2:
+		print "converColor: invalid color specified."
+		sys.exit(1)
+	
+	range = nameContent[0]
+	add = 0
+	if len(nameContent) == 2:
+		add = int(nameContent[1])
+
+	colorMap = {}
+	colorMap["kWhite"] = ROOT.kWhite
+	colorMap["kBlack"] = ROOT.kBlack
+	colorMap["kGray"] = ROOT.kGray
+	colorMap["kRed"] = ROOT.kRed
+	colorMap["kGreen"] = ROOT.kGreen
+	colorMap["kBlue"] = ROOT.kBlue
+	colorMap["kYellow"] = ROOT.kYellow
+	colorMap["kMagenta"] = ROOT.kMagenta
+	colorMap["kCyan"] = ROOT.kCyan
+	colorMap["kOrange"] = ROOT.kOrange
+	colorMap["kSpring"] = ROOT.kSpring
+	colorMap["kTeal"] = ROOT.kTeal
+	colorMap["kAzure"] = ROOT.kAzure
+	colorMap["kViolet"] = ROOT.kViolet
+	colorMap["kPink"] = ROOT.kPink
+
+	color = colorMap[range] + add
+
+	return color

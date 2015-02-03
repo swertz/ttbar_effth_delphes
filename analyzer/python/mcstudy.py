@@ -48,7 +48,12 @@ def mcStudyMain(mcStudyFile):
 		histDict = {}
 		corrList = {}
 		weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
+		weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
 		resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 50)
+		resHist.SetBit(ROOT.TH1.kCanRebin)
+		
+		histDict["weightedNorm"] = weightedNormHist
+		histDict["chisq"] = resHist
 
 		varVect = []
 		for i,proc in enumerate(myConfig.dataCfg):
@@ -58,9 +63,11 @@ def mcStudyMain(mcStudyFile):
 				procN = proc["name"]
 				
 				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -10, 10)
+				myHist.SetBit(ROOT.TH1.kCanRebin)
 				histDict[procN] = myHist
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
 					procN+" Std. Dev. (GeV^{-2})", 100, 0., 1.)
+				myVarHist.SetBit(ROOT.TH1.kCanRebin)
 				histDict[procN+"_StdDev"] = myVarHist
 				
 				varVect.append(procN)
@@ -69,8 +76,6 @@ def mcStudyMain(mcStudyFile):
 					if data2["signal"] == "1":
 						corrList[procN+"/"+data2["name"]] = 0.
 
-		histDict["weightedNorm"] = weightedNormHist
-		histDict["chisq"] = resHist
 		histDict["corrList"] = corrList
 
 		pseudoNumber = int(myMCStudy.cfg["pseudoNumber"])

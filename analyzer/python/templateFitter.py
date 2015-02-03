@@ -34,26 +34,60 @@ def templateFitterMain(templateCfgFileName):
 	fillHistos(templateCfg)
 	outFile.cd()
 
-	# Generate pseudo-experiment
+	corrHist = True
+
+	dataHist = 0
+	mcSumHist = 0
+
+	fittedVars,minNLL,varErrors,chisq,nDoF = \
+		templateFit(templateCfg, dataHist, corrHist)
+
+	# Print the fit result
+	
+	print "\n== Fit results:"
+	for sig in fittedVars.keys():
+		print "=== {0}: {1} = {2:.3f} +- {3:.3f}"\
+			.format(sig, fittedVars[sig], varErrors[sig])
+	
+	print "\n== Correlations:"
+	for i,sig in enumerate(fittedVars.keys()):
+		for j,sig2 in enumerate(fittedVars.keys()):
+			if j > i:
+				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
+	print ""
+	
+	# Plot the fit results
+	# The built-in RooFit functions can't be used since some of the "PDFs" may 
+	# have negative values (RooFit can't stomach it).
+
+	#frame = histVar.frame()
+	#dataRHist.plotOn(frame)
+	#model.plotOn(frame)
+	#for data in templateCfg.dataCfg:
+	#	model.plotOn(frame, RooFit.Components(data["name"] + "_histPdf"), \
+	#		RooFit.LineStyle(kDashed), RooFit.LineColor( convertColor(data["color"]) ) )
+	#cnv = TCanvas("Template_fit","Template fit")
+	#cnv.cd()
+	#frame.Write()
+
+	corrHist.Write()
+
+	for proc in templateCfg.dataCfg:
+		proc["histo"].Write()
+	dataHist.Write()
+	mcSumHist.Write()
+	
+	outFile.Close()
+
+######## TEMPLATE FIT ################################################################
+
+def templateFit(templateCfg, dataHist, corrHist = None):
 	
 	inputVar = templateCfg.mvaCfg["inputvar"]
 	nBins = int(templateCfg.mvaCfg["nbins"])
 	varMin = float(templateCfg.mvaCfg["varmin"])
 	varMax = float(templateCfg.mvaCfg["varmax"])
 	
-	dataHist = TH1D("MCdata_" + inputVar, "MC data: " + inputVar, \
-		nBins, varMin, varMax)
-	mcSumHist = dataHist.Clone("MCsum_" + inputVar)
-	mcSumHist.SetTitle("MC sum: " + inputVar)
-	for proc in templateCfg.dataCfg:
-		if proc["signal"] != "1":
-			mcSumHist.Add(proc["histo"])
-
-	mcExpect = mcSumHist.Integral()
-	rPoisson = TRandom(0)
-	totEvents = rPoisson.Poisson(mcExpect)
-	dataHist.FillRandom(mcSumHist, totEvents)
-
 	# Configure the fit
 
 	histVar = RooRealVar("histVar", "histVar", varMin, varMax)
@@ -91,23 +125,25 @@ def templateFitterMain(templateCfgFileName):
 	
 	varArgList = RooArgList()
 	PDFArgList = RooArgList()
-	varIndexes = {}
-	i = 0
 	for proc in procVars.keys():
 		varArgList.add( procVars[proc] )
 		PDFArgList.add( procPDFs[proc] )
-		if sigYields.keys().__contains__(proc):
-			varIndexes[proc] = i
-			i += 1
 
 	model = RooAddPdf("Template_model", "Template model", PDFArgList, varArgList)
+
+	verbosity = -1
+	RooMsgService.instance().setGlobalKillBelow(RooFit.WARNING)
+	if templateCfg.mvaCfg["options"].find("verbose") >= 0:
+		verbosity = 1
+		RooMsgService.instance().setGlobalKillBelow(RooFit.DEBUG)
 
 	# Do the fit
 
 	fitResult = model.fitTo(dataRHist, \
-		RooFit.SumW2Error(kTRUE), \
+		#RooFit.SumW2Error(kTRUE), \
 		RooFit.NumCPU(int(templateCfg.mvaCfg["numcpu"]), 1), \
-		RooFit.Save(kTRUE)\
+		RooFit.Save(kTRUE), \
+		RooFit.PrintLevel(verbosity) \
 		)
 	fitResult.SetName("fitResult")
 
@@ -120,14 +156,14 @@ def templateFitterMain(templateCfgFileName):
 	varErrors = {}
 
 	resultArgList = fitResult.floatParsFinal()
-	corrHist = fitResult.correlationHist()
+	if corrHist is not None:
+		corrHist = fitResult.correlationHist()
 	minNLL = fitResult.minNll()
-	cov = fitResult.covarianceMatrix()
 	
 	for sig in sigYields.keys():
 		
 		fittedEvtNum[sig] = resultArgList.find(sig + "_var").getVal()
-		evtNumErrors[sig] = sqrt( cov[ varIndexes[sig] ][ varIndexes[sig] ] )
+		evtNumErrors[sig] = procVars[sig].getError()
 
 		fittedVars[sig] = fittedEvtNum[sig] / sigYields[sig]
 		varErrors[sig] = evtNumErrors[sig] / sigYields[sig]
@@ -135,43 +171,15 @@ def templateFitterMain(templateCfgFileName):
 		for sig2 in sigYields.keys():
 			corr[sig + "/" + sig2] = fitResult.correlation(sig + "_var", sig2 + "_var")
 
-	# Print the fit result
-	
-	print "\n== Fit results:"
-	for sig in sigYields.keys():
-		print "=== {0}: {1:.2f} +- {2:.2f} events =====> {3} = {4:.3f} +- {5:.3f}"\
-			.format(sig, fittedEvtNum[sig], evtNumErrors[sig], 
-			sig, fittedVars[sig], varErrors[sig])
-	
-	print "\n== Correlations:"
-	for i,sig in enumerate(sigYields.keys()):
-		for j,sig2 in enumerate(sigYields.keys()):
-			if j > i:
-				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
-	print ""
-	
-	# Plot the fit results
-	# The built-in RooFit functions can't be used since some of the "PDFs" may 
-	# have negative values (RooFit can't stomach it).
+	# Compute Chi-Square of the fit (which might not be Chi-Square-distributed)
 
-	#frame = histVar.frame()
-	#dataRHist.plotOn(frame)
-	#model.plotOn(frame)
-	#for data in templateCfg.dataCfg:
-	#	model.plotOn(frame, RooFit.Components(data["name"] + "_histPdf"), \
-	#		RooFit.LineStyle(kDashed), RooFit.LineColor( convertColor(data["color"]) ) )
-	#cnv = TCanvas("Template_fit","Template fit")
-	#cnv.cd()
-	#frame.Write()
+	chisq = 1
+	nDoF = 1
 
-	corrHist.Write()
-
-	for proc in templateCfg.dataCfg:
-		proc["histo"].Write()
-	dataHist.Write()
-	mcSumHist.Write()
-	
-	outFile.Close()
+	if templateCfg.mvaCfg["options"].find("nevents") >= 0:
+		return fittedEvtNum, evtNumErrors, corr, minNLL, chisq, nDoF
+	else:
+		return fittedVars, varErrors, corr, minNLL, chisq, nDoF
 
 ######## FILL HISTOGRAMS #############################################################
 
@@ -196,12 +204,18 @@ def fillHistos(cfg):
 
 		for event in dataTree:
 			
-			weight = dataTree.__getattr__(genWeight) * lumi * float(proc["xsection"]) / float(proc["genevents"])
+			weight = dataTree.__getattr__(genWeight) * lumi * \
+					float(proc["xsection"]) / float(proc["genevents"])
 			hist.Fill(dataTree.__getattr__(inputVar), weight)
 		
 		proc["histo"] = hist
 
 		dataFile.Close()
+
+######## GET HISTOGRAMS #############################################################
+
+def getHistos(cfg):
+	print ""
 
 ######## MAIN #############################################################
 

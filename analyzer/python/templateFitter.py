@@ -103,10 +103,10 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 	
 		expect = float( proc["histo"].Integral() )
 		if proc["signal"] == "1":
-			range = float( proc["range"] )
+			valRange = float( proc["range"] )
 			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
 				"Variable for process " + proc["name"], \
-				0., -range*expect, range*expect)
+				0., -valRange*expect, valRange*expect)
 			sigYields[ proc["name"] ] = expect
 		else:
 			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
@@ -173,8 +173,22 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 
 	# Compute Chi-Square of the fit (which might not be Chi-Square-distributed)
 
-	chisq = 1
-	nDoF = 1
+	chisq = 0.
+	for i in range(dataHist.GetNbinsX()):
+		temp = 0.
+		
+		for proc in templateCfg.dataCfg:
+			if proc["signal"] == "1":
+				temp += fittedVars[ proc["name"] ] * \
+						proc["histo"].GetBinContent(i+1)
+			else:
+				temp += proc["histo"].GetBinContent(i+1)
+
+		temp -= dataHist.GetBinContent(i+1)
+		temp /= dataHist.GetBinError(i+1)
+		chisq += temp**2
+
+	nDoF = dataHist.GetNbinsX() - len(fittedVars)
 
 	if templateCfg.mvaCfg["options"].find("nevents") >= 0:
 		return fittedEvtNum, evtNumErrors, corr, minNLL, chisq, nDoF

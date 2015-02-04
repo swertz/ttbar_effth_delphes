@@ -90,6 +90,10 @@ def mcStudyMain(mcStudyFile):
 			mcStudyCounting(myConfig, myMCResult, paramSet, histDict, pseudoNumber) 
 		
 		elif myMCStudy.cfg["mode"] == "template":
+			myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
+			myHist.SetBit(ROOT.TH1.kCanRebin)
+			histDict["minNLL"] = myHist
+			
 			mcStudyTemplate(myConfig, paramSet, histDict, pseudoNumber)
 
 		else:
@@ -199,6 +203,7 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		
 		histDict["weightedNorm"].Fill(math.sqrt(weighteddsquare))
 		histDict["chisq"].Fill(chisq)
+		histDict["minNLL"].Fill(minNLL)
 
 		dataHist.Reset()
 	

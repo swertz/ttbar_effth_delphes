@@ -62,7 +62,7 @@ def mcStudyMain(mcStudyFile):
 				
 				procN = proc["name"]
 				
-				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -10, 10)
+				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -1, 1)
 				myHist.SetBit(ROOT.TH1.kCanRebin)
 				histDict[procN] = myHist
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \

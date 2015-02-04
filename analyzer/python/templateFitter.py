@@ -26,18 +26,24 @@ def templateFitterMain(templateCfgFileName):
 
 	print "== Reading configuration file {0}".format(templateCfgFileName)
 	templateCfg = PConfig(templateCfgFileName)
-	outFile = TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
+	outFile = TFile(templateCfg.mvaCfg["outfile"], "RECREATE")
 
-	# Fill histograms for different processes
+	# Necessary to store the data which will be fitted on
+	dataHist = True
 	
-	print "== Filling input histograms from trees."
-	fillHistos(templateCfg)
+	if templateCfg.mvaCfg["option"].find("fill") >= 0:
+		# Fill histograms for different processes
+		print "== Filling input histograms from trees."
+		fillHistos(templateCfg, dataHist)
+	
+	elif templateCfg.mvaCfg["option"].find("get") >= 0:
+		# Retrieve histograms from specified files
+		print "== Getting input histograms from files."
+		getHistos(templateCfg, dataHist)
+	
 	outFile.cd()
 
 	corrHist = True
-
-	dataHist = 0
-	mcSumHist = 0
 
 	fittedVars,minNLL,varErrors,chisq,nDoF = \
 		templateFit(templateCfg, dataHist, corrHist)
@@ -75,7 +81,6 @@ def templateFitterMain(templateCfgFileName):
 	for proc in templateCfg.dataCfg:
 		proc["histo"].Write()
 	dataHist.Write()
-	mcSumHist.Write()
 	
 	outFile.Close()
 
@@ -197,7 +202,7 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 
 ######## FILL HISTOGRAMS #############################################################
 
-def fillHistos(cfg):
+def fillHistos(cfg, dataHist = None):
 	inputVar = cfg.mvaCfg["inputvar"]
 	nBins = int(cfg.mvaCfg["nbins"])
 	varMin = float(cfg.mvaCfg["varmin"])
@@ -225,11 +230,48 @@ def fillHistos(cfg):
 		proc["histo"] = hist
 
 		dataFile.Close()
+	
+	if dataHist is not None:
+		dataHist = TH1D(proc["data_" + inputVar, \
+			"data: " + inputVar, nBins, varMin, varMax)
+
+		dataFile = TFile(cfg.mvaCfg["datafile"])
+
+		dataTree = dataFile.Get(cfg.mvaCfg["datatreename"])
+		nEntries = dataTree.GetEntriesFast()
+
+		for event in dataTree:
+			hist.Fill(dataTree.__getattr__(inputVar))
+
+		dataFile.Close()		
 
 ######## GET HISTOGRAMS #############################################################
 
-def getHistos(cfg):
-	print ""
+def getHistos(cfg, dataHist = None):
+	dataFile = TFile()
+	
+	if cfg.mvaCfg.keys().__contains__("histfile"):
+		dataFile.Open(cfg.mvaCfg["histfile"])
+
+	for proc in cfg.dataCfg:
+		if not cfg.mvaCfg.keys().__contains__("histfile"):
+			dataFile.Open(proc["histfile"])
+		
+		cfg.dataCfg["histo"] = dataFile.Get(proc["histname"])
+		
+		if not cfg.mvaCfg.keys().__contains__("histfile"):
+			dataFile.Close()
+	if dataFile.IsOpen():
+		dataFile.Close()
+
+	cfg.mvaCfg["nbins"] = str(cfg.dataCfg[0]["histo"].GetNbins())
+	cfg.mvaCfg["varmin"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmin())
+	cfg.mvaCfg["varmax"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmax())
+
+	if dataHist is not None:
+		dataFile = TFile(cfg.mvaCfg["datafile"])
+		dataHist = dataFile.Get(cfg.mvaCfg["datahistname"])
+		dataFile.Close()	
 
 ######## MAIN #############################################################
 

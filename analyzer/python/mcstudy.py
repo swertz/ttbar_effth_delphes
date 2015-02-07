@@ -185,7 +185,13 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		dataHist.FillRandom(mcSumHist, totEvents)
 		templateCfg.mvaCfg["datahisto"] = dataHist
 
-		result,err,corr,minNLL,chisq,nDoF = templateFit(templateCfg)
+		fitResults = templateFit(templateCfg)
+		result = fitResults["fittedVars"]
+		err = fitResults["varErrors"]
+		corr = fitResults["corr"]
+		minNLL = fitResults["minNLL"]
+		chisq = fitResults["chisq"]
+		nDoF = fitResults["nDoF"]
 		
 		weighteddsquare = 0.
 		

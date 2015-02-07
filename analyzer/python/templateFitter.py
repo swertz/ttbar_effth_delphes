@@ -40,8 +40,15 @@ def templateFitterMain(templateCfgFileName):
 	
 	outFile.cd()
 
-	fittedVars,varErrors,corr,minNLL,chisq,nDoF = \
-		templateFit(templateCfg)
+	fitResults = templateFit(templateCfg)
+
+	fittedVars = fitResults["fittedVars"]
+	varErrors = fitResults["varErrors"]
+	corr = fitResults["corr"]
+	minNLL = fitResults["minNLL"]
+	chisq = fitResults["chisq"]
+	nDoF = fitResults["nDoF"]
+	corrHist = fitResults["corrHist"]
 
 	# Print the fit result
 	
@@ -59,7 +66,7 @@ def templateFitterMain(templateCfgFileName):
 
 	plotTemplateFitResults(templateCfg, fittedVars)
 
-	#corrHist.Write()
+	corrHist.Write()
 	for proc in templateCfg.dataCfg:
 		proc["histo"].Write()
 	templateCfg.mvaCfg["datahisto"].Write()
@@ -144,8 +151,7 @@ def templateFit(templateCfg):
 	varErrors = {}
 
 	resultArgList = fitResult.floatParsFinal()
-	#if corrHist is not None:
-	#	corrHist = fitResult.correlationHist()
+	corrHist = fitResult.correlationHist()
 	minNLL = fitResult.minNll()
 	
 	for sig in sigYields.keys():
@@ -178,10 +184,19 @@ def templateFit(templateCfg):
 
 	nDoF = dataHist.GetNbinsX() - len(fittedVars)
 
-	if templateCfg.mvaCfg["options"].find("nevents") >= 0:
-		return fittedEvtNum, evtNumErrors, corr, minNLL, chisq, nDoF
-	else:
-		return fittedVars, varErrors, corr, minNLL, chisq, nDoF
+	fitResults = {}
+
+	fitResults["fittedVars"] = fittedVars
+	fitResults["fittedEvtNum"] = fittedEvtNum
+	fitResults["varErrors"] = varErrors
+	fitResults["evtNumErrors"] = evtNumErrors
+	fitResults["corr"] = corr
+	fitResults["minNLL"] = minNLL
+	fitResults["chisq"] = chisq
+	fitResults["nDoF"] = nDoF
+	fitResults["corrHist"] = corrHist
+
+	return fitResults
 
 ######## WRITE PLOTS FOR FIT RESULTS ####################################################
 

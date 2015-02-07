@@ -183,8 +183,9 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 	
 		totEvents = rPoisson.Poisson(mcExpect)
 		dataHist.FillRandom(mcSumHist, totEvents)
+		templateCfg.mvaCfg["datahisto"] = dataHist
 
-		result,err,corr,minNLL,chisq,nDoF = templateFit(templateCfg, dataHist)
+		result,err,corr,minNLL,chisq,nDoF = templateFit(templateCfg)
 		
 		weighteddsquare = 0.
 		
@@ -207,9 +208,8 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		histDict["minNLL"].Fill(minNLL)
 		
 		dataHist.SetName("data")
-		histDict["data"] = dataHist
 
-		#dataHist.Reset()
+		dataHist.Reset()
 	
 	histDict["chisq"].SetTitle(histDict["chisq"].GetTitle() + " (" + str(nDoF) + " D.o.F.)")
 	

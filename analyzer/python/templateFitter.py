@@ -40,10 +40,8 @@ def templateFitterMain(templateCfgFileName):
 	
 	outFile.cd()
 
-	corrHist = True
-
 	fittedVars,varErrors,corr,minNLL,chisq,nDoF = \
-		templateFit(templateCfg, templateCfg.mvaCfg["datahisto"], corrHist)
+		templateFit(templateCfg)
 
 	# Print the fit result
 	
@@ -59,7 +57,7 @@ def templateFitterMain(templateCfgFileName):
 				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
 	print ""
 
-	writeTemplateFitResults(templateCfg, templateCfg.mvaCfg["datahisto"], fittedVars)
+	plotTemplateFitResults(templateCfg, fittedVars)
 
 	#corrHist.Write()
 	for proc in templateCfg.dataCfg:
@@ -70,12 +68,13 @@ def templateFitterMain(templateCfgFileName):
 
 ######## TEMPLATE FIT ################################################################
 
-def templateFit(templateCfg, dataHist, corrHist = None):
+def templateFit(templateCfg):
 	
 	inputVar = templateCfg.mvaCfg["inputvar"]
 	nBins = int(templateCfg.mvaCfg["nbins"])
 	varMin = float(templateCfg.mvaCfg["varmin"])
 	varMax = float(templateCfg.mvaCfg["varmax"])
+	dataHist = templateCfg.mvaCfg["datahisto"]
 	
 	# Configure the fit
 
@@ -145,8 +144,8 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 	varErrors = {}
 
 	resultArgList = fitResult.floatParsFinal()
-	if corrHist is not None:
-		corrHist = fitResult.correlationHist()
+	#if corrHist is not None:
+	#	corrHist = fitResult.correlationHist()
 	minNLL = fitResult.minNll()
 	
 	for sig in sigYields.keys():
@@ -186,7 +185,7 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 
 ######## WRITE PLOTS FOR FIT RESULTS ####################################################
 
-def	writeTemplateFitResults(cfg, dataHist, fittedVars):
+def	plotTemplateFitResults(cfg, fittedVars):
 	# Plot the fit results and write them
 	# The built-in RooFit functions can't be used since some of the "PDFs" may 
 	# have negative values (RooFit can't stomach it).
@@ -199,6 +198,8 @@ def	writeTemplateFitResults(cfg, dataHist, fittedVars):
 	legend = TLegend(0.6,0.6,0.89,0.89)
 	legend.SetFillColor(0)
 	
+	dataHist = cfg.mvaCfg["datahisto"].Clone("temp_data_hist")
+	dataHist.SetTitle(cnv.GetTitle())
 	dataHist.SetLineWidth(2)
 	dataHist.SetMarkerStyle(8)
 	dataHist.SetStats(kFALSE)
@@ -243,17 +244,21 @@ def	writeTemplateFitResults(cfg, dataHist, fittedVars):
 	fitSumHist.Draw("same,hist,][")
 	legend.AddEntry(fitSumHist, "Fitted combination", "l")
 
-	# Redraw it to have the data points on top; correct the Y axis range
+	# Redraw dataHist to have the data points on top; correct the Y axis range
 	# and set axis titles.
+	
 	dataHist.SetAxisRange(1.1*minY, 1.1*maxY, "Y")
+	
 	xTitle = cfg.mvaCfg["inputvar"]
 	if cfg.mvaCfg.keys().__contains__("inputvarunit"):
 		xTitle += " (" + cfg.mvaCfg["inputvarunit"] + ")"
 	dataHist.SetXTitle(xTitle)
+	
 	yTitle = "Events/" + str(dataHist.GetBinWidth(1))
 	if cfg.mvaCfg.keys().__contains__("inputvarunit"):
 		yTitle += " " + cfg.mvaCfg["inputvarunit"]
 	dataHist.SetYTitle(yTitle)
+	
 	dataHist.Draw("same,E0,P")
 	
 	legend.Draw("same")

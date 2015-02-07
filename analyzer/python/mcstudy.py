@@ -112,12 +112,13 @@ def mcStudyMain(mcStudyFile):
 		histDict["corrList"] = corrHist
 		
 		for hist in sorted(histDict.values(), key = lambda hist: hist.GetTitle()):
-			if hist.Integral() != 0 and hist.GetDimension() == 1:
+			if hist.Integral() != 0 and hist.GetDimension() == 1 and hist.GetName() != "data":
 				hist.Scale(1./hist.Integral())
 			hist.Write()
 		
 	if myMCStudy.cfg["mode"] == "template":
 		outFile.cd()
+		histDict["data"].Write()
 		for proc in sorted(myConfig.dataCfg, key = lambda proc: proc["name"]):
 			proc["histo"].Write()
 
@@ -204,8 +205,11 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		histDict["weightedNorm"].Fill(math.sqrt(weighteddsquare))
 		histDict["chisq"].Fill(chisq)
 		histDict["minNLL"].Fill(minNLL)
+		
+		dataHist.SetName("data")
+		histDict["data"] = dataHist
 
-		dataHist.Reset()
+		#dataHist.Reset()
 	
 	histDict["chisq"].SetTitle(histDict["chisq"].GetTitle() + " (" + str(nDoF) + " D.o.F.)")
 	

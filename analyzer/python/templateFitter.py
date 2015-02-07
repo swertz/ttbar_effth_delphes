@@ -28,31 +28,28 @@ def templateFitterMain(templateCfgFileName):
 	templateCfg = PConfig(templateCfgFileName)
 	outFile = TFile(templateCfg.mvaCfg["outfile"], "RECREATE")
 
-	# Necessary to store the data which will be fitted on
-	dataHist = True
-	
-	if templateCfg.mvaCfg["option"].find("fill") >= 0:
+	if templateCfg.mvaCfg["options"].find("fill") >= 0:
 		# Fill histograms for different processes
 		print "== Filling input histograms from trees."
-		fillHistos(templateCfg, dataHist)
+		fillHistos(templateCfg, dataHist = True)
 	
-	elif templateCfg.mvaCfg["option"].find("get") >= 0:
+	elif templateCfg.mvaCfg["options"].find("get") >= 0:
 		# Retrieve histograms from specified files
 		print "== Getting input histograms from files."
-		getHistos(templateCfg, dataHist)
+		getHistos(templateCfg, dataHist = True)
 	
 	outFile.cd()
 
 	corrHist = True
 
-	fittedVars,minNLL,varErrors,chisq,nDoF = \
-		templateFit(templateCfg, dataHist, corrHist)
+	fittedVars,varErrors,corr,minNLL,chisq,nDoF = \
+		templateFit(templateCfg, templateCfg.mvaCfg["datahisto"], corrHist)
 
 	# Print the fit result
 	
 	print "\n== Fit results:"
 	for sig in fittedVars.keys():
-		print "=== {0}: {1} = {2:.3f} +- {3:.3f}"\
+		print "=== {0} = {1:.3f} +- {2:.3f}"\
 			.format(sig, fittedVars[sig], varErrors[sig])
 	
 	print "\n== Correlations:"
@@ -61,26 +58,13 @@ def templateFitterMain(templateCfgFileName):
 			if j > i:
 				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
 	print ""
-	
-	# Plot the fit results
-	# The built-in RooFit functions can't be used since some of the "PDFs" may 
-	# have negative values (RooFit can't stomach it).
 
-	#frame = histVar.frame()
-	#dataRHist.plotOn(frame)
-	#model.plotOn(frame)
-	#for data in templateCfg.dataCfg:
-	#	model.plotOn(frame, RooFit.Components(data["name"] + "_histPdf"), \
-	#		RooFit.LineStyle(kDashed), RooFit.LineColor( convertColor(data["color"]) ) )
-	#cnv = TCanvas("Template_fit","Template fit")
-	#cnv.cd()
-	#frame.Write()
+	writeTemplateFitResults(templateCfg, templateCfg.mvaCfg["datahisto"], fittedVars)
 
-	corrHist.Write()
-
+	#corrHist.Write()
 	for proc in templateCfg.dataCfg:
 		proc["histo"].Write()
-	dataHist.Write()
+	templateCfg.mvaCfg["datahisto"].Write()
 	
 	outFile.Close()
 
@@ -105,7 +89,7 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 
 		# For each signal, configure a variable and a PDF from the corresponding
 		# histogram.
-	
+
 		expect = float( proc["histo"].Integral() )
 		if proc["signal"] == "1":
 			valRange = float( proc["range"] )
@@ -200,9 +184,85 @@ def templateFit(templateCfg, dataHist, corrHist = None):
 	else:
 		return fittedVars, varErrors, corr, minNLL, chisq, nDoF
 
+######## WRITE PLOTS FOR FIT RESULTS ####################################################
+
+def	writeTemplateFitResults(cfg, dataHist, fittedVars):
+	# Plot the fit results and write them
+	# The built-in RooFit functions can't be used since some of the "PDFs" may 
+	# have negative values (RooFit can't stomach it).
+
+	cnv = TCanvas("fit_canvas", "Maximum Likelihood fit on " + cfg.mvaCfg["inputvar"] + ": result")
+	
+	pad = TPad()
+	pad.SetTitle(cnv.GetTitle())
+	
+	legend = TLegend(0.6,0.6,0.89,0.89)
+	legend.SetFillColor(0)
+	
+	dataHist.SetLineWidth(2)
+	dataHist.SetMarkerStyle(8)
+	dataHist.SetStats(kFALSE)
+	# dataHist will define the frame axis ranges
+	dataHist.Draw("same,E0,P")
+	legend.AddEntry(dataHist, "Data", "lep")
+
+	fitSumHist = dataHist.Clone()
+	fitSumHist.Reset()
+	fitSumHist.SetLineColor(kRed)
+	fitSumHist.SetLineWidth(2)
+
+	plottedHists = []
+	minY = 0.
+	maxY = 0.
+
+	for proc in cfg.dataCfg:
+		
+		temp = proc["histo"].Clone("temp_hist")
+		
+		if proc["signal"] == "1":
+			temp.Scale(fittedVars[ proc["name"] ])
+			legend.AddEntry(temp, "Fitted " + proc["name"], "l")
+			temp.SetLineStyle(2)
+		else:
+			legend.AddEntry(temp, "Bkg.: " + proc["name"], "l")
+			temp.SetLineStyle(3)
+		
+		temp.SetLineColor(convertColor(proc["color"]))
+		temp.SetLineWidth(2)
+		temp.SetStats(kFALSE)
+		temp.Draw("same,hist,][")
+		
+		if temp.GetMinimum() < minY:
+			minY = temp.GetMinimum()
+		if temp.GetMaximum() > maxY:
+			maxY = temp.GetMaximum()
+
+		fitSumHist.Add(temp)
+		plottedHists.append(temp)
+	
+	fitSumHist.Draw("same,hist,][")
+	legend.AddEntry(fitSumHist, "Fitted combination", "l")
+
+	# Redraw it to have the data points on top; correct the Y axis range
+	# and set axis titles.
+	dataHist.SetAxisRange(1.1*minY, 1.1*maxY, "Y")
+	xTitle = cfg.mvaCfg["inputvar"]
+	if cfg.mvaCfg.keys().__contains__("inputvarunit"):
+		xTitle += " (" + cfg.mvaCfg["inputvarunit"] + ")"
+	dataHist.SetXTitle(xTitle)
+	yTitle = "Events/" + str(dataHist.GetBinWidth(1))
+	if cfg.mvaCfg.keys().__contains__("inputvarunit"):
+		yTitle += " " + cfg.mvaCfg["inputvarunit"]
+	dataHist.SetYTitle(yTitle)
+	dataHist.Draw("same,E0,P")
+	
+	legend.Draw("same")
+	
+	cnv.Write()
+
 ######## FILL HISTOGRAMS #############################################################
 
-def fillHistos(cfg, dataHist = None):
+def fillHistos(cfg, dataHist = False):
 	inputVar = cfg.mvaCfg["inputvar"]
 	nBins = int(cfg.mvaCfg["nbins"])
 	varMin = float(cfg.mvaCfg["varmin"])
@@ -231,8 +291,8 @@ def fillHistos(cfg, dataHist = None):
 
 		dataFile.Close()
 	
-	if dataHist is not None:
-		dataHist = TH1D(proc["data_" + inputVar, \
+	if dataHist:
+		hist = TH1D("data_" + inputVar, \
 			"data: " + inputVar, nBins, varMin, varMax)
 
 		dataFile = TFile(cfg.mvaCfg["datafile"])
@@ -243,35 +303,41 @@ def fillHistos(cfg, dataHist = None):
 		for event in dataTree:
 			hist.Fill(dataTree.__getattr__(inputVar))
 
+		cfg.mvaCfg["datahisto"] = hist
+
 		dataFile.Close()		
 
 ######## GET HISTOGRAMS #############################################################
 
-def getHistos(cfg, dataHist = None):
-	dataFile = TFile()
+def getHistos(cfg, dataHist = False):
+	dataFile = 0 
 	
 	if cfg.mvaCfg.keys().__contains__("histfile"):
-		dataFile.Open(cfg.mvaCfg["histfile"])
+		dataFile = TFile(cfg.mvaCfg["histfile"])
 
 	for proc in cfg.dataCfg:
 		if not cfg.mvaCfg.keys().__contains__("histfile"):
-			dataFile.Open(proc["histfile"])
-		
-		cfg.dataCfg["histo"] = dataFile.Get(proc["histname"])
-		
+			dataFile = TFile(proc["histfile"])
+
+		proc["histo"] = dataFile.Get(proc["histname"])
+		# Necessary so that the histogram persists in memory after the file is closed
+		proc["histo"].SetDirectory(0)
+
 		if not cfg.mvaCfg.keys().__contains__("histfile"):
 			dataFile.Close()
+	
 	if dataFile.IsOpen():
 		dataFile.Close()
 
-	cfg.mvaCfg["nbins"] = str(cfg.dataCfg[0]["histo"].GetNbins())
+	cfg.mvaCfg["nbins"] = str(cfg.dataCfg[0]["histo"].GetNbinsX())
 	cfg.mvaCfg["varmin"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmin())
 	cfg.mvaCfg["varmax"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmax())
 
-	if dataHist is not None:
+	if dataHist:
 		dataFile = TFile(cfg.mvaCfg["datafile"])
-		dataHist = dataFile.Get(cfg.mvaCfg["datahistname"])
-		dataFile.Close()	
+		cfg.mvaCfg["datahisto"] = dataFile.Get(cfg.mvaCfg["datahistname"])
+		cfg.mvaCfg["datahisto"].SetDirectory(0)
+		dataFile.Close()
 
 ######## MAIN #############################################################
 

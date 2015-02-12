@@ -31,7 +31,8 @@ PAnalysis::PAnalysis(PConfig *config){
 	myCut = 0;
 	myBkgEff = 0;
 	mySigEff = 0;
-	myMinEventNumber = -1;
+	myMinMCNumberSig = -1;
+	myMinMCNumberBkg = -1;
 	
 	myConfig = config;
 	myName = config->GetAnaName();
@@ -488,10 +489,13 @@ void PAnalysis::WriteSplitData(TString outputDir){
 		else
 			outName = myConfig->GetSplitName();
 		outName += "_data_" + data->GetName();
+
 		TFile* outFileSig = new TFile(outputDir+"/"+outName+"_siglike.root","RECREATE");
 		TTree* treeSig = data->GetTree()->CloneTree(0);
+		
 		TFile* outFileBkg = new TFile(outputDir+"/"+outName+"_bkglike.root","RECREATE");
 		TTree* treeBkg = data->GetTree()->CloneTree(0);
+		
 		if(outFileSig->IsZombie() || outFileBkg->IsZombie()){
 			cerr << "Error creating split output files.\n";
 			exit(1);
@@ -513,14 +517,16 @@ void PAnalysis::WriteSplitData(TString outputDir){
 				treeSig->Fill();
 		}
 
-		if(myMinEventNumber < 0 || treeBkg->GetEntries() < myMinEventNumber)
-			myMinEventNumber = treeBkg->GetEntries();
-		if(myMinEventNumber < 0 || treeSig->GetEntries() < myMinEventNumber)
-			myMinEventNumber = treeSig->GetEntries();
+		if(myMinMCNumberSig < 0 || treeSig->GetEntries() < myMinMCNumberSig)
+			myMinMCNumberSig = treeSig->GetEntries();
+		
+		if(myMinMCNumberBkg < 0 || treeBkg->GetEntries() < myMinMCNumberBkg)
+			myMinMCNumberBkg = treeBkg->GetEntries();
 
 		outFileSig->cd();
 		treeSig->Write();
 		outFileSig->Close();
+		
 		outFileBkg->cd();
 		treeBkg->Write();
 		outFileBkg->Close();
@@ -543,8 +549,10 @@ void PAnalysis::WriteLog(TString output){
 	ofstream logFile;
 	logFile.open(output);
 	logFile << mySigEff << endl << myBkgEff << endl;
-	if(myMinEventNumber >= 0)
-		logFile << myMinEventNumber;
+	if(myMinMCNumberSig >= 0)
+		logFile << myMinMCNumberSig << endl;
+	if(myMinMCNumberBkg >= 0)
+		logFile << myMinMCNumberBkg;
 	logFile.close();
 }	
 

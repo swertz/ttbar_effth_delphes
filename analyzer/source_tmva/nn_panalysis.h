@@ -53,7 +53,8 @@ class PAnalysis{
 	std::vector<unsigned int> myBkgs; // we may train against several backgrounds
 	//double sRootB, sRootSB, sB;
 	double myCut, myBkgEff, mySigEff;
-	long myMinEventNumber;
+	long myMinMCNumberSig;
+	long myMinMCNumberBkg;
 
 	TMVA::Factory* myFactory;
 

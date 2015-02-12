@@ -91,23 +91,15 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 
 	// Computing input weights
 	// Note: not quite clear how TMVA computes the weights (how are they combined with the gen weight?)
-	//		... should be OK to pass as input weight xsection*eff for each dataset
+	//		... should be OK to pass as input weight xsection*eff*lumi/nSelected for each dataset
 
-	/*double expBkg = 0;
-	for(unsigned int i=0; i<myBkgs.size(); i++){
-		double xS = myData.at(myBkgs.at(i))->GetXSection();
-		double eff = myData.at(myBkgs.at(i))->GetEfficiency();
-		expBkg += xS*eff;
+	for(unsigned int i=0; i<myData.size(); i++){
+		double xS = myData.at(i)->GetXSection();
+		double eff = myData.at(i)->GetEfficiency();
+		double nSel = myData.at(i)->GetTree()->GetEntries();
+		double lumi = myConfig->GetLumi(); 
+		myData.at(i)->SetInputReweight(xS*eff*lumi/nSel);
 	}
-	double entriesSig = min(myData.at(mySig)->GetTree()->GetEntries(), 2*myConfig->GetTrainEntries());
-
-	for(unsigned int i=0; i<myBkgs.size(); i++){
-		double xS = myData.at(myBkgs.at(i))->GetXSection();
-		double eff = myData.at(myBkgs.at(i))->GetEfficiency();
-		double entriesBkg = min(myData.at(myBkgs.at(i))->GetTree()->GetEntries(), 2*myConfig->GetTrainEntries());
-		myData.at(myBkgs.at(i))->SetInputReweight(entriesSig*xS*eff/(entriesBkg*expBkg));
-	}
-	myData.at(mySig)->SetInputReweight(1.);*/
 
 	if(topo == "")
 		topo = myConfig->GetTopology();
@@ -135,11 +127,9 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	#else
 		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "Silent:!DrawProgressBar");
 	#endif
-	//myFactory->AddSignalTree(myData.at(mySig)->GetTree(), myData.at(mySig)->GetInputReweight());
-	myFactory->AddSignalTree(myData.at(mySig)->GetTree(), myData.at(mySig)->GetEfficiency()*myData.at(mySig)->GetXSection());
+	myFactory->AddSignalTree(myData.at(mySig)->GetTree(), myData.at(mySig)->GetInputReweight());
 	for(unsigned int i=0; i<myBkgs.size(); i++)
-		myFactory->AddBackgroundTree(myData.at(myBkgs.at(i))->GetTree(), myData.at(myBkgs.at(i))->GetEfficiency()*myData.at(myBkgs.at(i))->GetXSection());
-		//myFactory->AddBackgroundTree(myData.at(myBkgs.at(i))->GetTree(), myData.at(myBkgs.at(i))->GetInputReweight());
+		myFactory->AddBackgroundTree(myData.at(myBkgs.at(i))->GetTree(), myData.at(myBkgs.at(i))->GetInputReweight());
 
 	// Will also use weights defined in the input datasets
 	// Careful if these weights are negative!
@@ -591,4 +581,4 @@ PAnalysis::~PAnalysis(){
 	if(myFactory)
 		delete myFactory;
 }
-	
+

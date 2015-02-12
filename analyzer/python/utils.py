@@ -186,3 +186,64 @@ def convertColor(name):
 	color = colorMap[range] + add
 
 	return color
+
+######## CONVERT WEIGHTED LEAST SQUARE CFG TO TEMPLATE CFG ###################
+# To be able to use the NLL fit used for the template fits
+# with the configurations from a MVA tree.
+#
+# MVA tree weighted least square fit has:
+# - a configuration object of the MVA tree (treeCfg)
+# - a training result object of the MVA tree (MCResult)
+# - a mode (fix the background or fit on the background)
+#
+# Template fit expects a configuration object,
+# containing the information for the fit, including 
+# the histograms to fit on (MC and data).
+#
+# These are filled here and saved to a file (histFileName) which will 
+# then be an input file to the template fit. 
+
+def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
+
+	templateCfg = copy.deepcopy(treeCfg)
+
+	# Convert "signal" ("1") or "background" ("0") (MVA tree)
+	# to "fit on" ("1") or "don't fit on" ("1") (Template)
+
+	nBins = len(MCResult.branches)
+
+	varVec = []
+
+	for proc in templateCfg.dataCfg:
+		if mode is not "fixBkg":
+			if proc["signal"] == "0":
+				proc["signal"] = "1"
+		if proc["signal"] == "1":
+			varVec.append(proc["name"])
+
+	templateCfg.mvaCfg["inputvar"] = "Branch"
+	templateCfg.mvaCfg["nbins"] = str(nBins)
+	templateCfg.mvaCfg["varmin"] = str(0)
+	templateCfg.mvaCfg["varmax"] = str(nBins)
+	templateCfg.mvaCfg["options"] = "get"
+	templateCfg.mvaCfg["histfile"] = histFileName
+	templateCfg.mvaCfg["numcpu"] = "1"
+
+	outFile = ROOT.TFile(histFileName, "RECREATE")
+
+	for proc in templateCfg.dataCfg:
+		proc["histname"] = proc["name"] + "_Branch"
+
+		hist = ROOT.TH1D(proc["name"] + "_Branch", proc["name"] + " Branch yields", nBins, 0, nBins)
+		
+		for i,branch in enumerate(MCResult.branches):
+			branchName = branch[1]
+			branchName = "/".join( branchName.split("/")[1:] )
+			hist.GetXaxis().SetBinLabel(i+1, branchName)
+			hist.SetBinContent(i+1, float(branch[2][ proc["name"] ]))
+
+		hist.Write()
+
+	outFile.Close()
+
+	return templateCfg

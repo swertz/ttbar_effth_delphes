@@ -26,7 +26,7 @@ def templateFitterMain(templateCfgFileName):
 
 	print "== Reading configuration file {0}".format(templateCfgFileName)
 	templateCfg = PConfig(templateCfgFileName)
-	outFile = TFile(templateCfg.mvaCfg["outfile"], "RECREATE")
+	outFile = TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
 
 	if templateCfg.mvaCfg["options"].find("fill") >= 0:
 		# Fill histograms for different processes
@@ -37,7 +37,7 @@ def templateFitterMain(templateCfgFileName):
 		# Retrieve histograms from specified files
 		print "== Getting input histograms from files."
 		getHistos(templateCfg, dataHist = True)
-	
+
 	outFile.cd()
 
 	fitResults = templateFit(templateCfg)
@@ -54,7 +54,7 @@ def templateFitterMain(templateCfgFileName):
 	
 	print "\n== Fit results:"
 	for sig in fittedVars.keys():
-		print "=== {0} = {1:.3f} +- {2:.3f}"\
+		print "=== {0}: {1} = {2:.3f} +- {3:.3f}"\
 			.format(sig, fittedVars[sig], varErrors[sig])
 	
 	print "\n== Correlations:"
@@ -63,10 +63,11 @@ def templateFitterMain(templateCfgFileName):
 			if j > i:
 				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
 	print ""
-
+	
 	plotTemplateFitResults(templateCfg, fittedVars)
 
 	corrHist.Write()
+	
 	for proc in templateCfg.dataCfg:
 		proc["histo"].Write()
 	templateCfg.mvaCfg["datahisto"].Write()
@@ -95,7 +96,7 @@ def templateFit(templateCfg):
 
 		# For each signal, configure a variable and a PDF from the corresponding
 		# histogram.
-
+	
 		expect = float( proc["histo"].Integral() )
 		if proc["signal"] == "1":
 			valRange = float( proc["range"] )

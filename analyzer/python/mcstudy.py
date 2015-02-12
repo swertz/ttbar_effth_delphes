@@ -21,6 +21,7 @@ from templateFitter import getHistos
 from utils import PMCConfig
 from utils import PConfig
 from utils import PResult
+from utils import convertWgtLstSqToTemplate 
 
 ######## MC STUDY MAIN #############################################################
 
@@ -62,7 +63,7 @@ def mcStudyMain(mcStudyFile):
 				
 				procN = proc["name"]
 				
-				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -1, 1)
+				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -10, 10)
 				myHist.SetBit(ROOT.TH1.kCanRebin)
 				histDict[procN] = myHist
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
@@ -96,6 +97,22 @@ def mcStudyMain(mcStudyFile):
 			
 			mcStudyTemplate(myConfig, paramSet, histDict, pseudoNumber)
 
+		elif myMCStudy.cfg["mode"] == "templateFromMVA":
+			resultFile = myConfig.mvaCfg["outputdir"] + "/" + \
+				myConfig.mvaCfg["name"] + "_results.out"
+		
+			print "== Reading MVA MC tree result file {0}".format(resultFile)
+			myMCResult = PResult()
+			myMCResult.iniFromFile(resultFile)
+			
+			myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
+			myHist.SetBit(ROOT.TH1.kCanRebin)
+			histDict["minNLL"] = myHist
+			
+			templateCfg = convertWgtLstSqToTemplate(myConfig, myMCResult, myMCStudy.cfg["histFile"])
+			
+			mcStudyTemplate(templateCfg, paramSet, histDict, pseudoNumber)
+
 		else:
 			print "== Mode not valid"
 			sys.exit(1)
@@ -112,13 +129,12 @@ def mcStudyMain(mcStudyFile):
 		histDict["corrList"] = corrHist
 		
 		for hist in sorted(histDict.values(), key = lambda hist: hist.GetTitle()):
-			if hist.Integral() != 0 and hist.GetDimension() == 1 and hist.GetName() != "data":
+			if hist.Integral() != 0 and hist.GetDimension() == 1:
 				hist.Scale(1./hist.Integral())
 			hist.Write()
 		
 	if myMCStudy.cfg["mode"] == "template":
 		outFile.cd()
-		histDict["data"].Write()
 		for proc in sorted(myConfig.dataCfg, key = lambda proc: proc["name"]):
 			proc["histo"].Write()
 
@@ -167,7 +183,6 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 	mcSumHist.SetTitle("MC sum: " + inputVar)
 
 	for proc in templateCfg.dataCfg:
-		
 		if proc["signal"] == "1":
 			mcSumHist.Add(proc["histo"], params[ proc["name"] ])
 		else:
@@ -186,6 +201,10 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		templateCfg.mvaCfg["datahisto"] = dataHist
 
 		fitResults = templateFit(templateCfg)
+		
+		# Otherwise ROOT complains because of possible memory leak:
+		fitResults["corrHist"].SetName("corr_hist_exp" + str(i))
+		
 		result = fitResults["fittedVars"]
 		err = fitResults["varErrors"]
 		corr = fitResults["corr"]

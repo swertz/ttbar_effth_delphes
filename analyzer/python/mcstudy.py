@@ -50,7 +50,7 @@ def mcStudyMain(mcStudyFile):
 		corrList = {}
 		weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
 		weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
-		resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 50)
+		resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 10)
 		resHist.SetBit(ROOT.TH1.kCanRebin)
 		
 		histDict["weightedNorm"] = weightedNormHist
@@ -63,7 +63,7 @@ def mcStudyMain(mcStudyFile):
 				
 				procN = proc["name"]
 				
-				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -10, 10)
+				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -0.5, 0.5)
 				myHist.SetBit(ROOT.TH1.kCanRebin)
 				histDict[procN] = myHist
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
@@ -123,7 +123,10 @@ def mcStudyMain(mcStudyFile):
 		corrHist = ROOT.TH2D("Correlations_hist","Correlations", nVar, 0, nVar, nVar, 0, nVar)
 		for i,proc in enumerate(sorted(varVect)):
 			for j,proc2 in enumerate(sorted(varVect, reverse=True)):
-				corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
+				if i == j:
+					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
+				else:
+					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
 				corrHist.GetXaxis().SetBinLabel(i+1, proc)
 				corrHist.GetYaxis().SetBinLabel(j+1, proc2)
 		histDict["corrList"] = corrHist
@@ -223,7 +226,10 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 				for proc2 in templateCfg.dataCfg:
 					if proc2["signal"] == "1":
 						proc2N = proc2["name"]
-						histDict["corrList"][procN+"/"+proc2N] += corr[procN+"/"+proc2N]
+						if procN == proc2N:
+							histDict["corrList"][procN+"/"+proc2N] += err[procN]
+						else:
+							histDict["corrList"][procN+"/"+proc2N] += corr[procN+"/"+proc2N]
 				
 				histDict[procN].Fill(result[procN])
 				histDict[procN+"_StdDev"].Fill(err[procN])
@@ -317,8 +323,11 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 		for proc in result.keys():
 			weighteddsquare += result[proc]**2/var[proc]
 			for proc2 in result.keys():
-				histDict["corrList"][proc+"/"+proc2] += \
-					cov[proc+"/"+proc2]/math.sqrt(abs(var[proc]*var[proc2]))
+				if proc == proc2:
+					histDict["corrList"][proc+"/"+proc2] += cov[proc+"/"+proc2]
+				else:
+					histDict["corrList"][proc+"/"+proc2] += \
+						cov[proc+"/"+proc2]/math.sqrt(abs(var[proc]*var[proc2]))
 		for proc in varVec:
 			histDict[proc].Fill(result[proc])
 			histDict[proc+"_StdDev"].Fill(math.sqrt(var[proc]))

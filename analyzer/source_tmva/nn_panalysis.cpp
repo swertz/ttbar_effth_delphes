@@ -124,7 +124,7 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	(TMVA::gConfig().GetIONames()).fWeightFileDir = myConfig->GetOutputDir();
 	
 	#ifdef P_LOG
-		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "!DrawProgressBar");
+		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "DrawProgressBar");
 	#else
 		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "Silent:!DrawProgressBar");
 	#endif
@@ -142,12 +142,12 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 
 	// Events: train/test/train/test/...
 	// ? for each background tree or for all the brackgrounds together ?
-	myFactory->PrepareTrainingAndTestTree("", "nTrain_Signal="+SSTR(myConfig->GetTrainEntries())+":nTrain_Background="+SSTR(myConfig->GetTrainEntries())+":nTest_Signal="+SSTR(myConfig->GetTrainEntries())+":nTest_Background="+SSTR(myConfig->GetTrainEntries())+":SplitMode=Alternate");
+	myFactory->PrepareTrainingAndTestTree("", "nTrain_Signal="+SSTR(myConfig->GetTrainEntries())+":nTrain_Background="+SSTR(myConfig->GetTrainEntries())+":nTest_Signal="+SSTR(myConfig->GetTrainEntries())+":nTest_Background="+SSTR(myConfig->GetTrainEntries())+":SplitMode=Alternate:NormMode=EqualNumEvents");
 
 	// to do: specify structure, help, verbosity,
 	
 	if(method == "MLP")
-		myFactory->BookMethod(TMVA::Types::kMLP, method+"_"+myName, "!H:V:NeuronType=sigmoid:VarTransform=Norm:IgnoreNegWeightsInTraining=True:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":TestRate=5:TrainingMethod=BFGS:SamplingTraining=False:Tau=15:ConvergenceTests=50:ResetStep=15");
+		myFactory->BookMethod(TMVA::Types::kMLP, method+"_"+myName, "!H:V:NeuronType=tanh:VarTransform=Norm:IgnoreNegWeightsInTraining=True:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":TestRate=5:TrainingMethod=BFGS:SamplingTraining=False:ConvergenceTests=50");
 	else if(method == "TMLP")
 		myFactory->BookMethod(TMVA::Types::kTMlpANN, method+"_"+myName, "!H:V:VarTransform=Norm:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":LearningMethod=BFGS");
 	else if(method == "BDT")

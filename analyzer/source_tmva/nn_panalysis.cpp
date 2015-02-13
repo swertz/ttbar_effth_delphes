@@ -147,7 +147,7 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	// to do: specify structure, help, verbosity,
 	
 	if(method == "MLP")
-		myFactory->BookMethod(TMVA::Types::kMLP, method+"_"+myName, "!H:V:NeuronType=sigmoid:VarTransform=Norm:IgnoreNegWeightsInTraining=True:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":TestRate=5:TrainingMethod=BFGS");
+		myFactory->BookMethod(TMVA::Types::kMLP, method+"_"+myName, "!H:V:NeuronType=sigmoid:VarTransform=Norm:IgnoreNegWeightsInTraining=True:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":TestRate=5:TrainingMethod=BFGS:SamplingTraining=False:Tau=15:ConvergenceTests=50:ResetStep=15");
 	else if(method == "TMLP")
 		myFactory->BookMethod(TMVA::Types::kTMlpANN, method+"_"+myName, "!H:V:VarTransform=Norm:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":LearningMethod=BFGS");
 	else if(method == "BDT")
@@ -483,17 +483,10 @@ void PAnalysis::WriteSplitData(TString outputDir){
 
 		data->Open();
 
-		TString outName;
-		if(myConfig->GetSplitName() == "")
-			outName = myName;
-		else
-			outName = myConfig->GetSplitName();
-		outName += "_data_" + data->GetName();
-
-		TFile* outFileSig = new TFile(outputDir+"/"+outName+"_siglike.root","RECREATE");
+		TFile* outFileSig = new TFile(outputDir + "/" + myName + "_siglike_data_" + data->GetName() + ".root","RECREATE");
 		TTree* treeSig = data->GetTree()->CloneTree(0);
 		
-		TFile* outFileBkg = new TFile(outputDir+"/"+outName+"_bkglike.root","RECREATE");
+		TFile* outFileBkg = new TFile(outputDir + "/" + myName + "_bkglike_data_" + data->GetName() + ".root","RECREATE");
 		TTree* treeBkg = data->GetTree()->CloneTree(0);
 		
 		if(outFileSig->IsZombie() || outFileBkg->IsZombie()){

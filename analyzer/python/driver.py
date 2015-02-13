@@ -295,20 +295,6 @@ def printTree(cfg, tree):
 				+ "{0:.1f}".format(expectedEvents) + " expected events."
 			file.Close()
 
-		#print "=== Signal-like:"
-
-		#for data in cfg.dataCfg:
-		#	fileName = branch + "_data_" + data["name"] + "_siglike.root"
-		#	file = TFile(fileName, "READ")
-		#	if file.IsZombie():
-		#		print "=== Error opening " + fileName + "."
-		#		sys.exit(1)
-		#	tree = file.Get(data["treename"])
-		#	expectedEvents = float(cfg.mvaCfg["lumi"])*float(data["xsection"])*tree.GetEntries()/int(data["genevents"])
-		#	print "==== " + data["name"] + ": " + str(tree.GetEntries()) + " MC events, " \
-		#		+ "{0:.1f}".format(expectedEvents) + " expected events."
-		#	file.Close()
-
 ######## WRITE RESULTS #############################################################
 
 def writeResults(cfg, tree):
@@ -329,16 +315,8 @@ def writeResults(cfg, tree):
 				expectedEvents = float(cfg.mvaCfg["lumi"])*float(data["xsection"])*tree.GetEntries()/int(data["genevents"])
 				outFile.write(data["name"] + "={0:.3f}".format(expectedEvents) + ",")
 				file.Close()
+			outFile.write("\n")
 			count += 1
-			#outFile.write("\n" + str(count) +":" + branch + "_siglike:")
-			#for data in cfg.dataCfg:
-			#	file = TFile(branch + "_data_" + data["name"] + "_siglike.root", "READ")
-			#	tree = file.Get(data["treename"])
-			#	expectedEvents = float(cfg.mvaCfg["lumi"])*float(data["xsection"])*tree.GetEntries()/int(data["genevents"])
-			#	outFile.write(data["name"] + "={0:.3f}".format(expectedEvents) + ",")
-			#	file.Close()
-			#outFile.write("\n")
-			#count += 1
 
 ######## MAIN #############################################################
 

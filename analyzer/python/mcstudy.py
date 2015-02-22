@@ -124,7 +124,8 @@ def mcStudyMain(mcStudyFile):
 		for i,proc in enumerate(sorted(varVect)):
 			for j,proc2 in enumerate(sorted(varVect, reverse=True)):
 				if i == j:
-					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
+					# factor 0.5 since this bin is filled twice when looping over proc and proc2
+					corrHist.SetBinContent(i+1, j+1, 0.5*corrList[proc+"/"+proc2]/pseudoNumber)
 				else:
 					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
 				corrHist.GetXaxis().SetBinLabel(i+1, proc)
@@ -324,7 +325,7 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 			weighteddsquare += result[proc]**2/var[proc]
 			for proc2 in result.keys():
 				if proc == proc2:
-					histDict["corrList"][proc+"/"+proc2] += cov[proc+"/"+proc2]
+					histDict["corrList"][proc+"/"+proc2] += math.sqrt(var[proc]) 
 				else:
 					histDict["corrList"][proc+"/"+proc2] += \
 						cov[proc+"/"+proc2]/math.sqrt(abs(var[proc]*var[proc2]))

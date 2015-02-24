@@ -97,7 +97,7 @@ class tryMisChief(Thread):
 				print "== Level {0}: All analyses seem to have failed. Stopping branch.".format(self.level)
 			return 0
 
-		# Build a list containing a tuple (sigEff/bkgEff, minMCEventsSig, minMCEventsBkg, config)
+		# Build a list containing a tuple (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, config)
 		# The list will be used to select the best MVA (by some criteria) and to decide whether to:
 		# - Define two new branches, one for the signal subset, one for the background subset, and go on with the training
 		# - Do not go on with one of the subsets, because of insufficient MC for training, 
@@ -121,50 +121,20 @@ class tryMisChief(Thread):
 				bkgEff = float(logResults[1])
 				
 				if bkgEff > 0.:
-					mvaResults.append( (sigEff/bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
+					if bkgEff < float(self.cfg.mvaCfg["maxbkgeff"]) or float(self.cfg.mvaCfg["maxbkgeff"]) == 0.:
+						mvaResults.append( (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
 					
-					#if sigEff/bkgEff > bestFig:
-					#	
-					#	# Checking if we have enough MC in at least one of the resulting subsets
-					#	if minMCEventsSig < int(self.cfg.mvaCfg["minmcevents"]):
-					#		stopSigLike = True
-					#		if minMCEventsSig < int(self.cfg.mvaCfg["minkeepevents"]):
-					#			removeSigLike = True
-					#		else:
-					#			removeSigLike = False
-					#	else:
-					#		stopSigLike = False
-					#	
-					#	if minMCEventsBkg < int(self.cfg.mvaCfg["minmcevents"]):
-					#		stopBkgLike = True
-					#		if minMCEventsSig < int(self.cfg.mvaCfg["minkeepevents"]):
-					#			removeBkgLike = True
-					#		else:
-					#			removeBkgLike = False
-					#	else:
-					#		stopBkgLike = False
-
-					#	if removeSigLike and removeBkgLike:
-					#		continue
-
-					#	if float(self.cfg.mvaCfg["maxbkgeff"]) > 0.:
-					#		if sigEff/bkgEff > float(self.cfg.mvaCfg["workingpoint"])/float(self.cfg.mvaCfg["maxbkgeff"]):
-					#			bestFig = sigEff/bkgEff
-					#			bestMva = thisCfg
-					#	else:
-					#		bestFig = sigEff/bkgEff
-					#		bestMva = thisCfg
 				else:
 					# something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
 					with self.locks["stdout"]:
 						print "== Level " + str(level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
 
 		# sort the resulting according to decreasing discrimination
-		mvaResults.sort(reverse = True, key = lambda entry: entry[0] )
+		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
 
 		# if no analysis has enough MC, stop this branch and remove the bad analyses if asked for
 		# and log the previous node of the branch in the tree, if this node is not yet in it (it might have been added by another parallel branch)
-		if len( [ result in mvaResults if result[1] >= int(self.cfg.mvaCfg["minkeepevents"]) and result[2] >= int(self.cfg.mvaCfg["minkeepevents"]) ] ) == 0:
+		if len( [ result for result in mvaResults if result[2] >= int(self.cfg.mvaCfg["minkeepevents"]) and result[3] >= int(self.cfg.mvaCfg["minkeepevents"]) ] ) == 0:
 			with self.locks["stdout"]:
 				print "== Level {0}: Found no MVA to have enough MC events. Stopping branch.".format(self.level)
 			if self.level != 1:
@@ -181,24 +151,24 @@ class tryMisChief(Thread):
 		# For now: take most discriminating MVA. One might decide to do other things,
 		# such as take best best MVA, provided one has enough MC to continue (otherwise, take second-best, and so on)
 
-		bestMva = mvaResults[0][3]
+		bestMva = mvaResults[0][4]
 		
-		if mvaResults[0][1] < int(self.cfg.mvaCfg["minkeepevents"]):
+		if mvaResults[0][2] < int(self.cfg.mvaCfg["minkeepevents"]):
 			removeSigLike = True
 		else:
 			removeSigLike = False
 		
-		if mvaResults[0][1] < int(self.cfg.mvaCfg["minmcevents"]):
+		if mvaResults[0][2] < int(self.cfg.mvaCfg["minmcevents"]):
 			stopSigLike = True
 		else:
 			stopSigLike = False
 		
-		if mvaResults[0][2] < int(self.cfg.mvaCfg["minkeepevents"]):
+		if mvaResults[0][3] < int(self.cfg.mvaCfg["minkeepevents"]):
 			removeBkgLike = True
 		else:
 			removeBkgLike = False
 		
-		if mvaResults[0][2] < int(self.cfg.mvaCfg["minmcevents"]):
+		if mvaResults[0][3] < int(self.cfg.mvaCfg["minmcevents"]):
 			stopBkgLike = True
 		else:
 			stopBkgLike = False
@@ -247,10 +217,12 @@ class tryMisChief(Thread):
 			with self.locks["tree"]:
 				if not removeSigLike:
 					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-					self.tree.append(branch)
+					if not self.tree.__contains__(branch):
+						self.tree.append(branch)
 				if not removeBkgLike:
 					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-					self.tree.append(branch)
+					if not self.tree.__contains__(branch):
+						self.tree.append(branch)
 			return 0
 		
 		# starting two new "tries", one for signal-like events, the other one for background-like
@@ -330,17 +302,16 @@ def printTree(cfg, tree):
 	for branch in tree:
 	
 		print "== Branch " + branch + ":"
-		#print "=== Background-like:"
 
-		for data in cfg.dataCfg:
-			fileName = branch + "_data_" + data["name"] + ".root"
+		for proc in cfg.dataCfg:
+			fileName = branch + "_data_" + proc["name"] + ".root"
 			file = TFile(fileName, "READ")
 			if file.IsZombie():
 				print "== Error opening " + fileName + "."
 				sys.exit(1)
-			tree = file.Get(data["treename"])
-			expectedEvents = float(cfg.mvaCfg["lumi"])*float(data["xsection"])*tree.GetEntries()/int(data["genevents"])
-			print "=== " + data["name"] + ": " + str(tree.GetEntries()) + " MC events, " \
+			tree = file.Get(proc["treename"])
+			expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*tree.GetEntries()/int(proc["genevents"])
+			print "=== " + proc["name"] + ": " + str(tree.GetEntries()) + " MC events, " \
 				+ "{0:.1f}".format(expectedEvents) + " expected events."
 			file.Close()
 
@@ -355,25 +326,113 @@ def writeResults(cfg, tree):
 		count = 0
 		for branch in tree:
 			outFile.write(str(count) + ":" + branch + ":")
-			for data in cfg.dataCfg:
-				fileName = branch + "_data_" + data["name"] + ".root"
+			for proc in cfg.dataCfg:
+				fileName = branch + "_data_" + proc["name"] + ".root"
 				file = TFile(fileName, "READ")
 				if file.IsZombie():
 					print "== Error opening " + fileName + "."
 					sys.exit(1)
-				tree = file.Get(data["treename"])
-				expectedEvents = float(cfg.mvaCfg["lumi"])*float(data["xsection"])*tree.GetEntries()/int(data["genevents"])
-				outFile.write(data["name"] + "={0:.3f}".format(expectedEvents) + ",")
+				tree = file.Get(proc["treename"])
+				expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*tree.GetEntries()/int(proc["genevents"])
+				outFile.write(proc["name"] + "={0:.3f}".format(expectedEvents) + ",")
 				file.Close()
 			outFile.write("\n")
 			count += 1
 
-######## WRITE RESULTS #############################################################
+######## PLOT RESULTS #############################################################
 # Create ROOT file with, for each process, plots:
 # - one bin/branch (=yields)
 # - juxtaposing the MVA outputs for each branch
 # - 2D plot with efficiencies for each branch
 
+def plotResults(cfg, tree):
+	fileName = cfg.mvaCfg["outputdir"] + "/" + cfg.mvaCfg["name"] + "_hists.root"
+	print "== Writing histograms to " + fileName + "."
+
+	file = TFile(fileName, "RECREATE")
+
+	nBr = len(tree)
+	nProc = len(cfg.dataCfg)
+	nBins = int(cfg.mvaCfg["plotbins"])
+
+	branchTotals = TH1D("branch_tot", "Branch totals", nBr, 0, nBr)
+	lst = TList()
+
+	branchEffs = TH2D("branch_effs", "Branch efficiencies (%)", nBr, 0, nBr, nProc, 0, nProc)
+	branchYields = TH2D("branch_yields", "Branch yields", nBr, 0, nBr, nProc, 0, nProc)
+	treeYields = {}
+	treeMVAs = {}
+		
+	# To join the MVA ouputs, we have to be careful, since there is a single MVA histogram for a sig/bkg pair.
+	# Thus, we have to skim the tree, to keep only the names of the MVAs, not their sig/bkg subsets
+	# We will then keep sig/bkg subsets which had been rejected in the tree building because of insufficient MC.
+	# Is it a problem????
+	skimmedTree = copy.deepcopy(tree)
+	# Remove the sig/bkg component
+	skimmedTree = [ branch.split("_siglike")[0] for branch in skimmedTree ]
+	skimmedTree = [ branch.split("_bkglike")[0] for branch in skimmedTree ]
+	# Remove duplicates
+	skimmedTree = list(set(skimmedTree))
+	nBrSkimmed = len(skimmedTree)
+	
+	for i,proc in enumerate(cfg.dataCfg):
+		
+		treeYields[ proc["name"] ] = TH1D(proc["name"] + "_yields", "Branch yields for " + proc["name"], nBr, 0, nBr)
+		
+		treeMVAs[ proc["name"] ] = TH1D(proc["name"] + "_MVAs", "MVA histograms for " + proc["name"], nBrSkimmed*nBins, 0, nBrSkimmed*nBins)
+
+		procFile = TFile(proc["path"], "READ")
+		procTree = procFile.Get(proc["treename"])
+		procTotMC = procTree.GetEntries()
+		procFile.Close()
+		
+		for j,branch in enumerate(tree):
+		
+			branchProcFile = TFile(branch + "_data_" + proc["name"] + ".root", "READ")
+			branchTree = branchProcFile.Get(proc["treename"])
+			branchMC = branchTree.GetEntries()
+			branchProcFile.Close()
+
+			branchEffs.SetBinContent(j+1, i+1, 100.*float(branchMC)/procTotMC)
+			branchEffs.GetYaxis().SetBinLabel(i+1, proc["name"])
+			branchEffs.GetXaxis().SetBinLabel(j+1, branch)
+
+			branchYield = branchMC * float(cfg.mvaCfg["lumi"]) * float(proc["xsection"]) / int(proc["genevents"])
+			treeYields[ proc["name"] ].SetBinContent(j+1, branchYield)
+			treeYields[ proc["name"] ].GetXaxis().SetBinLabel(j+1, branch)
+
+			branchYields.SetBinContent(j+1, i+1, branchYield)
+			branchYields.GetYaxis().SetBinLabel(i+1, proc["name"])
+			branchYields.GetXaxis().SetBinLabel(j+1, branch)
+
+		for j,branch in enumerate(skimmedTree):
+
+			branchFile = TFile(branch + ".root", "READ")
+			procHist = branchFile.Get(proc["name"] + "_output").Rebin( float(cfg.mvaCfg["histbins"]) / int(cfg.mvaCfg["plotbins"]) )
+			
+			for k in range(1, procHist.GetNbinsX()+1):
+				treeMVAs[ proc["name"] ].SetBinContent(j*nBins+k, procHist.GetBinContent(k))
+
+			branchFile.Close()
+
+		file.cd()
+
+		treeYields[ proc["name"] ].Write()
+		lst.Add(treeYields[ proc["name"] ])
+		treeMVAs[ proc["name"] ].Write()
+
+	branchTotals.Merge(lst)
+	branchComps = branchYields.Clone("branch_comps")
+	branchComps.SetTitle("Branch compositions (%)")
+	for j in range(1, nBr+1):
+		for i in range(1, nProc+1):
+			branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
+
+	file.cd()
+	branchEffs.Write()
+	branchYields.Write()
+	branchComps.Write()
+	file.Close()
 
 ######## MAIN #############################################################
 
@@ -394,6 +453,7 @@ def driverMain(cfgFile):
 	print "== Main thread stopped."
 	printTree(myConfig, tree)
 	writeResults(myConfig, tree)
+	plotResults(myConfig, tree)
 	print "============================================="
 
 if __name__ == "__main__":

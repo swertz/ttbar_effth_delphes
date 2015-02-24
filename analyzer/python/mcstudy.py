@@ -158,11 +158,6 @@ def mcStudyMain(mcStudyFile):
 def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 	print "== Doing MC Study: template fits on " + templateCfg.mvaCfg["inputvar"] + "."
 
-	inputVar = templateCfg.mvaCfg["inputvar"]
-	nBins = int(templateCfg.mvaCfg["nbins"])
-	varMin = float(templateCfg.mvaCfg["varmin"])
-	varMax = float(templateCfg.mvaCfg["varmax"])
-	
 	if not templateCfg.dataCfg[0].__contains__("histo"):
 		
 		if templateCfg.mvaCfg["options"].find("fill") >= 0:
@@ -180,8 +175,11 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 			print "== Invalid template fit mode."
 			sys.exit(1)
 		
-	dataHist = ROOT.TH1D("MCdata_" + inputVar, "MC data: " + inputVar, \
-		nBins, varMin, varMax)
+	inputVar = templateCfg.mvaCfg["inputvar"]
+
+	dataHist = templateCfg.dataCfg[0]["histo"].Clone("MCdata_" + inputVar)
+	dataHist.Reset()
+	dataHist.SetTitle("MC data: " + inputVar)
 	
 	mcSumHist = dataHist.Clone("MCsum_" + inputVar)
 	mcSumHist.SetTitle("MC sum: " + inputVar)

@@ -83,7 +83,7 @@ def templateFit(templateCfg):
 	varMin = float(templateCfg.mvaCfg["varmin"])
 	varMax = float(templateCfg.mvaCfg["varmax"])
 	dataHist = templateCfg.mvaCfg["datahisto"]
-	
+
 	# Configure the fit
 
 	histVar = RooRealVar("histVar", "histVar", varMin, varMax)
@@ -169,6 +169,7 @@ def templateFit(templateCfg):
 	# Compute Chi-Square of the fit (which might not be Chi-Square-distributed)
 
 	chisq = 0.
+	nDoF = 0
 	for i in range(dataHist.GetNbinsX()):
 		temp = 0.
 		
@@ -179,11 +180,13 @@ def templateFit(templateCfg):
 			else:
 				temp += proc["histo"].GetBinContent(i+1)
 
-		temp -= dataHist.GetBinContent(i+1)
-		temp /= dataHist.GetBinError(i+1)
-		chisq += temp**2
+		if dataHist.GetBinContent(i+1) != 0:
+			temp -= dataHist.GetBinContent(i+1)
+			temp /= dataHist.GetBinError(i+1)
+			chisq += temp**2
+			nDoF += 1
 
-	nDoF = dataHist.GetNbinsX() - len(fittedVars)
+	nDoF -= len(fittedVars)
 
 	fitResults = {}
 
@@ -334,11 +337,11 @@ def getHistos(cfg, dataHist = False):
 	dataFile = 0 
 	
 	if cfg.mvaCfg.keys().__contains__("histfile"):
-		dataFile = TFile(cfg.mvaCfg["histfile"])
+		dataFile = TFile(cfg.mvaCfg["histfile"], "READ")
 
 	for proc in cfg.dataCfg:
 		if not cfg.mvaCfg.keys().__contains__("histfile"):
-			dataFile = TFile(proc["histfile"])
+			dataFile = TFile(proc["histfile"], "READ")
 
 		proc["histo"] = dataFile.Get(proc["histname"])
 		# Necessary so that the histogram persists in memory after the file is closed

@@ -46,18 +46,24 @@ class tryMisChief(Thread):
 				thisCfg = copy.deepcopy(self.cfg)
 				bkgName = ""
 				inputVar = ""
-				# this part has still to be worked out:
+
+				# This part adapts each new analysis from the current one:
+				# in particular, which process is signal ("1"), which is background ("0"), 
+				# and which is spectator ("-1")
+				# It also defines the input variables ("inputVar") to be used for the training.
 				for data2 in thisCfg.dataCfg:
 					if data2 != data and data2["signal"] == "1":
 						data2["signal"] = "-1"
 					if data2["signal"] == "0":
 						bkgName += "_" + data2["name"]
 						inputVar += data2["weightname"] + ","
+
 				thisCfg.mvaCfg["name"] = data["name"] + "_vs" + bkgName
 				thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + data["weightname"]
 				thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
 				thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
 				thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
+
 				# define thread with this new configuration
 				myThread = launchMisChief(self.level, thisCfg, self.locks)
 				threads.append(myThread)
@@ -84,12 +90,23 @@ class tryMisChief(Thread):
 		stopSigLike = False
 		stopBkgLike = False
 		
-		# exclude the ones that didn't end successfully:
+		# exclude the ones that didn't end successfully ("outcode" != 0) :
 		configs = [ cfg for cfg in configs if cfg.mvaCfg["outcode"] == 0 ]
 		if len(configs) == 0:
 			with self.locks["stdout"]:
 				print "== Level {0}: All analyses seem to have failed. Stopping branch.".format(self.level)
 			return 0
+
+		# Build a list containing a tuple (sigEff/bkgEff, minMCEventsSig, minMCEventsBkg)
+		# The list will be used to select the best MVA (by some criteria) and to decide whether to:
+		# - Define two new branches, one for the signal subset, one for the background subset, and go on with the training
+		# - Do not go on with one of the subsets, because of insufficient MC for training, 
+		#	but either keep the corresponding box (sufficient MC for box)
+		#	or forget about it.
+		#	And continue training on the other subset.
+		# - Stop here (no good MVA, or no sufficient MC for training), but for each subset, either
+		#	keep the corresponding box (sufficient MC for box)
+		#	or forget about it.
 		
 		for thisCfg in configs:
 			with open(thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["log"], "r") as logFile:
@@ -194,39 +211,39 @@ class tryMisChief(Thread):
 					self.tree.append(branch)
 
 		# if max level reached, stop this branch and log results in tree
-		if self.level == int(self.cfg.mvaCfg["maxlevel"]):
-			with self.locks["stdout"]:
-				print "== Level {0}: Reached max level. Stopping the branch.".format(self.level)
-			with self.locks["tree"]:
-				if not removeSigLike:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-					self.tree.append(branch)
-				if not removeBkgLike:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-					self.tree.append(branch)
-			return 0
-		
-		# starting two new "tries", one for signal-like events, the other one for background-like
-		# unless one of those doesn't have enough MC
-		cfgSigLike = copy.deepcopy(bestMva)
-		cfgBkgLike = copy.deepcopy(bestMva)
+			if self.level == int(self.cfg.mvaCfg["maxlevel"]):
+				with self.locks["stdout"]:
+					print "== Level {0}: Reached max level. Stopping the branch.".format(self.level)
+				with self.locks["tree"]:
+					if not removeSigLike:
+						branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
+						self.tree.append(branch)
+					if not removeBkgLike:
+						branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
+						self.tree.append(branch)
+				return 0
+			
+			# starting two new "tries", one for signal-like events, the other one for background-like
+			# unless one of those doesn't have enough MC
+			cfgSigLike = copy.deepcopy(bestMva)
+			cfgBkgLike = copy.deepcopy(bestMva)
 
-		cfgSigLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_SigLike"
-		cfgSigLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
+			cfgSigLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_SigLike"
+			cfgSigLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
 
-		cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
-		cfgBkgLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
+			cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
+			cfgBkgLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
 
-		for data in cfgSigLike.dataCfg:
-			data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_data_" + data["name"] + ".root"
-			if data["signal"] == "-1":
-				data["signal"] = "1"
-		for data in cfgBkgLike.dataCfg:
-			data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_data_" + data["name"] + ".root"
-			if data["signal"] == "-1":
-				data["signal"] = "1"
+			for data in cfgSigLike.dataCfg:
+				data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_data_" + data["name"] + ".root"
+				if data["signal"] == "-1":
+					data["signal"] = "1"
+			for data in cfgBkgLike.dataCfg:
+				data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_data_" + data["name"] + ".root"
+				if data["signal"] == "-1":
+					data["signal"] = "1"
 
-		threadSig = tryMisChief(self.level+1, cfgSigLike, self.locks, self.tree)
+			threadSig = tryMisChief(self.level+1, cfgSigLike, self.locks, self.tree)
 		threadBkg = tryMisChief(self.level+1, cfgBkgLike, self.locks, self.tree)
 
 		if not stopSigLike:

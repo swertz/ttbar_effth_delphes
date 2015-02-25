@@ -48,13 +48,13 @@ PConfig::PConfig(TString configFile){
 
 	nProc = 0;
 	for(int i=0; i<cfg.GetNSections()-1; i++){
-		paths.push_back( (string)cfg.Value("data_"+SSTR(i),"path") );
-		names.push_back( (string)cfg.Value("data_"+SSTR(i),"name") );
-		types.push_back( (int)cfg.Value("data_"+SSTR(i),"signal") );
-		xSections.push_back( (double)cfg.Value("data_"+SSTR(i),"xsection") );
-		totEvents.push_back( (long)cfg.Value("data_"+SSTR(i),"genevents") );
-		treeNames.push_back( (string)cfg.Value("data_"+SSTR(i),"treename") );
-		colors.push_back( TranslateColor((string)cfg.Value("data_"+SSTR(i),"color")) );
+		paths.push_back( (string)cfg.Value("proc_"+SSTR(i),"path") );
+		names.push_back( (string)cfg.Value("proc_"+SSTR(i),"name") );
+		types.push_back( (int)cfg.Value("proc_"+SSTR(i),"signal") );
+		xSections.push_back( (double)cfg.Value("proc_"+SSTR(i),"xsection") );
+		totEvents.push_back( (long)cfg.Value("proc_"+SSTR(i),"genevents") );
+		treeNames.push_back( (string)cfg.Value("proc_"+SSTR(i),"treename") );
+		colors.push_back( TranslateColor((string)cfg.Value("proc_"+SSTR(i),"color")) );
 		nProc++;
 	}
 }

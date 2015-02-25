@@ -57,7 +57,7 @@ def mcStudyMain(mcStudyFile):
 		histDict["chisq"] = resHist
 
 		varVect = []
-		for i,proc in enumerate(myConfig.dataCfg):
+		for i,proc in enumerate(myConfig.procCfg):
 			
 			if proc["signal"] == "1":
 				
@@ -73,9 +73,9 @@ def mcStudyMain(mcStudyFile):
 				
 				varVect.append(procN)
 				
-				for j,data2 in enumerate(myConfig.dataCfg):
-					if data2["signal"] == "1":
-						corrList[procN+"/"+data2["name"]] = 0.
+				for j,proc2 in enumerate(myConfig.procCfg):
+					if proc2["signal"] == "1":
+						corrList[procN+"/"+proc2["name"]] = 0.
 
 		histDict["corrList"] = corrList
 
@@ -139,18 +139,10 @@ def mcStudyMain(mcStudyFile):
 		
 	if myMCStudy.cfg["mode"] == "template":
 		outFile.cd()
-		for proc in sorted(myConfig.dataCfg, key = lambda proc: proc["name"]):
+		for proc in sorted(myConfig.procCfg, key = lambda proc: proc["name"]):
 			proc["histo"].Write()
 
 	outFile.Close()
-
-
-######## MC STUDY BRANCH TEMPLATES #####################################################
-# Pseudo-experiments on the MC histograms for each branch
-
-#def mcStudyBranchTemplates():
-	# get histograms for the processes for each branch
-
 
 ######## MC STUDY SIMPLE TEMPLATES #####################################################
 # Pseudo-experiments on MC histograms for a particular kinematical variable
@@ -158,7 +150,7 @@ def mcStudyMain(mcStudyFile):
 def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 	print "== Doing MC Study: template fits on " + templateCfg.mvaCfg["inputvar"] + "."
 
-	if not templateCfg.dataCfg[0].__contains__("histo"):
+	if not templateCfg.procCfg[0].__contains__("histo"):
 		
 		if templateCfg.mvaCfg["options"].find("fill") >= 0:
 			# Fill histograms with the variable used for the fit, and store them in the
@@ -177,14 +169,14 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		
 	inputVar = templateCfg.mvaCfg["inputvar"]
 
-	dataHist = templateCfg.dataCfg[0]["histo"].Clone("MCdata_" + inputVar)
+	dataHist = templateCfg.procCfg[0]["histo"].Clone("MCdata_" + inputVar)
 	dataHist.Reset()
 	dataHist.SetTitle("MC data: " + inputVar)
 	
 	mcSumHist = dataHist.Clone("MCsum_" + inputVar)
 	mcSumHist.SetTitle("MC sum: " + inputVar)
 
-	for proc in templateCfg.dataCfg:
+	for proc in templateCfg.procCfg:
 		if proc["signal"] == "1":
 			mcSumHist.Add(proc["histo"], params[ proc["name"] ])
 		else:
@@ -216,13 +208,13 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		
 		weighteddsquare = 0.
 		
-		for proc in templateCfg.dataCfg:
+		for proc in templateCfg.procCfg:
 			if proc["signal"] == "1":
 				procN = proc["name"]
 				
 				weighteddsquare += (result[procN]/err[procN])**2
 				
-				for proc2 in templateCfg.dataCfg:
+				for proc2 in templateCfg.procCfg:
 					if proc2["signal"] == "1":
 						proc2N = proc2["name"]
 						if procN == proc2N:
@@ -264,9 +256,9 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 	allVarVec = myMCResult.branches[0][2].keys()
 	varVec = []
 	for proc in allVarVec:
-		for data in myConfig.dataCfg:
-			if data["name"] == proc:
-				if data["signal"] == "1":
+		for proc2 in myConfig.procCfg:
+			if proc2["name"] == proc:
+				if proc2["signal"] == "1":
 					varVec.append(proc)
 				break
 
@@ -274,9 +266,9 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
 		mean = ROOT.RooRealVar(branch[1] + "_events", \
 			"Predicted number of events in branch " + branch[1], 0.)
 		for proc in branch[2].keys():
-			for data in myConfig.dataCfg:
-				if data["name"] == proc:
-					if data["signal"] == "1":
+			for proc2 in myConfig.procCfg:
+				if proc2["name"] == proc:
+					if proc2["signal"] == "1":
 						mean.setVal(branch[2][proc]*params[proc] + mean.getVal())
 					else:
 						mean.setVal(branch[2][proc] + mean.getVal())

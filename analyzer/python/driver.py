@@ -36,12 +36,12 @@ class tryMisChief(Thread):
 		if not os.path.isdir(self.cfg.mvaCfg["outputdir"]):
 			os.makedirs(self.cfg.mvaCfg["outputdir"])
 		
-		# for each data that is marked as signal, create specific
-		# configuration and launch thread
+		# For each process that is marked as signal, create specific
+		# tmva configuration object and launch thread
 		threads = []
 		configs = []
-		for data in self.cfg.dataCfg:
-			if data["signal"] == "1":
+		for proc in self.cfg.procCfg:
+			if proc["signal"] == "1":
 				# copy previous configuration and adapt it
 				thisCfg = copy.deepcopy(self.cfg)
 				bkgName = ""
@@ -51,23 +51,28 @@ class tryMisChief(Thread):
 				# in particular, which process is signal ("1"), which is background ("0"), 
 				# and which is spectator ("-1")
 				# It also defines the input variables ("inputVar") to be used for the training.
-				for data2 in thisCfg.dataCfg:
-					if data2 != data and data2["signal"] == "1":
-						data2["signal"] = "-1"
-					if data2["signal"] == "0":
-						bkgName += "_" + data2["name"]
-						inputVar += data2["weightname"] + ","
+				# By default, it is the weight corresponding to the hypothesis of the processes used
+				# for training ("weightname"). Of course this field might be left blank, with
+				# other input variables used as well ("otherinputvar").
 
-				thisCfg.mvaCfg["name"] = data["name"] + "_vs" + bkgName
-				thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + data["weightname"]
+				for proc2 in thisCfg.procCfg:
+					if proc2 != proc and proc2["signal"] == "1":
+						proc2["signal"] = "-1"
+					if proc2["signal"] == "0":
+						bkgName += "_" + proc2["name"]
+						inputVar += proc2["weightname"] + ","
+
+				thisCfg.mvaCfg["name"] = proc["name"] + "_vs" + bkgName
+				thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + proc["weightname"]
 				thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
 				thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
 				thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
 
-				# define thread with this new configuration
+				# Define thread with this new configuration
 				myThread = launchMisChief(self.level, thisCfg, self.locks)
 				threads.append(myThread)
 				configs.append(thisCfg)
+		
 		with self.locks["stdout"]:
 			print "== Level {0}: Starting {1} mva threads.".format(self.level, len(threads))
 
@@ -77,18 +82,11 @@ class tryMisChief(Thread):
 		for thread in threads:
 			thread.join()
 		
-		# find the one giving the best results (as long as it fulfills the conditions)
+		# Find the one giving the best results (as long as it fulfills the conditions)
 		# (it would be nice to have several ways to choose the best one...)
-		# if an analysis only has enough MC events in the sig-/bkg-selection, only keep that part
-		# it may be that no analysis has enough MC events to continue => stop branch
-		# it there are not enough MC events to keep the branch, remove it
-		
-		bestFig = 0.
-		bestMva = None
-		removeSigLike = False
-		removeBkgLike = False
-		stopSigLike = False
-		stopBkgLike = False
+		# If an analysis only has enough MC events in the sig-/bkg-selection, only keep that part
+		# It may be that no analysis has enough MC events to continue => stop branch
+		# It there are not enough MC events to keep the branch, remove it
 		
 		# exclude the ones that didn't end successfully ("outcode" != 0) :
 		configs = [ cfg for cfg in configs if cfg.mvaCfg["outcode"] == 0 ]
@@ -125,14 +123,14 @@ class tryMisChief(Thread):
 						mvaResults.append( (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
 					
 				else:
-					# something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
+					# Something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
 					with self.locks["stdout"]:
 						print "== Level " + str(level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
 
-		# sort the resulting according to decreasing discrimination
+		# Sort the resulting according to decreasing discrimination
 		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
 
-		# if no analysis has enough MC, stop this branch and remove the bad analyses if asked for
+		# If no analysis has enough MC, stop this branch and remove the bad analyses if asked for
 		# and log the previous node of the branch in the tree, if this node is not yet in it (it might have been added by another parallel branch)
 		if len( [ result for result in mvaResults if result[2] >= int(self.cfg.mvaCfg["minkeepevents"]) and result[3] >= int(self.cfg.mvaCfg["minkeepevents"]) ] ) == 0:
 			with self.locks["stdout"]:
@@ -152,6 +150,10 @@ class tryMisChief(Thread):
 		# such as take best best MVA, provided one has enough MC to continue (otherwise, take second-best, and so on)
 
 		bestMva = mvaResults[0][4]
+		removeSigLike = False
+		removeBkgLike = False
+		stopSigLike = False
+		stopBkgLike = False
 		
 		if mvaResults[0][2] < int(self.cfg.mvaCfg["minkeepevents"]):
 			removeSigLike = True
@@ -236,14 +238,14 @@ class tryMisChief(Thread):
 		cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
 		cfgBkgLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
 
-		for data in cfgSigLike.dataCfg:
-			data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_data_" + data["name"] + ".root"
-			if data["signal"] == "-1":
-				data["signal"] = "1"
-		for data in cfgBkgLike.dataCfg:
-			data["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_data_" + data["name"] + ".root"
-			if data["signal"] == "-1":
-				data["signal"] = "1"
+		for proc in cfgSigLike.procCfg:
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + data["name"] + ".root"
+			if proc["signal"] == "-1":
+				proc["signal"] = "1"
+		for proc in cfgBkgLike.procCfg:
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + data["name"] + ".root"
+			if proc["signal"] == "-1":
+				proc["signal"] = "1"
 
 		threadSig = tryMisChief(self.level+1, cfgSigLike, self.locks, self.tree)
 		threadBkg = tryMisChief(self.level+1, cfgBkgLike, self.locks, self.tree)
@@ -271,9 +273,9 @@ class launchMisChief(Thread):
 	def run(self):
 		# write the config file that will be used for this analysis
 		with open(self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".conf", "w") as configFile:
-			for i,data in enumerate(self.cfg.dataCfg):
-				configFile.write("[data_" + str(i) + "]\n")
-				for key, value in data.items():
+			for i,proc in enumerate(self.cfg.procCfg):
+				configFile.write("[proc_" + str(i) + "]\n")
+				for key, value in proc.items():
 					configFile.write(key + " = " + value + "\n")
 				configFile.write("\n")
 			configFile.write("[analysis]\n")
@@ -283,11 +285,14 @@ class launchMisChief(Thread):
 		# launch the program on this config file
 		commandString = sys.argv[argExec] + " " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".conf"
 		commandString += " > " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".log 2>&1"
+
 		if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
 			with self.locks["stdout"]:
 				print "== Looks like a security issue..."
 			sys.exit(1)
+
 		result = call(commandString, shell=True)
+
 		self.cfg.mvaCfg["outcode"] = result
 		if result != 0:
 			with self.locks["stdout"]:
@@ -303,8 +308,8 @@ def printTree(cfg, tree):
 	
 		print "== Branch " + branch + ":"
 
-		for proc in cfg.dataCfg:
-			fileName = branch + "_data_" + proc["name"] + ".root"
+		for proc in cfg.procCfg:
+			fileName = branch + "_proc_" + proc["name"] + ".root"
 			file = TFile(fileName, "READ")
 			if file.IsZombie():
 				print "== Error opening " + fileName + "."
@@ -326,8 +331,8 @@ def writeResults(cfg, tree):
 		count = 0
 		for branch in tree:
 			outFile.write(str(count) + ":" + branch + ":")
-			for proc in cfg.dataCfg:
-				fileName = branch + "_data_" + proc["name"] + ".root"
+			for proc in cfg.procCfg:
+				fileName = branch + "_proc_" + proc["name"] + ".root"
 				file = TFile(fileName, "READ")
 				if file.IsZombie():
 					print "== Error opening " + fileName + "."
@@ -352,7 +357,7 @@ def plotResults(cfg, tree):
 	file = TFile(fileName, "RECREATE")
 
 	nBr = len(tree)
-	nProc = len(cfg.dataCfg)
+	nProc = len(cfg.procCfg)
 	nBins = int(cfg.mvaCfg["plotbins"])
 
 	branchTotals = TH1D("branch_tot", "Branch totals", nBr, 0, nBr)
@@ -375,7 +380,7 @@ def plotResults(cfg, tree):
 	skimmedTree = list(set(skimmedTree))
 	nBrSkimmed = len(skimmedTree)
 	
-	for i,proc in enumerate(cfg.dataCfg):
+	for i,proc in enumerate(cfg.procCfg):
 		
 		treeYields[ proc["name"] ] = TH1D(proc["name"] + "_yields", "Branch yields for " + proc["name"], nBr, 0, nBr)
 		
@@ -388,7 +393,7 @@ def plotResults(cfg, tree):
 		
 		for j,branch in enumerate(tree):
 		
-			branchProcFile = TFile(branch + "_data_" + proc["name"] + ".root", "READ")
+			branchProcFile = TFile(branch + "_proc_" + proc["name"] + ".root", "READ")
 			branchTree = branchProcFile.Get(proc["treename"])
 			branchMC = branchTree.GetEntries()
 			branchProcFile.Close()
@@ -408,7 +413,7 @@ def plotResults(cfg, tree):
 		for j,branch in enumerate(skimmedTree):
 
 			branchFile = TFile(branch + ".root", "READ")
-			procHist = branchFile.Get(proc["name"] + "_output").Rebin( float(cfg.mvaCfg["histbins"]) / int(cfg.mvaCfg["plotbins"]) )
+			procHist = branchFile.Get(proc["name"] + "_output").Rebin( float(cfg.mvaCfg["fitbins"]) / int(cfg.mvaCfg["plotbins"]) )
 			
 			for k in range(1, procHist.GetNbinsX()+1):
 				treeMVAs[ proc["name"] ].SetBinContent(j*nBins+k, procHist.GetBinContent(k))

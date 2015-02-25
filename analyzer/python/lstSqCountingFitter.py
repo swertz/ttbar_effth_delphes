@@ -72,16 +72,16 @@ def weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 
 	y = []
 	A = []
-	# vector containing the prediction for the backgrounds for each branch;
+	# Vector containing the prediction for the backgrounds for each branch;
 	# has to be subtracted from the observed number of events!
 	b = []
 
 	allVarVec = myMCResult.branches[0][2].keys()
 	if mode == "fixBkg":
 		for proc in allVarVec:
-			for data in myConfig.dataCfg:
-				if data["name"] == proc:
-					if data["signal"] == "1":
+			for proc2 in myConfig.procCfg:
+				if proc2["name"] == proc:
+					if proc2["signal"] == "1":
 						varVec.append(proc)
 					break
 	else:
@@ -91,9 +91,9 @@ def weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 	for branch in myMCResult.branches: 
 		b_i = 0
 		for proc in allVarVec:
-			for data in myConfig.dataCfg:
-				if data["name"] == proc:
-					if data["signal"] != "1":
+			for proc2 in myConfig.procCfg:
+				if proc2["name"] == proc:
+					if proc2["signal"] != "1":
 						b_i += branch[2][proc]
 					break
 		b.append(b_i)
@@ -133,7 +133,7 @@ def weightedLstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 	return result,res,nDoF,var,cov
 	
 ###### LEAST SQUARE COUNTING FIT #########################################################
-#(best not use this one!) 
+#(best not use this one! no weights used for uncertainties) 
 
 def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 
@@ -151,9 +151,9 @@ def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 	allVarVec = myMCResult.branches[0][2].keys()
 	if mode == "fixBkg":
 		for proc in allVarVec:
-			for data in myConfig.dataCfg:
-				if data["name"] == proc:
-					if data["signal"] == "1":
+			for proc2 in myConfig.procCfg:
+				if proc2["name"] == proc:
+					if proc2["signal"] == "1":
 						varVec.append(proc)
 					break
 	else:
@@ -163,9 +163,9 @@ def lstSqCountingFit(myConfig, myMCResult, myDataResult, mode="fixBkg"):
 	for branch in myMCResult.branches: 
 		b_i = 0
 		for proc in allVarVec:
-			for data in myConfig.dataCfg:
-				if data["name"] == proc:
-					if data["signal"] != "1":
+			for proc2 in myConfig.procCfg:
+				if proc2["name"] == proc:
+					if proc2["signal"] != "1":
 						b_i += branch[2][proc]
 					break
 		b.append(b_i)

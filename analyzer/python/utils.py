@@ -81,12 +81,12 @@ class PResult:
 				if len(self.branches) < 3:
 					print "== Error in the result file syntax."
 					sys.exit(1)
-				# splitting the data entries to get name and expected number of events
-				datae = branch[2].split(",")
-				datae = [ data for data in datae if data != "" ]
-				datae = [ data.split("=") for data in datae ]
-				datae = [ (data[0], float(data[1])) for data in datae ]
-				branch[2] = dict(datae)
+				# splitting the process entries to get name and expected number of events
+				processes = branch[2].split(",")
+				processes = [ proc for proc in processes if proc != "" ]
+				processes = [ proc.split("=") for proc in processes ]
+				processes = [ (proc[0], float(proc[1])) for proc in processes ]
+				branch[2] = dict(processes)
 	
 	def iniFromRDS(self, mcResult, rdsRow):
 		self.branches = copy.deepcopy(mcResult.branches)
@@ -101,7 +101,7 @@ class PConfig:
 
 	def __init__(self, cfgFileName):
 		self.mvaCfg = {}
-		self.dataCfg = []
+		self.procCfg = []
 
 		with open(cfgFileName, "r") as cfgFile:
 			# splitting the file content into sections (starting with a "[")
@@ -131,11 +131,8 @@ class PConfig:
 						cfgTable.append(tuple(tupleLine))
 
 					self.mvaCfg = dict(cfgTable)
-					# there has to be at least twice as many events left as the number of events asked for training
-					#if int(self.mvaCfg["minmcevents"]) < 2*int(self.mvaCfg["trainentries"]):
-					#	self.mvaCfg["minmcevents"] = str(2*int(self.mvaCfg["trainentries"]))
 
-				elif sectionTitle.find("data_") >= 0:
+				elif sectionTitle.find("proc_") >= 0:
 
 					tempCfgTable = [ line for line in sectionContent.split("\n") ]
 					tempCfgTable = [ line for line in tempCfgTable if line is not "" ]
@@ -150,7 +147,7 @@ class PConfig:
 						cfgTable.append(tuple(tupleLine))
 
 					if len(cfgTable) > 0:
-						self.dataCfg.append(dict(cfgTable))
+						self.procCfg.append(dict(cfgTable))
 
 ######## CONVERT COLOR #####################################################
 
@@ -214,7 +211,7 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 
 	varVec = []
 
-	for proc in templateCfg.dataCfg:
+	for proc in templateCfg.procCfg:
 		if mode is not "fixBkg":
 			if proc["signal"] == "0":
 				proc["signal"] = "1"
@@ -231,7 +228,7 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 
 	outFile = ROOT.TFile(histFileName, "RECREATE")
 
-	for proc in templateCfg.dataCfg:
+	for proc in templateCfg.procCfg:
 		proc["histname"] = proc["name"] + "_Branch"
 
 		hist = ROOT.TH1D(proc["name"] + "_Branch", proc["name"] + " Branch yields", nBins, 0, nBins)

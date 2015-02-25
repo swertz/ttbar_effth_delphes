@@ -68,7 +68,7 @@ def templateFitterMain(templateCfgFileName):
 
 	corrHist.Write()
 	
-	for proc in templateCfg.dataCfg:
+	for proc in templateCfg.procCfg:
 		proc["histo"].Write()
 	templateCfg.mvaCfg["datahisto"].Write()
 	
@@ -92,7 +92,7 @@ def templateFit(templateCfg):
 	procPDFs = {}
 	sigYields = {}
 	
-	for proc in templateCfg.dataCfg:
+	for proc in templateCfg.procCfg:
 
 		# For each signal, configure a variable and a PDF from the corresponding
 		# histogram.
@@ -173,7 +173,7 @@ def templateFit(templateCfg):
 	for i in range(dataHist.GetNbinsX()):
 		temp = 0.
 		
-		for proc in templateCfg.dataCfg:
+		for proc in templateCfg.procCfg:
 			if proc["signal"] == "1":
 				temp += fittedVars[ proc["name"] ] * \
 						proc["histo"].GetBinContent(i+1)
@@ -235,7 +235,7 @@ def	plotTemplateFitResults(cfg, fittedVars):
 	minY = 0.
 	maxY = 0.
 
-	for proc in cfg.dataCfg:
+	for proc in cfg.procCfg:
 		
 		temp = proc["histo"].Clone("temp_hist")
 		
@@ -294,74 +294,74 @@ def fillHistos(cfg, dataHist = False):
 	genWeight = cfg.mvaCfg["genweight"]
 	lumi = float(cfg.mvaCfg["lumi"])
 
-	for proc in cfg.dataCfg:
+	for proc in cfg.procCfg:
 		
 		hist = TH1D(proc["name"] + "_" + inputVar, \
 			proc["name"] + ": " + inputVar, \
 			nBins, varMin, varMax)
 		hist.Sumw2()
 		
-		dataFile = TFile(proc["path"])
-		dataTree = dataFile.Get(proc["treename"])
-		nEntries = dataTree.GetEntriesFast()
+		file = TFile(proc["path"])
+		tree = file.Get(proc["treename"])
+		nEntries = tree.GetEntriesFast()
 
-		for event in dataTree:
+		for event in tree:
 			
-			weight = dataTree.__getattr__(genWeight) * lumi * \
+			weight = tree.__getattr__(genWeight) * lumi * \
 					float(proc["xsection"]) / float(proc["genevents"])
-			hist.Fill(dataTree.__getattr__(inputVar), weight)
+			hist.Fill(tree.__getattr__(inputVar), weight)
 		
 		proc["histo"] = hist
 
-		dataFile.Close()
+		file.Close()
 	
 	if dataHist:
 		hist = TH1D("data_" + inputVar, \
 			"data: " + inputVar, nBins, varMin, varMax)
 
-		dataFile = TFile(cfg.mvaCfg["datafile"])
+		file = TFile(cfg.mvaCfg["datafile"])
 
-		dataTree = dataFile.Get(cfg.mvaCfg["datatreename"])
-		nEntries = dataTree.GetEntriesFast()
+		tree = file.Get(cfg.mvaCfg["datatreename"])
+		nEntries = tree.GetEntriesFast()
 
-		for event in dataTree:
-			hist.Fill(dataTree.__getattr__(inputVar))
+		for event in tree:
+			hist.Fill(tree.__getattr__(inputVar))
 
 		cfg.mvaCfg["datahisto"] = hist
 
-		dataFile.Close()		
+		file.Close()		
 
 ######## GET HISTOGRAMS #############################################################
 
 def getHistos(cfg, dataHist = False):
-	dataFile = 0 
+	file = 0 
 	
 	if cfg.mvaCfg.keys().__contains__("histfile"):
-		dataFile = TFile(cfg.mvaCfg["histfile"], "READ")
+		file = TFile(cfg.mvaCfg["histfile"], "READ")
 
-	for proc in cfg.dataCfg:
+	for proc in cfg.procCfg:
 		if not cfg.mvaCfg.keys().__contains__("histfile"):
-			dataFile = TFile(proc["histfile"], "READ")
+			file = TFile(proc["histfile"], "READ")
 
-		proc["histo"] = dataFile.Get(proc["histname"])
+		proc["histo"] = file.Get(proc["histname"])
 		# Necessary so that the histogram persists in memory after the file is closed
 		proc["histo"].SetDirectory(0)
 
 		if not cfg.mvaCfg.keys().__contains__("histfile"):
-			dataFile.Close()
+			file.Close()
 	
-	if dataFile.IsOpen():
-		dataFile.Close()
+	if file.IsOpen():
+		file.Close()
 
-	cfg.mvaCfg["nbins"] = str(cfg.dataCfg[0]["histo"].GetNbinsX())
-	cfg.mvaCfg["varmin"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmin())
-	cfg.mvaCfg["varmax"] = str(cfg.dataCfg[0]["histo"].GetXaxis().GetXmax())
+	cfg.mvaCfg["nbins"] = str(cfg.procCfg[0]["histo"].GetNbinsX())
+	cfg.mvaCfg["varmin"] = str(cfg.procCfg[0]["histo"].GetXaxis().GetXmin())
+	cfg.mvaCfg["varmax"] = str(cfg.procCfg[0]["histo"].GetXaxis().GetXmax())
 
 	if dataHist:
-		dataFile = TFile(cfg.mvaCfg["datafile"])
+		file = TFile(cfg.mvaCfg["datafile"])
 		cfg.mvaCfg["datahisto"] = dataFile.Get(cfg.mvaCfg["datahistname"])
 		cfg.mvaCfg["datahisto"].SetDirectory(0)
-		dataFile.Close()
+		file.Close()
 
 ######## MAIN #############################################################
 

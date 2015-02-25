@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "nn_panalysis.h"
-#include "nn_pconfig.h"
+#include "panalysis.h"
+#include "pconfig.h"
 
 using namespace std;
 

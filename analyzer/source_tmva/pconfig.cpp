@@ -6,7 +6,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 
-#include "nn_pconfig.h"
+#include "pconfig.h"
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & > \
         ( std::ostringstream() << std::dec << x ).str()
@@ -14,7 +14,7 @@
 using namespace std;
 
 PConfig::PConfig(TString configFile){
-	ConfigFile cfg(configFile.Data());
+	ConfigFile cfg(configFile.Proc());
 
 	anaName = (string)cfg.Value("analysis","name");
 	outputDir = (string)cfg.Value("analysis","outputdir");
@@ -46,7 +46,7 @@ PConfig::PConfig(TString configFile){
 	nWeights = weights.size();
 	delete tempArray;
 
-	nData = 0;
+	nProc = 0;
 	for(int i=0; i<cfg.GetNSections()-1; i++){
 		paths.push_back( (string)cfg.Value("data_"+SSTR(i),"path") );
 		names.push_back( (string)cfg.Value("data_"+SSTR(i),"name") );
@@ -55,7 +55,7 @@ PConfig::PConfig(TString configFile){
 		totEvents.push_back( (long)cfg.Value("data_"+SSTR(i),"genevents") );
 		treeNames.push_back( (string)cfg.Value("data_"+SSTR(i),"treename") );
 		colors.push_back( TranslateColor((string)cfg.Value("data_"+SSTR(i),"color")) );
-		nData++;
+		nProc++;
 	}
 }
 
@@ -87,8 +87,8 @@ TString PConfig::GetTreeName(unsigned int i) const{
 	return treeNames.at(i);
 }
 
-unsigned int PConfig::GetNData(void) const{
-	return nData;
+unsigned int PConfig::GetNProc(void) const{
+	return nProc;
 }
 
 unsigned int PConfig::GetNWeights(void) const{

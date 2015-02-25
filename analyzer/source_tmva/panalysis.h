@@ -12,9 +12,9 @@
 #include "TGraph.h"
 #include "TLine.h"
 
-#include "nn_defs.h"
-#include "nn_pdata.h"
-#include "nn_pconfig.h"
+#include "defs.h"
+#include "pdata.h"
+#include "pconfig.h"
 
 double min(double a, double b);
 
@@ -31,7 +31,7 @@ class PAnalysis{
 	void BkgEffWP(double workingPoint=0);
 	//void FiguresOfMerit(void);
 	void WriteOutput(TString options="");
-	void WriteSplitData(TString outputDir="");
+	void WriteSplitProc(TString outputDir="");
 	void WriteLog(TString output="");
 	double GetBkgEff(void) const;
 	double GetSigEff(void) const;
@@ -40,9 +40,9 @@ class PAnalysis{
 
 	PConfig *myConfig;
 
-	void AddData(PData* data);
-	void OpenAllData(void);
-	void CloseAllData(void);
+	void AddProc(PProc* data);
+	void OpenAllProc(void);
+	void CloseAllProc(void);
 	void FillStack(void);
 	double Transform(TString method, double output);
 	
@@ -62,7 +62,7 @@ class PAnalysis{
 	TString myOutput;
 	TString myMvaMethod;
 	
-	std::vector<PData*> myData;
+	std::vector<PProc*> myProc;
 
 	TCanvas* myCnvTraining;
 	TCanvas* myCnvPlot;

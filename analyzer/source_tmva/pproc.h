@@ -1,5 +1,5 @@
-#ifndef DEF_NN_PDATA
-#define DEF_NN_PDATA
+#ifndef DEF_NN_PPROC
+#define DEF_NN_PPROC
 
 #include <iostream>
 #include "TString.h"
@@ -8,14 +8,14 @@
 #include "TH1.h"
 #include "TColor.h"
 
-#include "nn_defs.h"
-#include "nn_pconfig.h"
+#include "defs.h"
+#include "pconfig.h"
 
-class PData{
+class PProc{
 	public:
 	
-	PData(PConfig *config, unsigned int num);
-	~PData();
+	PProc(PConfig *config, unsigned int num);
+	~PProc();
 
 	void SetInputReweight(double reweight);
 	void SetHistReweight(double reweight);
@@ -56,6 +56,6 @@ class PData{
 	std::vector<double> myWeight;
 };
 
-bool compareData(const PData* lhs, const PData* rhs);
+bool compareProc(const PProc* lhs, const PProc* rhs);
 
 #endif

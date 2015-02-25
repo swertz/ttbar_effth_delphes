@@ -1,9 +1,9 @@
 #include <cstdlib> // for exit() function
-#include "nn_pdata.h"
+#include "pproc.h"
 
 using namespace std;
 
-PData::PData(PConfig* config, unsigned int num){
+PProc::PProc(PConfig* config, unsigned int num){
 	#ifdef P_LOG
 		cout << "Creating data instance nr. " << num << " for " << config->GetName(num) << ".\n";
 	#endif
@@ -27,7 +27,7 @@ PData::PData(PConfig* config, unsigned int num){
 	myConfig = config;
 }
 
-void PData::Open(void){
+void PProc::Open(void){
 	myFile = (TFile*) new TFile(myPath, "READ");
 	if(myFile->IsZombie()){
 		cerr << "Failure opening file " << myPath << ".\n";
@@ -38,49 +38,49 @@ void PData::Open(void){
 		myTree->SetBranchAddress(myConfig->GetWeight(i), &myWeight.at(i));
 }
 
-void PData::Close(void){
+void PProc::Close(void){
 	myFile->Close();
 }
 
-void PData::SetInputReweight(double reweight){
+void PProc::SetInputReweight(double reweight){
 	myInputReweight = reweight;
 }
 
-void PData::SetHistReweight(double reweight){
+void PProc::SetHistReweight(double reweight){
 	myHistReweight = reweight;
 }
 
-TString PData::GetPath(void) const{
+TString PProc::GetPath(void) const{
 	return myPath;
 }
 
-TString PData::GetName(void) const{
+TString PProc::GetName(void) const{
 	return myName;
 }
 
-int PData::GetType(void) const{
+int PProc::GetType(void) const{
 	return myType;
 }
 
-double PData::GetXSection(void) const{
+double PProc::GetXSection(void) const{
 	return myXSection;
 }
 
-double PData::GetEfficiency(void) const{
+double PProc::GetEfficiency(void) const{
 	return myEfficiency;
 }
 
-double PData::GetInputReweight(void) const{
+double PProc::GetInputReweight(void) const{
 	return myInputReweight;
 }
 
-double PData::GetHistReweight(void) const{
+double PProc::GetHistReweight(void) const{
 	return myHistReweight;
 }
 
-double* PData::GetHyp(TString hypName){
+double* PProc::GetHyp(TString hypName){
 	if(myTree->GetEntries() <= 0){
-		cerr << "Error in " << myName << "::GetHyp(): can't return weight without opening the data first.\n";
+		cerr << "Error in " << myName << "::GetHyp(): can't return weight without opening the process first.\n";
 		exit(1);
 	}
 	for(unsigned int i=0; i<myConfig->GetNWeights(); i++){
@@ -91,37 +91,37 @@ double* PData::GetHyp(TString hypName){
 	exit(1);
 }
 
-TTree* PData::GetTree(void) const{
+TTree* PProc::GetTree(void) const{
 	if(myTree->GetEntries() <= 0){
-		cerr << "Error in " << myName << "::GetTree(): can't return TTree without opening the data first.\n";
+		cerr << "Error in " << myName << "::GetTree(): can't return TTree without opening the process first.\n";
 		exit(1);
 	}
 	return myTree;
 }
 
-TH1D* PData::GetHist(void) const{
+TH1D* PProc::GetHist(void) const{
 	return myHist;
 }
 
-TFile* PData::GetFile(void) const{
+TFile* PProc::GetFile(void) const{
 	if(myFile->IsZombie()){
-		cerr << "Error in " << myName << "::GetFile(): can't return TFile without opening the data first.\n";
+		cerr << "Error in " << myName << "::GetFile(): can't return TFile without opening the process first.\n";
 		exit(1);
 	}
 	return myFile;
 }
 
-Color_t PData::GetColor(void) const{
+Color_t PProc::GetColor(void) const{
 	return myColor;
 }
 
-bool compareData(const PData* lhs, const PData* rhs){
+bool compareProc(const PProc* lhs, const PProc* rhs){
 	return lhs->GetXSection()*lhs->GetEfficiency() < rhs->GetXSection()*rhs->GetEfficiency();
 }
 
-PData::~PData(){
+PProc::~PProc(){
 	#ifdef P_LOG
-		cout << "Destroying PData " << myName << "." << endl;
+		cout << "Destroying PProc " << myName << "." << endl;
 	#endif
 	delete myHist;
 	delete myFile;

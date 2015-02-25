@@ -7,7 +7,7 @@
 #include <TMVA/Reader.h>
 #include <TMVA/Tools.h>
 #include <TMVA/Config.h>
-#include "nn_panalysis.h"
+#include "panalysis.h"
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & > \
         ( std::ostringstream() << std::dec << x ).str()
@@ -44,62 +44,62 @@ PAnalysis::PAnalysis(PConfig *config){
 		exit(1);
 	}
 
-	for(unsigned int i=0; i<config->GetNData(); i++){
-		PData *tempData = new PData(config, i);
-		AddData(tempData);
+	for(unsigned int i=0; i<config->GetNProc(); i++){
+		PProc *tempProc = new PProc(config, i);
+		AddProc(tempProc);
 	}
 }
 
-void PAnalysis::AddData(PData* data){
+void PAnalysis::AddProc(PProc* proc){
 	#ifdef P_LOG
-		cout << "Adding data " << data->GetName() << " to analysis " << myName << "." << endl;
+		cout << "Adding process " << proc->GetName() << " to analysis " << myName << "." << endl;
 	#endif
 
-	myData.push_back(data);
-	switch(data->GetType()){
+	myProc.push_back(proc);
+	switch(proc->GetType()){
 		case 0:
-			myBkgs.push_back(myData.size()-1);
+			myBkgs.push_back(myProc.size()-1);
 			break;
 		case 1:
 			if(mySig >= 0){
 				cerr << "Only one signal can be assigned to the analysis!" << endl;
 				exit(1);
 			}
-			mySig = myData.size()-1;
+			mySig = myProc.size()-1;
 			break;
 		default:
 			break;
 	}
 }
 
-void PAnalysis::OpenAllData(void){
-	for(unsigned int i=0; i<myData.size(); i++)
-		myData.at(i)->Open();
+void PAnalysis::OpenAllProc(void){
+	for(unsigned int i=0; i<myProc.size(); i++)
+		myProc.at(i)->Open();
 }
 
-void PAnalysis::CloseAllData(void){
-	for(unsigned int i=0; i<myData.size(); i++)
-		myData.at(i)->Close();
+void PAnalysis::CloseAllProc(void){
+	for(unsigned int i=0; i<myProc.size(); i++)
+		myProc.at(i)->Close();
 }
 
 void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, TString topo){
 	if(mySig < 0 || !myBkgs.size()){
-		cerr << "Cannot compute input weights: at least two datasets (one signal and one background) have to be assigned to the analysis!" << endl;
+		cerr << "Cannot compute input weights: at least two processes (one signal and one background) have to be assigned to the analysis!" << endl;
 		exit(1);
 	}
 
-	OpenAllData();
+	OpenAllProc();
 
 	// Computing input weights
 	// Note: not quite clear how TMVA computes the weights (how are they combined with the gen weight?)
-	//		... should be OK to pass as input weight xsection*eff*lumi/nSelected for each dataset
+	//		... should be OK to pass as input weight xsection*eff*lumi/nSelected for each process
 
-	for(unsigned int i=0; i<myData.size(); i++){
-		double xS = myData.at(i)->GetXSection();
-		double eff = myData.at(i)->GetEfficiency();
-		double nSel = myData.at(i)->GetTree()->GetEntries();
+	for(unsigned int i=0; i<myProc.size(); i++){
+		double xS = myProc.at(i)->GetXSection();
+		double eff = myProc.at(i)->GetEfficiency();
+		double nSel = myProc.at(i)->GetTree()->GetEntries();
 		double lumi = myConfig->GetLumi(); 
-		myData.at(i)->SetInputReweight(xS*eff*lumi/nSel);
+		myProc.at(i)->SetInputReweight(xS*eff*lumi/nSel);
 	}
 
 	if(topo == "")
@@ -128,11 +128,11 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	#else
 		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "Silent:!DrawProgressBar");
 	#endif
-	myFactory->AddSignalTree(myData.at(mySig)->GetTree(), myData.at(mySig)->GetInputReweight());
+	myFactory->AddSignalTree(myProc.at(mySig)->GetTree(), myProc.at(mySig)->GetInputReweight());
 	for(unsigned int i=0; i<myBkgs.size(); i++)
-		myFactory->AddBackgroundTree(myData.at(myBkgs.at(i))->GetTree(), myData.at(myBkgs.at(i))->GetInputReweight());
+		myFactory->AddBackgroundTree(myProc.at(myBkgs.at(i))->GetTree(), myProc.at(myBkgs.at(i))->GetInputReweight());
 
-	// Will also use weights defined in the input datasets
+	// Will also use weights defined in the input process dataset
 	// Careful if these weights are negative!
 	if(myConfig->GetGenWeight() != "")
 		myFactory->SetWeightExpression(myConfig->GetGenWeight());
@@ -144,12 +144,8 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	// ? for each background tree or for all the brackgrounds together ?
 	myFactory->PrepareTrainingAndTestTree("", "nTrain_Signal="+SSTR(myConfig->GetTrainEntries())+":nTrain_Background="+SSTR(myConfig->GetTrainEntries())+":nTest_Signal="+SSTR(myConfig->GetTrainEntries())+":nTest_Background="+SSTR(myConfig->GetTrainEntries())+":SplitMode=Alternate:NormMode=EqualNumEvents");
 
-	// to do: specify structure, help, verbosity,
-	
 	if(method == "MLP")
 		myFactory->BookMethod(TMVA::Types::kMLP, method+"_"+myName, "!H:V:NeuronType=tanh:VarTransform=Norm:IgnoreNegWeightsInTraining=True:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":TestRate=5:TrainingMethod=BFGS:SamplingTraining=False:ConvergenceTests=50");
-	else if(method == "TMLP")
-		myFactory->BookMethod(TMVA::Types::kTMlpANN, method+"_"+myName, "!H:V:VarTransform=Norm:NCycles="+SSTR(iterations)+":HiddenLayers="+topo+":LearningMethod=BFGS");
 	else if(method == "BDT")
 		myFactory->BookMethod(TMVA::Types::kBDT, method+"_"+myName, "!H:V:NTrees="+SSTR(iterations));
 	else{
@@ -163,7 +159,7 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	myFactory->TestAllMethods();
 	myFactory->EvaluateAllMethods();
 
-	CloseAllData();
+	CloseAllProc();
 }
 
 void PAnalysis::DoHist(bool evalOnTrained){
@@ -175,42 +171,42 @@ void PAnalysis::DoHist(bool evalOnTrained){
 		DefineAndTrainFactory();
 	}
 
-	OpenAllData();
+	OpenAllProc();
 
 	// Computing event reweighting for the histograms
 
 	double expBkg = 0;
-	for(unsigned int i=0; i<myData.size(); i++){
-		if(myData.at(i)->GetType() != 1){
-			double xS = myData.at(i)->GetXSection();
-			double eff = myData.at(i)->GetEfficiency();
+	for(unsigned int i=0; i<myProc.size(); i++){
+		if(myProc.at(i)->GetType() != 1){
+			double xS = myProc.at(i)->GetXSection();
+			double eff = myProc.at(i)->GetEfficiency();
 			expBkg += xS*eff;
 		}
 	}
 	double entriesSig;
 	if(evalOnTrained)
-		entriesSig = myData.at(mySig)->GetTree()->GetEntries();
+		entriesSig = myProc.at(mySig)->GetTree()->GetEntries();
 	else
-		entriesSig = max(floor(myData.at(mySig)->GetTree()->GetEntries()/2), myData.at(mySig)->GetTree()->GetEntries() - myConfig->GetTrainEntries());
+		entriesSig = max(floor(myProc.at(mySig)->GetTree()->GetEntries()/2), myProc.at(mySig)->GetTree()->GetEntries() - myConfig->GetTrainEntries());
 
-	for(unsigned int i=0; i<myData.size(); i++){
-		if(myData.at(i)->GetType() != 1){
-			double xS = myData.at(i)->GetXSection();
-			double eff = myData.at(i)->GetEfficiency();
-			double entriesBkg = myData.at(i)->GetTree()->GetEntries();
-			if(!evalOnTrained && myData.at(i)->GetType() == 0)
-				entriesBkg = max(floor(myData.at(i)->GetTree()->GetEntries()/2), myData.at(i)->GetTree()->GetEntries() - myConfig->GetTrainEntries());
-			myData.at(i)->SetHistReweight(xS*eff/entriesBkg);
+	for(unsigned int i=0; i<myProc.size(); i++){
+		if(myProc.at(i)->GetType() != 1){
+			double xS = myProc.at(i)->GetXSection();
+			double eff = myProc.at(i)->GetEfficiency();
+			double entriesBkg = myProc.at(i)->GetTree()->GetEntries();
+			if(!evalOnTrained && myProc.at(i)->GetType() == 0)
+				entriesBkg = max(floor(myProc.at(i)->GetTree()->GetEntries()/2), myProc.at(i)->GetTree()->GetEntries() - myConfig->GetTrainEntries());
+			myProc.at(i)->SetHistReweight(xS*eff/entriesBkg);
 		}
 	}
-	myData.at(mySig)->SetHistReweight(expBkg/entriesSig);
+	myProc.at(mySig)->SetHistReweight(expBkg/entriesSig);
 
 	// Filling histograms
 
 	vector<float> inputs(myConfig->GetNWeights());
 
-	for(unsigned int j=0; j<myData.size(); j++){
-		PData* data = (PData*) myData.at(j);
+	for(unsigned int j=0; j<myProc.size(); j++){
+		PProc* proc = (PProc*) myProc.at(j);
 
 		TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
 		for(unsigned int k=0; k<myConfig->GetNWeights(); k++){
@@ -218,28 +214,28 @@ void PAnalysis::DoHist(bool evalOnTrained){
 		}
 		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 		
-		for(long i=0; i<data->GetTree()->GetEntries(); i++){
-			if(data->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !evalOnTrained)
+		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
+			if(proc->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !evalOnTrained)
 				continue;
-			data->GetTree()->GetEntry(i);
+			proc->GetTree()->GetEntry(i);
 			for(unsigned int k=0; k<myConfig->GetNWeights(); k++)
-				inputs.at(k) = (float) *data->GetHyp(myConfig->GetWeight(k));
-			data->GetHist()->Fill(Transform(myMvaMethod, myReader->EvaluateMVA(myName)), data->GetHistReweight());
+				inputs.at(k) = (float) *proc->GetHyp(myConfig->GetWeight(k));
+			proc->GetHist()->Fill(Transform(myMvaMethod, myReader->EvaluateMVA(myName)), proc->GetHistReweight());
 		}
 		
-		data->GetHist()->SetLineWidth(3);
-		data->GetHist()->SetLineColor(data->GetColor());
-		data->GetHist()->SetXTitle("MVA output");
-		data->GetHist()->SetStats(0);
-		if(data->GetType() == -1)
-			data->GetHist()->SetLineStyle(2);
+		proc->GetHist()->SetLineWidth(3);
+		proc->GetHist()->SetLineColor(proc->GetColor());
+		proc->GetHist()->SetXTitle("MVA output");
+		proc->GetHist()->SetStats(0);
+		if(proc->GetType() == -1)
+			proc->GetHist()->SetLineStyle(2);
 		else
-			data->GetHist()->SetLineStyle(0);
+			proc->GetHist()->SetLineStyle(0);
 
 		delete myReader;
 	}
 
-	CloseAllData();
+	CloseAllProc();
 }
 
 double PAnalysis::Transform(TString method, double input){
@@ -255,7 +251,7 @@ void PAnalysis::DoPlot(void){
 	#ifdef P_LOG
 		cout << "Plotting output histograms.\n";
 	#endif
-	if(!myData.at(0)->GetHist()->GetEntries()){
+	if(!myProc.at(0)->GetHist()->GetEntries()){
 		cerr << "Cannot plot MVA output histograms without histograms! Attemping to call DoHist().\n";
 		DoHist();
 	}
@@ -265,11 +261,11 @@ void PAnalysis::DoPlot(void){
 	myLegend->SetFillColor(0);
 	myStack = (THStack*) new THStack("output_stack","MVA output");
 	
-	for(unsigned int j=0; j<myData.size(); j++)
-		myLegend->AddEntry(myData.at(j)->GetHist(), myData.at(j)->GetName(), "f");
+	for(unsigned int j=0; j<myProc.size(); j++)
+		myLegend->AddEntry(myProc.at(j)->GetHist(), myProc.at(j)->GetName(), "f");
 	FillStack();
 
-	TH1D* tempSigHist = (TH1D*) myData.at(mySig)->GetHist()->Rebin(myConfig->GetHistBins()/myConfig->GetPlotBins(),"rebinned");
+	TH1D* tempSigHist = (TH1D*) myProc.at(mySig)->GetHist()->Rebin(myConfig->GetHistBins()/myConfig->GetPlotBins(),"rebinned");
 
 	if(myStack->GetMaximum() > tempSigHist->GetMaximum()){
 		myStack->Draw("");
@@ -285,12 +281,12 @@ void PAnalysis::DoPlot(void){
 }
 
 void PAnalysis::FillStack(void){
-	vector<PData*> pointers;
-	for(unsigned int i=0; i<myData.size(); i++){
-		if(myData.at(i)->GetType() != 1)
-			pointers.push_back(myData.at(i));
+	vector<PProc*> pointers;
+	for(unsigned int i=0; i<myProc.size(); i++){
+		if(myProc.at(i)->GetType() != 1)
+			pointers.push_back(myProc.at(i));
 	}
-	sort(pointers.begin(), pointers.end(), &compareData);
+	sort(pointers.begin(), pointers.end(), &compareProc);
 	for(unsigned int i=0; i<pointers.size(); i++)
 		myStack->Add(pointers.at(i)->GetHist()->Rebin(myConfig->GetHistBins()/myConfig->GetPlotBins(),"rebinned"));
 }
@@ -300,27 +296,27 @@ void PAnalysis::DoROC(void){
 		cout << "Drawing ROC curve.\n";
 	#endif
 	if(mySig<0 || !myBkgs.size()){
-		cerr << "Cannot draw ROC curve without signal and background data!\n";
+		cerr << "Cannot draw ROC curve without signal and background processes!\n";
 		exit(1);
-	}else if(!myData.at(0)->GetHist()->GetEntries()){
-		cerr << "Cannot draw ROC curve without data histograms! Attempting to call DoHist().\n";
+	}else if(!myProc.at(0)->GetHist()->GetEntries()){
+		cerr << "Cannot draw ROC curve without process histograms! Attempting to call DoHist().\n";
 		DoHist();
 	}
 	
-	double countS = myData.at(mySig)->GetHist()->Integral();
+	double countS = myProc.at(mySig)->GetHist()->Integral();
 	double totS = countS;
 	double countBkg = 0;
 	unsigned int nBins = myConfig->GetHistBins();
 	for(unsigned int i=0; i<myBkgs.size(); i++)
-		countBkg += myData.at(myBkgs.at(i))->GetHist()->Integral();
+		countBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
 	double totBkg = countBkg;
 	double sigEff[nBins+2];
 	double bkgEff[nBins+2];
 
 	for(unsigned int i=0; i<=nBins+1; i++){
-		countS -= (double)myData.at(mySig)->GetHist()->GetBinContent(i);
+		countS -= (double)myProc.at(mySig)->GetHist()->GetBinContent(i);
 		for(unsigned int j=0; j<myBkgs.size(); j++)
-			countBkg -= (double)myData.at(myBkgs.at(j))->GetHist()->GetBinContent(i);
+			countBkg -= (double)myProc.at(myBkgs.at(j))->GetHist()->GetBinContent(i);
 		sigEff[i] = countS/totS;
 		bkgEff[i] = countBkg/totBkg;
 	}
@@ -369,12 +365,12 @@ void PAnalysis::BkgEffWP(double workingPoint){
 			if(sigEff[i-1]-workingPoint < workingPoint-sigEff[i]){
 				myBkgEff = bkgEff[i-1];
 				mySigEff = sigEff[i-1];
-				myCut = myData.at(mySig)->GetHist()->GetXaxis()->GetBinLowEdge(i-1);
+				myCut = myProc.at(mySig)->GetHist()->GetXaxis()->GetBinLowEdge(i-1);
 				break;
 			}else{
 				myBkgEff = bkgEff[i];
 				mySigEff = sigEff[i];
-				myCut = myData.at(mySig)->GetHist()->GetXaxis()->GetBinLowEdge(i);
+				myCut = myProc.at(mySig)->GetHist()->GetXaxis()->GetBinLowEdge(i);
 				break;
 			}
 		}
@@ -385,7 +381,7 @@ void PAnalysis::BkgEffWP(double workingPoint){
 	}
 
 	myCnvPlot->cd();
-	myCutLine = (TLine*) new TLine(myCut,0,myCut,max(myStack->GetMaximum(), myData.at(mySig)->GetHist()->GetMaximum()));
+	myCutLine = (TLine*) new TLine(myCut,0,myCut,max(myStack->GetMaximum(), myProc.at(mySig)->GetHist()->GetMaximum()));
 	myCutLine->SetLineWidth(3);
 	myCutLine->Draw();
 
@@ -399,26 +395,26 @@ void PAnalysis::BkgEffWP(double workingPoint){
 		cout << "Computing figures of merit." << endl;
 	#endif
 	if(mySig<0 || !myBkgs.size()){
-		cerr << "Cannot compute figures of merit without signal and background data!\n";
+		cerr << "Cannot compute figures of merit without signal and background proc!\n";
 		exit(1);
-	}else if(!myData.at(0)->GetHist()->GetEntries()){
-		cerr << "Cannot compute figures of merit without data histograms! Attempting to call DoOutHist().\n";
+	}else if(!myProc.at(0)->GetHist()->GetEntries()){
+		cerr << "Cannot compute figures of merit without proc histograms! Attempting to call DoOutHist().\n";
 		DoOutHist();
 	}
 
-	double totS = myData.at(mySig)->GetHist()->Integral();
+	double totS = myProc.at(mySig)->GetHist()->Integral();
 	double totBkg = 0;
 	for(unsigned int i=0; i<myBkgs.size(); i++)
-		totBkg += myData.at(myBkgs.at(i))->GetHist()->Integral();
+		totBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
 	double expBkg = myConfig->GetLumi()*totBkg;
-	double expSig = myConfig->GetLumi()*myData.at(mySig)->GetXSection()*myData.at(mySig)->GetEfficiency();
+	double expSig = myConfig->GetLumi()*myProc.at(mySig)->GetXSection()*myProc.at(mySig)->GetEfficiency();
 	double tempSB, tempSRootB, tempSRootSB;
 	double bestSRBsig = 0, bestSRBbkg = 0;
 
 	for(int i=0; i<=P_NBINS+1; i++){
-		expSig -= myConfig->GetLumi()*myData.at(mySig)->GetXSection()*myData.at(mySig)->GetEfficiency()*(double)myData.at(mySig)->GetHist()->GetBinContent(i)/totS;
+		expSig -= myConfig->GetLumi()*myProc.at(mySig)->GetXSection()*myProc.at(mySig)->GetEfficiency()*(double)myProc.at(mySig)->GetHist()->GetBinContent(i)/totS;
 		for(unsigned int j=0; j<myBkgs.size(); j++)
-			expBkg -= myConfig->GetLumi()*(double)myData.at(myBkgs.at(j))->GetHist()->GetBinContent(i);
+			expBkg -= myConfig->GetLumi()*(double)myProc.at(myBkgs.at(j))->GetHist()->GetBinContent(i);
 
 		tempSB = expSig/expBkg;
 		tempSRootB = expSig/sqrt(expBkg);
@@ -456,38 +452,38 @@ void PAnalysis::WriteOutput(TString options){
 		myCnvEff->Write("ROC");
 	if(myCnvPlot && options.Contains("plot"))
 		myCnvPlot->Write("Plot");
-	if(myData.at(0)->GetHist()->GetEntries() && options.Contains("hist")){
-		myData.at(mySig)->GetHist()->Scale(myData.at(mySig)->GetXSection()*myData.at(mySig)->GetEfficiency()/myData.at(mySig)->GetHist()->Integral());
-		for(unsigned int i=0; i<myData.size(); i++){
-			myData.at(i)->GetHist()->Scale(myConfig->GetLumi());
-			myData.at(i)->GetHist()->Write();
+	if(myProc.at(0)->GetHist()->GetEntries() && options.Contains("hist")){
+		myProc.at(mySig)->GetHist()->Scale(myProc.at(mySig)->GetXSection()*myProc.at(mySig)->GetEfficiency()/myProc.at(mySig)->GetHist()->Integral());
+		for(unsigned int i=0; i<myProc.size(); i++){
+			myProc.at(i)->GetHist()->Scale(myConfig->GetLumi());
+			myProc.at(i)->GetHist()->Write();
 		}
 	}
 	if(myROC && options.Contains("ROC"))
 		myROC->Write("ROC curve");
 }
 
-void PAnalysis::WriteSplitData(TString outputDir){
+void PAnalysis::WriteSplitProc(TString outputDir){
 	if(outputDir == "")
 		outputDir = myConfig->GetOutputDir();
 	#ifdef P_LOG
-		cout << "Splitting data and writing output files.\n"; 
+		cout << "Splitting root files and writing output files.\n"; 
 	#endif
 	if(!myCut){
-		cerr << "Cannot write split data without knowing the cut value! Attempting to call BkgEffWP().\n";
+		cerr << "Cannot write split root files without knowing the cut value! Attempting to call BkgEffWP().\n";
 		BkgEffWP();
 	}
 
-	for(unsigned int j=0; j<myData.size(); j++){
-		PData* data = (PData*) myData.at(j);
+	for(unsigned int j=0; j<myProc.size(); j++){
+		PProc* proc = (PProc*) myProc.at(j);
 
-		data->Open();
+		proc->Open();
 
-		TFile* outFileSig = new TFile(outputDir + "/" + myName + "_siglike_data_" + data->GetName() + ".root","RECREATE");
-		TTree* treeSig = data->GetTree()->CloneTree(0);
+		TFile* outFileSig = new TFile(outputDir + "/" + myName + "_siglike_proc_" + proc->GetName() + ".root","RECREATE");
+		TTree* treeSig = proc->GetTree()->CloneTree(0);
 		
-		TFile* outFileBkg = new TFile(outputDir + "/" + myName + "_bkglike_data_" + data->GetName() + ".root","RECREATE");
-		TTree* treeBkg = data->GetTree()->CloneTree(0);
+		TFile* outFileBkg = new TFile(outputDir + "/" + myName + "_bkglike_proc_" + proc->GetName() + ".root","RECREATE");
+		TTree* treeBkg = proc->GetTree()->CloneTree(0);
 		
 		if(outFileSig->IsZombie() || outFileBkg->IsZombie()){
 			cerr << "Error creating split output files.\n";
@@ -500,10 +496,10 @@ void PAnalysis::WriteSplitData(TString outputDir){
 			myReader->AddVariable(myConfig->GetWeight(k), &inputs.at(k));
 		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 		
-		for(long i=0; i<data->GetTree()->GetEntries(); i++){
-			data->GetTree()->GetEntry(i);
+		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
+			proc->GetTree()->GetEntry(i);
 			for(unsigned int k=0; k<myConfig->GetNWeights(); k++)
-				inputs.at(k) = (float) *data->GetHyp(myConfig->GetWeight(k));
+				inputs.at(k) = (float) *proc->GetHyp(myConfig->GetWeight(k));
 			if(Transform(myMvaMethod, myReader->EvaluateMVA(myName)) < myCut)
 				treeBkg->Fill();
 			else
@@ -525,7 +521,7 @@ void PAnalysis::WriteSplitData(TString outputDir){
 		outFileBkg->Close();
 
 		delete myReader;
-		data->Close();
+		proc->Close();
 	}
 }
 
@@ -562,8 +558,8 @@ PAnalysis::~PAnalysis(){
 		cout << "Destroying PAnalysis " << myName << ".\n";
 	#endif
 
-	for(unsigned i=0; i<myData.size(); i++)
-		delete myData.at(i);
+	for(unsigned i=0; i<myProc.size(); i++)
+		delete myProc.at(i);
 	if(myStack)
 		delete myStack;
 	if(myCnvPlot)

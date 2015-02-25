@@ -13,7 +13,7 @@
 #include "TLine.h"
 
 #include "defs.h"
-#include "pdata.h"
+#include "pproc.h"
 #include "pconfig.h"
 
 double min(double a, double b);
@@ -44,7 +44,7 @@ class PAnalysis{
 	void OpenAllProc(void);
 	void CloseAllProc(void);
 	void FillStack(void);
-	double Transform(TString method, double output);
+	float Transform(TString method, float output);
 	
 	TFile* myOutputFile;
 	THStack* myStack;

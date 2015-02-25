@@ -124,7 +124,7 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	(TMVA::gConfig().GetIONames()).fWeightFileDir = myConfig->GetOutputDir();
 	
 	#ifdef P_LOG
-		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "DrawProgressBar");
+		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "!DrawProgressBar");
 	#else
 		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "Silent:!DrawProgressBar");
 	#endif
@@ -170,6 +170,12 @@ void PAnalysis::DoHist(bool evalOnTrained){
 		cerr << "Cannot draw NN output histograms without having defined and trained the factory! Attemping to call DefineAndTrainFactory().\n";
 		DefineAndTrainFactory();
 	}
+	
+	vector<float> inputs(myConfig->GetNInputVars());
+	TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
+	for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+		myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
+	myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 
 	OpenAllProc();
 
@@ -203,16 +209,9 @@ void PAnalysis::DoHist(bool evalOnTrained){
 
 	// Filling histograms
 
-	vector<float> inputs(myConfig->GetNInputVars());
-
 	for(unsigned int j=0; j<myProc.size(); j++){
 		PProc* proc = (PProc*) myProc.at(j);
 
-		TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-		for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-			myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
-		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
-		
 		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
 			if(proc->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !evalOnTrained)
 				continue;
@@ -231,13 +230,14 @@ void PAnalysis::DoHist(bool evalOnTrained){
 		else
 			proc->GetHist()->SetLineStyle(0);
 
-		delete myReader;
 	}
 
 	CloseAllProc();
+	
+	delete myReader;
 }
 
-double PAnalysis::Transform(TString method, double input){
+float PAnalysis::Transform(TString method, float input){
 	if(method == "BDT")
 		return 1/(1+exp(-10*input));
 	else if(method.Contains("MLP"))
@@ -472,6 +472,12 @@ void PAnalysis::WriteSplitRootFiles(TString outputDir){
 		cerr << "Cannot write split root files without knowing the cut value! Attempting to call BkgEffWP().\n";
 		BkgEffWP();
 	}
+		
+	vector<float> inputs(myConfig->GetNInputVars());
+	TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
+	for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+		myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
+	myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 
 	for(unsigned int j=0; j<myProc.size(); j++){
 		PProc* proc = (PProc*) myProc.at(j);
@@ -489,17 +495,19 @@ void PAnalysis::WriteSplitRootFiles(TString outputDir){
 			exit(1);
 		}
 		
-		vector<float> inputs(myConfig->GetNInputVars());
-		TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-		for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-			myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
-		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
+		float mvaOutput;
+		TString outBranchName = "MVAOUT__" + outputDir + "/" + myName;
+		outBranchName.ReplaceAll("//","__");
+		outBranchName.ReplaceAll("/","__");
+		treeSig->Branch(outBranchName, &mvaOutput, outBranchName + "/F");
+		treeBkg->Branch(outBranchName, &mvaOutput, outBranchName + "/F");
 		
 		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
 			proc->GetTree()->GetEntry(i);
 			for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
 				inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
-			if(Transform(myMvaMethod, myReader->EvaluateMVA(myName)) < myCut)
+			mvaOutput = Transform(myMvaMethod, myReader->EvaluateMVA(myName));
+			if(mvaOutput < myCut)
 				treeBkg->Fill();
 			else
 				treeSig->Fill();
@@ -519,9 +527,10 @@ void PAnalysis::WriteSplitRootFiles(TString outputDir){
 		treeBkg->Write();
 		outFileBkg->Close();
 
-		delete myReader;
 		proc->Close();
 	}
+	
+	delete myReader;
 }
 
 void PAnalysis::WriteLog(TString output){

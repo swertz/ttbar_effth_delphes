@@ -14,7 +14,7 @@
 using namespace std;
 
 PConfig::PConfig(TString configFile){
-	ConfigFile cfg(configFile.Proc());
+	ConfigFile cfg(configFile.Data());
 
 	anaName = (string)cfg.Value("analysis","name");
 	outputDir = (string)cfg.Value("analysis","outputdir");

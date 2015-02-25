@@ -239,11 +239,11 @@ class tryMisChief(Thread):
 		cfgBkgLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
 
 		for proc in cfgSigLike.procCfg:
-			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + data["name"] + ".root"
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
 			if proc["signal"] == "-1":
 				proc["signal"] = "1"
 		for proc in cfgBkgLike.procCfg:
-			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + data["name"] + ".root"
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
 			if proc["signal"] == "-1":
 				proc["signal"] = "1"
 
@@ -358,7 +358,8 @@ def plotResults(cfg, tree):
 
 	nBr = len(tree)
 	nProc = len(cfg.procCfg)
-	nBins = int(cfg.mvaCfg["plotbins"])
+	nBins = int(cfg.mvaCfg["histbins"])
+	nFitBins = int(cfg.mvaCfg["fitbins"])
 
 	branchTotals = TH1D("branch_tot", "Branch totals", nBr, 0, nBr)
 	lst = TList()
@@ -384,7 +385,7 @@ def plotResults(cfg, tree):
 		
 		treeYields[ proc["name"] ] = TH1D(proc["name"] + "_yields", "Branch yields for " + proc["name"], nBr, 0, nBr)
 		
-		treeMVAs[ proc["name"] ] = TH1D(proc["name"] + "_MVAs", "MVA histograms for " + proc["name"], nBrSkimmed*nBins, 0, nBrSkimmed*nBins)
+		treeMVAs[ proc["name"] ] = TH1D(proc["name"] + "_MVAs", "MVA histograms for " + proc["name"], nBrSkimmed*nFitBins, 0, nBrSkimmed*nFitBins)
 
 		procFile = TFile(proc["path"], "READ")
 		procTree = procFile.Get(proc["treename"])
@@ -413,10 +414,10 @@ def plotResults(cfg, tree):
 		for j,branch in enumerate(skimmedTree):
 
 			branchFile = TFile(branch + ".root", "READ")
-			procHist = branchFile.Get(proc["name"] + "_output").Rebin( float(cfg.mvaCfg["fitbins"]) / int(cfg.mvaCfg["plotbins"]) )
+			procHist = branchFile.Get(proc["name"] + "_output").Rebin(nBins/nFitBins)
 			
-			for k in range(1, procHist.GetNbinsX()+1):
-				treeMVAs[ proc["name"] ].SetBinContent(j*nBins+k, procHist.GetBinContent(k))
+			for k in range(1, nFitBins+1):
+				treeMVAs[ proc["name"] ].SetBinContent(j*nFitBins+k, procHist.GetBinContent(k))
 
 			branchFile.Close()
 

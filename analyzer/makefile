@@ -4,7 +4,7 @@ CXX := g++
 
 sourcedir_tmva := source_tmva/
 objdir_tmva := objs_tmva/
-objects_tmva := $(objdir_tmva)/nn_main.o $(objdir_tmva)/nn_panalysis.o $(objdir_tmva)/nn_pdata.o $(objdir_tmva)/nn_pconfig.o $(objdir_tmva)/Chameleon.o $(objdir_tmva)/ConfigFile.o
+objects_tmva := $(objdir_tmva)/main.o $(objdir_tmva)/panalysis.o $(objdir_tmva)/pproc.o $(objdir_tmva)/pconfig.o $(objdir_tmva)/Chameleon.o $(objdir_tmva)/ConfigFile.o
 
 all: tmva makefile
 

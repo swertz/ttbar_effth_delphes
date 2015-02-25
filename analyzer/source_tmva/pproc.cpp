@@ -15,8 +15,8 @@ PProc::PProc(PConfig* config, unsigned int num){
 	}
 	myTreeName = config->GetTreeName(num);
 	myTree = (TTree*) myFile->Get(myTreeName);
-	for(unsigned int i=0; i<config->GetNWeights(); i++)
-		myWeight.push_back(0);
+	for(unsigned int i=0; i<config->GetNInputVars(); i++)
+		myInputVars.push_back(0);
 	myEfficiency = (double)myTree->GetEntries()/config->GetTotEvents(num);
 	myFile->Close();
 	myName = config->GetName(num);
@@ -34,8 +34,8 @@ void PProc::Open(void){
 		exit(1);
 	}
 	myTree = (TTree*) myFile->Get(myTreeName);
-	for(unsigned int i=0; i<myConfig->GetNWeights(); i++)
-		myTree->SetBranchAddress(myConfig->GetWeight(i), &myWeight.at(i));
+	for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
+		myTree->SetBranchAddress(myConfig->GetInputVar(i), &myInputVars.at(i));
 }
 
 void PProc::Close(void){
@@ -78,16 +78,16 @@ double PProc::GetHistReweight(void) const{
 	return myHistReweight;
 }
 
-double* PProc::GetHyp(TString hypName){
+double* PProc::GetInputVar(TString varName){
 	if(myTree->GetEntries() <= 0){
-		cerr << "Error in " << myName << "::GetHyp(): can't return weight without opening the process first.\n";
+		cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
 		exit(1);
 	}
-	for(unsigned int i=0; i<myConfig->GetNWeights(); i++){
-		if(hypName == myConfig->GetWeight(i))
-			return &myWeight.at(i);
+	for(unsigned int i=0; i<myConfig->GetNInputVars(); i++){
+		if(varName == myConfig->GetInputVar(i))
+			return &myInputVars.at(i);
 	}
-	cerr << "Error in " << myName << "::GetHyp(): couldn't find weight under hypothesis " << hypName << ".\n";
+	cerr << "Error in " << myName << "::GetInputVar(): couldn't find input variable " << varName << ". Remember it has to be part of the input variables defined in the [analysis] section.\n";
 	exit(1);
 }
 

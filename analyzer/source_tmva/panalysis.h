@@ -31,7 +31,7 @@ class PAnalysis{
 	void BkgEffWP(double workingPoint=0);
 	//void FiguresOfMerit(void);
 	void WriteOutput(TString options="");
-	void WriteSplitProc(TString outputDir="");
+	void WriteSplitRootFiles(TString outputDir="");
 	void WriteLog(TString output="");
 	double GetBkgEff(void) const;
 	double GetSigEff(void) const;

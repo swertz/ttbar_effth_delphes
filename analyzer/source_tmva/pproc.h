@@ -29,7 +29,7 @@ class PProc{
 	double GetEfficiency(void) const;
 	double GetInputReweight(void) const;
 	double GetHistReweight(void) const;
-	double *GetHyp(TString hypName);
+	double *GetInputVar(TString varName);
 	TH1D* GetHist(void) const;
 	TTree* GetTree(void) const;
 	TFile* GetFile(void) const;
@@ -53,7 +53,7 @@ class PProc{
 	double myHistReweight;
 	Color_t myColor;
 
-	std::vector<double> myWeight;
+	std::vector<double> myInputVars;
 };
 
 bool compareProc(const PProc* lhs, const PProc* rhs);

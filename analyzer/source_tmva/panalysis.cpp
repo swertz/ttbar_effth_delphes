@@ -137,8 +137,8 @@ void PAnalysis::DefineAndTrainFactory(unsigned int iterations, TString method, T
 	if(myConfig->GetGenWeight() != "")
 		myFactory->SetWeightExpression(myConfig->GetGenWeight());
 
-	for(unsigned int i=0; i<myConfig->GetNWeights(); i++)
-		myFactory->AddVariable(myConfig->GetWeight(i));
+	for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
+		myFactory->AddVariable(myConfig->GetInputVar(i));
 
 	// Events: train/test/train/test/...
 	// ? for each background tree or for all the brackgrounds together ?
@@ -203,23 +203,22 @@ void PAnalysis::DoHist(bool evalOnTrained){
 
 	// Filling histograms
 
-	vector<float> inputs(myConfig->GetNWeights());
+	vector<float> inputs(myConfig->GetNInputVars());
 
 	for(unsigned int j=0; j<myProc.size(); j++){
 		PProc* proc = (PProc*) myProc.at(j);
 
 		TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-		for(unsigned int k=0; k<myConfig->GetNWeights(); k++){
-			myReader->AddVariable(myConfig->GetWeight(k), &inputs.at(k));
-		}
+		for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+			myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
 		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 		
 		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
 			if(proc->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !evalOnTrained)
 				continue;
 			proc->GetTree()->GetEntry(i);
-			for(unsigned int k=0; k<myConfig->GetNWeights(); k++)
-				inputs.at(k) = (float) *proc->GetHyp(myConfig->GetWeight(k));
+			for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+				inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
 			proc->GetHist()->Fill(Transform(myMvaMethod, myReader->EvaluateMVA(myName)), proc->GetHistReweight());
 		}
 		
@@ -463,7 +462,7 @@ void PAnalysis::WriteOutput(TString options){
 		myROC->Write("ROC curve");
 }
 
-void PAnalysis::WriteSplitProc(TString outputDir){
+void PAnalysis::WriteSplitRootFiles(TString outputDir){
 	if(outputDir == "")
 		outputDir = myConfig->GetOutputDir();
 	#ifdef P_LOG
@@ -490,16 +489,16 @@ void PAnalysis::WriteSplitProc(TString outputDir){
 			exit(1);
 		}
 		
-		vector<float> inputs(myConfig->GetNWeights());
+		vector<float> inputs(myConfig->GetNInputVars());
 		TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-		for(unsigned int k=0; k<myConfig->GetNWeights(); k++)
-			myReader->AddVariable(myConfig->GetWeight(k), &inputs.at(k));
+		for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+			myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
 		myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
 		
 		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
 			proc->GetTree()->GetEntry(i);
-			for(unsigned int k=0; k<myConfig->GetNWeights(); k++)
-				inputs.at(k) = (float) *proc->GetHyp(myConfig->GetWeight(k));
+			for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+				inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
 			if(Transform(myMvaMethod, myReader->EvaluateMVA(myName)) < myCut)
 				treeBkg->Fill();
 			else

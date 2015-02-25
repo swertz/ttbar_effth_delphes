@@ -25,7 +25,7 @@ int main(int argc, char **argv){
 	if(myConfig->GetOutputTasks().Contains("results"))
 		myAna->WriteOutput();
 	if(myConfig->GetOutputTasks().Contains("split"))
-		myAna->WriteSplitData();
+		myAna->WriteSplitRootFiles();
 	if(myConfig->GetOutputTasks().Contains("log"))
 		myAna->WriteLog();
 

@@ -35,15 +35,15 @@ PConfig::PConfig(TString configFile){
 	splitName = (string)cfg.Value("analysis","splitname");
 	logName = (string)cfg.Value("analysis","log");
 
-	TString weightsString = (string)cfg.Value("analysis","inputvar");
-	TObjArray* tempArray = weightsString.Tokenize(",");
+	TString inputVarString = (string)cfg.Value("analysis","inputvar");
+	TObjArray* tempArray = inputVarString.Tokenize(",");
 	for(int k=0; k<tempArray->GetEntries(); k++){
 		TObjString* tempObj = (TObjString*) tempArray->At(k);
-		TString weightName = (TString) tempObj->GetString();
-		if(weightName != "")
-			weights.push_back(tempObj->GetString());
+		TString varName = (TString) tempObj->GetString();
+		if(varName != "")
+			inputVars.push_back(tempObj->GetString());
 	}
-	nWeights = weights.size();
+	nInputVars = inputVars.size();
 	delete tempArray;
 
 	nProc = 0;
@@ -91,8 +91,8 @@ unsigned int PConfig::GetNProc(void) const{
 	return nProc;
 }
 
-unsigned int PConfig::GetNWeights(void) const{
-	return nWeights;
+unsigned int PConfig::GetNInputVars(void) const{
+	return nInputVars;
 }
 
 TString PConfig::GetAnaName(void) const{
@@ -159,8 +159,8 @@ TString PConfig::GetLogName(void) const{
 	return logName;
 }
 
-TString PConfig::GetWeight(unsigned int i) const{
-	return weights.at(i);
+TString PConfig::GetInputVar(unsigned int i) const{
+	return inputVars.at(i);
 }
 
 Color_t PConfig::TranslateColor(TString color) const{

@@ -36,8 +36,8 @@ class PConfig{
 	TString GetOutputTasks(void) const;
 	TString GetSplitName(void) const;
 	TString GetLogName(void) const;
-	TString GetWeight(unsigned int i) const;
-	unsigned int GetNWeights(void) const;
+	TString GetInputVar(unsigned int i) const;
+	unsigned int GetNInputVars(void) const;
 
 	private:
 
@@ -48,14 +48,14 @@ class PConfig{
 	std::vector<double> xSections;
 	std::vector<long> totEvents;
 	std::vector<TString> treeNames;
-	unsigned int nProc, nWeights;
+	unsigned int nProc, nInputVars;
 
 	TString anaName, outputDir, outputName, topology, mvaMethod;
 	unsigned int iterations, trainEntries;
 	double workingPoint, lumi;
 	unsigned int histBins, plotBins;
 	TString writeOptions, outputTasks, splitName, logName, genWeight;
-	std::vector<TString> weights;
+	std::vector<TString> inputVars;
 
 	Color_t TranslateColor(TString color) const;
 };

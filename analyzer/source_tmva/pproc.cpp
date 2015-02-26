@@ -5,7 +5,7 @@ using namespace std;
 
 PProc::PProc(PConfig* config, unsigned int num){
 	#ifdef P_LOG
-		cout << "Creating data instance nr. " << num << " for " << config->GetName(num) << ".\n";
+		cout << "Creating PProc instance nr. " << num << " for " << config->GetName(num) << ".\n";
 	#endif
 	myPath = config->GetPath(num);
 	myFile = (TFile*) new TFile(myPath, "READ");
@@ -23,6 +23,7 @@ PProc::PProc(PConfig* config, unsigned int num){
 	myType = config->GetType(num);
 	myColor = config->GetColor(num);
 	myXSection = config->GetXSection(num);
+	myYield = myEfficiency*myXSection*config->GetLumi();
 	myHist = (TH1D*) new TH1D(myName+"_output", "MVA output", config->GetHistBins(), 0., 1.);
 	myConfig = config;
 }
@@ -68,6 +69,10 @@ double PProc::GetXSection(void) const{
 
 double PProc::GetEfficiency(void) const{
 	return myEfficiency;
+}
+
+double PProc::GetYield(void) const{
+	return myYield;
 }
 
 double PProc::GetInputReweight(void) const{

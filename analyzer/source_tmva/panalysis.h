@@ -29,6 +29,7 @@ class PAnalysis{
 	void DoPlot(void);
 	void DoROC(void);
 	void BkgEffWP(double workingPoint=0);
+	void BkgEffWPPrecise(double workingPoint=0);
 	//void FiguresOfMerit(void);
 	void WriteOutput(TString options="");
 	void WriteSplitRootFiles(TString outputDir="");

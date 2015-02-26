@@ -389,6 +389,102 @@ void PAnalysis::BkgEffWP(double workingPoint){
 	#endif
 }
 
+void PAnalysis::BkgEffWPPrecise(double workingPoint){
+	if(workingPoint == 0)
+		workingPoint = myConfig->GetWorkingPoint();
+	#ifdef P_LOG
+		cout << "Computing precise cut for signal efficiency = " << workingPoint << "... " << endl;
+	#endif
+	if(!myFactory){
+		cerr << "Cannot compute precise working point without having defined and trained the factory! Attemping to call DefineAndTrainFactory().\n";
+		DefineAndTrainFactory();
+	}
+	if(workingPoint > 1 || workingPoint <= 0){
+		cerr << "Working point must be a double between 0 and 1!\n";
+		exit(1);
+	}
+
+	// We will evaluate the MVA on the signal, build a vector of (MVA output), sort it, and cut the vector at the working point to find the MVA cut value
+
+	vector<float> inputs(myConfig->GetNInputVars());
+	TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
+	for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+		myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
+	myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
+
+	// Fetching the signal
+	PProc* proc = (PProc*) myProc.at(mySig);
+	proc->Open();
+	TTree* tree = proc->GetTree();
+	
+	vector<float> mvaOutput;
+	
+	for(long i=0; i<tree->GetEntries(); i++){
+		tree->GetEntry(i);
+		for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+			inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
+		float mva = Transform(myMvaMethod, myReader->EvaluateMVA(myName));
+		mvaOutput.push_back(mva);
+	}
+
+	sort(mvaOutput.begin(), mvaOutput.end());
+
+	// the sort is in ascending MVA values, so we have to cut at 1-workingPoint
+	int cutIndex = (int) floor( (1.-workingPoint) * tree->GetEntries() );
+
+	mySigEff = 1. - (double) cutIndex / tree->GetEntries();
+
+	// just a security in the limiting case of workingPoint = 0.
+	if(cutIndex == tree->GetEntries())
+		myCut = (double) *mvaOutput.end() + 1.;
+	else
+		myCut = (double) mvaOutput.at(cutIndex);
+
+	proc->Close();
+	
+	// Draw cut line on plot canvas, if it exists
+	if(myCnvPlot){
+		myCnvPlot->cd();
+		myCutLine = (TLine*) new TLine(myCut,0,myCut,max(myStack->GetMaximum(), myProc.at(mySig)->GetHist()->GetMaximum()));
+		myCutLine->SetLineWidth(3);
+		myCutLine->Draw();
+	}
+
+	// Compute background efficiency using this cut:
+	
+	double bkgSelectedYield = 0.;
+	double bkgTotYield = 0.;
+	
+	for(unsigned int j=0; j<myBkgs.size(); j++){
+		PProc* proc = (PProc*) myProc.at(myBkgs.at(j));
+
+		proc->Open();
+
+		int count = 0;
+
+		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
+			proc->GetTree()->GetEntry(i);
+			for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+				inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
+			if(Transform(myMvaMethod, myReader->EvaluateMVA(myName)) >= myCut)
+				count++;
+		}
+
+		bkgSelectedYield += proc->GetYield() * (double)count / proc->GetTree()->GetEntries();
+		bkgTotYield += proc->GetYield();
+
+		proc->Close();
+	}
+
+	myBkgEff = bkgSelectedYield/bkgTotYield;
+	
+	delete myReader;
+	
+	#ifdef P_LOG
+		cout << "For signal efficiency " << mySigEff << ", MVA cut is (precisely) " << myCut << ", and background efficiency is " << myBkgEff << ".\n";
+	#endif
+}
+
 /*void PAnalysis::FiguresOfMerit(void){
 	#ifdef P_LOG
 		cout << "Computing figures of merit." << endl;
@@ -469,8 +565,8 @@ void PAnalysis::WriteSplitRootFiles(TString outputDir){
 		cout << "Splitting root files and writing output files.\n"; 
 	#endif
 	if(!myCut){
-		cerr << "Cannot write split root files without knowing the cut value! Attempting to call BkgEffWP().\n";
-		BkgEffWP();
+		cerr << "Cannot write split root files without knowing the cut value! Attempting to call BkgEffWPPrecise().\n";
+		BkgEffWPPrecise();
 	}
 		
 	vector<float> inputs(myConfig->GetNInputVars());

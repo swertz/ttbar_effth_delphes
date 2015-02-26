@@ -27,6 +27,7 @@ class PProc{
 	int GetType(void) const;
 	double GetXSection(void) const;
 	double GetEfficiency(void) const;
+	double GetYield(void) const;
 	double GetInputReweight(void) const;
 	double GetHistReweight(void) const;
 	double *GetInputVar(TString varName);
@@ -49,6 +50,7 @@ class PProc{
 	int myType;
 	double myXSection;
 	double myEfficiency;
+	double myYield;
 	double myInputReweight;
 	double myHistReweight;
 	Color_t myColor;

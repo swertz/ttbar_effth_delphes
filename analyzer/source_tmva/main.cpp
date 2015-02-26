@@ -21,7 +21,7 @@ int main(int argc, char **argv){
 	myAna->DoHist();
 	myAna->DoPlot();
 	myAna->DoROC();
-	myAna->BkgEffWP();
+	myAna->BkgEffWPPrecise();
 	if(myConfig->GetOutputTasks().Contains("results"))
 		myAna->WriteOutput();
 	if(myConfig->GetOutputTasks().Contains("split"))

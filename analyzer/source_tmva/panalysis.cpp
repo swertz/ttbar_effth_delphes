@@ -646,6 +646,7 @@ void PAnalysis::WriteLog(TString output){
 		logFile << myMinMCNumberSig << endl;
 	if(myMinMCNumberBkg >= 0)
 		logFile << myMinMCNumberBkg;
+	logFile << myCut;
 	logFile.close();
 }	
 

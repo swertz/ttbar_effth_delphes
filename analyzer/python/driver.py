@@ -35,48 +35,21 @@ class tryMisChief(Thread):
 	def run(self):
 		if not os.path.isdir(self.cfg.mvaCfg["outputdir"]):
 			os.makedirs(self.cfg.mvaCfg["outputdir"])
+
+		# Define new configurations based on the one passed to this "try":
+		configs = defineNewCfgs(self.cfg)
 		
-		# For each process that is marked as signal, create specific
-		# tmva configuration object and launch thread
+		# Define threads with the new configurations
 		threads = []
-		configs = []
-		for proc in self.cfg.procCfg:
-			if proc["signal"] == "1":
-				# copy previous configuration and adapt it
-				thisCfg = copy.deepcopy(self.cfg)
-				bkgName = ""
-				inputVar = ""
-
-				# This part adapts each new analysis from the current one:
-				# in particular, which process is signal ("1"), which is background ("0"), 
-				# and which is spectator ("-1")
-				# It also defines the input variables ("inputVar") to be used for the training.
-				# By default, it is the weight corresponding to the hypothesis of the processes used
-				# for training ("weightname"). Of course this field might be left blank, with
-				# other input variables used as well ("otherinputvar").
-
-				for proc2 in thisCfg.procCfg:
-					if proc2 != proc and proc2["signal"] == "1":
-						proc2["signal"] = "-1"
-					if proc2["signal"] == "0":
-						bkgName += "_" + proc2["name"]
-						inputVar += proc2["weightname"] + ","
-
-				thisCfg.mvaCfg["name"] = proc["name"] + "_vs" + bkgName
-				thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + proc["weightname"]
-				thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
-				thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
-				thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
-
-				# Define thread with this new configuration
-				myThread = launchMisChief(self.level, thisCfg, self.locks)
-				threads.append(myThread)
-				configs.append(thisCfg)
+		for thisCfg in configs:
+			myThread = launchMisChief(self.level, thisCfg, self.locks)
+			threads.append(myThread)
+			configs.append(thisCfg)
 		
 		with self.locks["stdout"]:
 			print "== Level {0}: Starting {1} mva threads.".format(self.level, len(threads))
 
-		# launching the analyses and waiting for them to finish
+		# Launching the analyses and waiting for them to finish
 		for thread in threads:
 			thread.start()
 		for thread in threads:
@@ -259,6 +232,41 @@ class tryMisChief(Thread):
 			threadSig.join()
 		if not stopBkgLike:
 			threadBkg.join()
+
+def defineNewCfgs(cfg):
+
+	# For each process that is marked as signal, create specific
+	# tmva configuration object and launch thread
+	configs = []
+	for proc in cfg.procCfg:
+		if proc["signal"] == "1":
+			# copy previous configuration and adapt it
+			thisCfg = copy.deepcopy(self.cfg)
+			bkgName = ""
+			inputVar = ""
+
+			# This part adapts each new analysis from the current one:
+			# in particular, which process is signal ("1"), which is background ("0"), 
+			# and which is spectator ("-1")
+			# It also defines the input variables ("inputVar") to be used for the training.
+			# By default, it is the weight corresponding to the hypothesis of the processes used
+			# for training ("weightname"). Of course this field might be left blank, with
+			# other input variables used as well ("otherinputvar").
+
+			for proc2 in thisCfg.procCfg:
+				if proc2 != proc and proc2["signal"] == "1":
+					proc2["signal"] = "-1"
+				if proc2["signal"] == "0":
+					bkgName += "_" + proc2["name"]
+					inputVar += proc2["weightname"] + ","
+
+			thisCfg.mvaCfg["name"] = proc["name"] + "_vs" + bkgName
+			thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + proc["weightname"]
+			thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
+			thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
+			thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
+
+	return configs
 
 ######## CLASS LAUNCHMISCHIEF #####################################################
 # Launch a MVA based on a configuration passed by tryMisChief

@@ -1,15 +1,23 @@
-# Never to be used as standalone file
+# Not to be used as standalone file
+
+import sys
+import copy
 
 def defineNewCfgs(cfg):
-	# For each process that is marked as signal, create specific
-	# tmva configuration object and launch thread
+	""" Create specific tmva configuration object and return a list with all the configurations.
+	Each of them will be used to launch a thread. """
 	
 	configs = []
 	
+	count = 0
+
 	for proc in cfg.procCfg:
-		if proc["signal"] == "1":
+		if proc["signal"] == "1" and cfg.mvaCfg["removefrompool"] == "y":
+			proc["signal"] = "-3"
+
+		if proc["signal"] == "1" or proc["signal"] == "-1":
 			# copy previous configuration and adapt it
-			thisCfg = copy.deepcopy(self.cfg)
+			thisCfg = copy.deepcopy(cfg)
 			bkgName = ""
 			inputVar = ""
 
@@ -21,9 +29,20 @@ def defineNewCfgs(cfg):
 			# for training ("weightname"). Of course this field might be left blank, with
 			# other input variables used as well ("otherinputvar").
 
+			count += 1
+			count2 = 0
+
 			for proc2 in thisCfg.procCfg:
-				if proc2 != proc and proc2["signal"] == "1":
-					proc2["signal"] = "-1"
+
+				if proc2["signal"] == "1" or proc2["signal"] == "-1":
+					count2 += 1
+					if count2 == count:
+						proc2["signal"] = "1"
+					else:
+						proc2["signal"] = "-1"
+
+				if proc2["signal"] == "-2":
+					proc2["signal"] = "0"
 				if proc2["signal"] == "0":
 					bkgName += "_" + proc2["name"]
 					inputVar += proc2["weightname"] + ","
@@ -33,5 +52,7 @@ def defineNewCfgs(cfg):
 			thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
 			thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
 			thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
+			
+			configs.append(thisCfg)
 
 	return configs

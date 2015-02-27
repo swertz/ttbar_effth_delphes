@@ -46,7 +46,6 @@ class tryMisChief(Thread):
 		for thisCfg in configs:
 			myThread = launchMisChief(self.level, thisCfg, self.locks)
 			threads.append(myThread)
-			configs.append(thisCfg)
 		
 		with self.locks["stdout"]:
 			print "== Level {0}: Starting {1} mva threads.".format(self.level, len(threads))

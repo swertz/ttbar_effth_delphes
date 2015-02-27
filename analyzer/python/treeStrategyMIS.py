@@ -1,7 +1,7 @@
-# Never to be used as standalone file
+# Not to be used as standalone file
 
 def defineNewCfgs(cfg):
-	# For each process that is marked as signal, create specific
+	# Using processes defined in cfg, create specific
 	# tmva configuration object and launch thread
 	
 	configs = []

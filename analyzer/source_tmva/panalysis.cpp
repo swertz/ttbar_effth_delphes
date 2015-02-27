@@ -239,9 +239,10 @@ void PAnalysis::DoHist(bool evalOnTrained){
 
 float PAnalysis::Transform(TString method, float input){
 	if(method == "BDT")
-		return 1/(1+exp(-10*input));
-	else if(method.Contains("MLP"))
-		return 1/(1+exp(-5*(input-0.5)));
+		return (input + 1.)/2.;
+		//return 1/(1+exp(-10*input));
+	/*else if(method.Contains("MLP"))
+		return 1/(1+exp(-5*(input-0.5)));*/
 	else
 		return input;
 }
@@ -645,7 +646,7 @@ void PAnalysis::WriteLog(TString output){
 	if(myMinMCNumberSig >= 0)
 		logFile << myMinMCNumberSig << endl;
 	if(myMinMCNumberBkg >= 0)
-		logFile << myMinMCNumberBkg;
+		logFile << myMinMCNumberBkg << endl;
 	logFile << myCut;
 	logFile.close();
 }	

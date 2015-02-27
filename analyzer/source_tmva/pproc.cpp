@@ -7,25 +7,34 @@ PProc::PProc(PConfig* config, unsigned int num){
 	#ifdef P_LOG
 		cout << "Creating PProc instance nr. " << num << " for " << config->GetName(num) << ".\n";
 	#endif
-	myPath = config->GetPath(num);
+
+	myConfig = config;
+	myName = myConfig->GetName(num);
+	myType = myConfig->GetType(num);
+	myColor = myConfig->GetColor(num);
+	myXSection = myConfig->GetXSection(num);
+	myHist = (TH1D*) new TH1D(myName+"_output", "MVA output", myConfig->GetHistBins(), 0., 1.);
+	myPath = myConfig->GetPath(num);
+	myTreeName = myConfig->GetTreeName(num);
+	myGenMCEvents = (double)myConfig->GetTotEvents(num);
+	myEvtReweight = myConfig->GetEvtReweight(num);
+	for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
+		myInputVars.push_back(0);
+
 	myFile = (TFile*) new TFile(myPath, "READ");
 	if(myFile->IsZombie()){
 		cerr << "Failure opening file " << myPath << ".\n";
 		exit(1);
 	}
-	myTreeName = config->GetTreeName(num);
 	myTree = (TTree*) myFile->Get(myTreeName);
-	for(unsigned int i=0; i<config->GetNInputVars(); i++)
-		myInputVars.push_back(0);
-	myEfficiency = (double)myTree->GetEntries()/config->GetTotEvents(num);
+	myEntries = (double)myTree->GetEntries();
+	
+	myTree->Draw("This->GetReadEntry()>>tempHist", myEvtReweight, "goff");
+	TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
+	myEffEntries = tempHist->Integral();
+	delete tempHist;
+	
 	myFile->Close();
-	myName = config->GetName(num);
-	myType = config->GetType(num);
-	myColor = config->GetColor(num);
-	myXSection = config->GetXSection(num);
-	myYield = myEfficiency*myXSection*config->GetLumi();
-	myHist = (TH1D*) new TH1D(myName+"_output", "MVA output", config->GetHistBins(), 0., 1.);
-	myConfig = config;
 }
 
 void PProc::Open(void){
@@ -67,12 +76,20 @@ double PProc::GetXSection(void) const{
 	return myXSection;
 }
 
-double PProc::GetEfficiency(void) const{
-	return myEfficiency;
+double PProc::GetGenMCEvents(void) const{
+	return myGenMCEvents;
+}
+
+double PProc::GetEntries(void) const{
+	return myEntries;
+}
+
+double PProc::GetEffEntries(void) const{
+	return myEffEntries;
 }
 
 double PProc::GetYield(void) const{
-	return myYield;
+	return myEffEntries*myXSection*myConfig->GetLumi()/myGenMCEvents;
 }
 
 double PProc::GetInputReweight(void) const{

@@ -24,9 +24,12 @@ class PProc{
 
 	TString GetPath(void) const;
 	TString GetName(void) const;
+	TString GetEvtReweight(void) const;
 	int GetType(void) const;
 	double GetXSection(void) const;
-	double GetEfficiency(void) const;
+	double GetGenMCEvents(void) const;
+	double GetEntries(void) const;
+	double GetEffEntries(void) const;
 	double GetYield(void) const;
 	double GetInputReweight(void) const;
 	double GetHistReweight(void) const;
@@ -47,10 +50,12 @@ class PProc{
 	TString myTreeName;
 	TString myPath;
 	TString myName;
+	TString myEvtReweight;
 	int myType;
 	double myXSection;
-	double myEfficiency;
-	double myYield;
+	double myGenMCEvents;
+	double myEntries;
+	double myEffEntries;
 	double myInputReweight;
 	double myHistReweight;
 	Color_t myColor;

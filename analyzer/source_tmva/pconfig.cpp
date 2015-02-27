@@ -27,7 +27,6 @@ PConfig::PConfig(TString configFile){
 	trainEntries = (unsigned int)cfg.Value("analysis","trainentries");
 	workingPoint = (double)cfg.Value("analysis","workingpoint");
 	lumi = (double)cfg.Value("analysis","lumi");
-	genWeight = (string)cfg.Value("analysis","genweight");
 	histBins = (unsigned int)cfg.Value("analysis","histbins");
 	plotBins = (unsigned int)cfg.Value("analysis","plotbins");
 	writeOptions = (string)cfg.Value("analysis","writeoptions");
@@ -54,6 +53,7 @@ PConfig::PConfig(TString configFile){
 		xSections.push_back( (double)cfg.Value("proc_"+SSTR(i),"xsection") );
 		totEvents.push_back( (long)cfg.Value("proc_"+SSTR(i),"genevents") );
 		treeNames.push_back( (string)cfg.Value("proc_"+SSTR(i),"treename") );
+		evtWeights.push_back( (string)cfg.Value("analysis","evtweight") );
 		colors.push_back( TranslateColor((string)cfg.Value("proc_"+SSTR(i),"color")) );
 		nProc++;
 	}
@@ -85,6 +85,10 @@ long PConfig::GetTotEvents(unsigned int i) const{
 
 TString PConfig::GetTreeName(unsigned int i) const{
 	return treeNames.at(i);
+}
+
+TString PConfig::GetEvtWeight(unsigned int i) const{
+	return evtWeights.at(i);
 }
 
 unsigned int PConfig::GetNProc(void) const{
@@ -129,10 +133,6 @@ double PConfig::GetWorkingPoint(void) const{
 
 double PConfig::GetLumi(void) const{
 	return lumi;
-}
-
-TString PConfig::GetGenWeight(void) const{
-	return genWeight;
 }
 
 unsigned int PConfig::GetHistBins(void) const{

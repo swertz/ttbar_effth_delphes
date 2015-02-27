@@ -25,7 +25,7 @@ do
 	done
 done
 
-dir=$MGWORKDIR/$1/Source/MadWeight/tools
+dir=$MGWORKDIR/Source/MadWeight/tools
 if [ -d $dir ]
 then
 	echo "Back-uping and patching $dir/vegas.f"
@@ -35,7 +35,7 @@ else
 	echo "Couldn't find directory $dir".
 fi
 
-dir=$MGWORKDIR/$1/bin/internal/
+dir=$MGWORKDIR/bin/internal/
 if [ -d $dir ]
 then
 	echo "Back-uping and patching $dir/madweight_interface.py"

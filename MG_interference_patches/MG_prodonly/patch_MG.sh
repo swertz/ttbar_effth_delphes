@@ -13,12 +13,12 @@ do
 	for ((j=0;j<${#DECAYS[*]};j++)); 
 	do
 		decay=${DECAYS[$j]}
-		dir=${MGWORKDIR}/P0_${proc}_ttx_${decay}
+		dir=$MGWORKDIR/P0_${proc}_ttx_$decay
 		if [ -d "$dir" ]
 		then
-			echo "Back-uping and patching ${dir}/matrix1.f"
-			cp ${dir}/matrix1.f ${dir}/matrix1.f.old
-			patch ${dir}/matrix1.f patch_${proc}.f
+			echo "Back-uping and patching $dir/matrix1.f"
+			cp $dir/matrix1.f $dir/matrix1.f.old
+			patch $dir/matrix1.f patch_$proc.f
 		else
 			echo "Couldn't find directory $dir".
 		fi

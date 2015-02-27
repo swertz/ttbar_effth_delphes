@@ -34,5 +34,15 @@ then
 else
 	echo "Couldn't find directory $dir".
 fi
+
+dir=$MGWORKDIR/$1/bin/internal/
+if [ -d $dir ]
+then
+	echo "Back-uping and patching $dir/madweight_interface.py"
+	cp $dir/madweight_interface.py $dir/madweight_interface.py.backup
+	patch $dir/madweight_interface.py patch_interface.py
+else
+	echo "Couldn't find directory $dir".
+fi
 	
 

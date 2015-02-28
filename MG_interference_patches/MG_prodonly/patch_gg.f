@@ -15,7 +15,7 @@
 >       JAMP(2,1)=+IMAG1*AMP(5)+AMP(11)
 >       JAMP(2,2)=+IMAG1*AMP(1)+IMAG1*AMP(3)+IMAG1*AMP(4)+AMP(9)+AMP(10)
 > 
->       JAMP(3,1)=0.D0
+>       JAMP(3,1)=(0.D0,0.D0)
 >       JAMP(3,2)=+2D0*(+AMP(2))
 569c572
 <       DO M = 1, NAMPSO

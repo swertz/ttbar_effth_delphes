@@ -44,5 +44,14 @@ then
 else
 	echo "Couldn't find directory $dir".
 fi
-	
+
+dir=$MGWORKDIR/Subprocesses/
+if [ -d $dir ]
+then
+	echo "Back-uping and patching $dir/driver.f"
+	cp $dir/driver.f $dir/driver.f.backup
+	patch $dir/driver.f patch_driver.f
+else
+	echo "Couldn't find directory $dir".
+fi
 

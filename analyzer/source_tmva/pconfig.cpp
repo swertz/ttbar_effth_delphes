@@ -53,8 +53,20 @@ PConfig::PConfig(TString configFile){
 		xSections.push_back( (double)cfg.Value("proc_"+SSTR(i),"xsection") );
 		totEvents.push_back( (long)cfg.Value("proc_"+SSTR(i),"genevents") );
 		treeNames.push_back( (string)cfg.Value("proc_"+SSTR(i),"treename") );
-		evtWeights.push_back( (string)cfg.Value("analysis","evtweight") );
 		colors.push_back( TranslateColor((string)cfg.Value("proc_"+SSTR(i),"color")) );
+		
+		std::vector<TString> thisWeights;
+		TString weightString = (string)cfg.Value("proc_"+SSTR(i),"evtweight");
+		TObjArray* tempArray = weightString.Tokenize("*");
+		for(int k=0; k<tempArray->GetEntries(); k++){
+			TObjString* tempObj = (TObjString*) tempArray->At(k);
+			TString weightName = (TString) tempObj->GetString();
+			if(weightName != "")
+				thisWeights.push_back((TString) tempObj->GetString());
+		}
+		delete tempArray;
+		evtWeights.push_back(thisWeights);
+		
 		nProc++;
 	}
 }
@@ -87,7 +99,7 @@ TString PConfig::GetTreeName(unsigned int i) const{
 	return treeNames.at(i);
 }
 
-TString PConfig::GetEvtWeight(unsigned int i) const{
+std::vector<TString> PConfig::GetEvtWeights(unsigned int i) const{
 	return evtWeights.at(i);
 }
 

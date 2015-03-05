@@ -18,7 +18,7 @@ class PConfig{
 	double GetXSection(unsigned int i) const;
 	long GetTotEvents(unsigned int i) const;
 	TString GetTreeName(unsigned int i) const;
-	TString GetGenWeight(unsigned int i) const;
+	std::vector<TString> GetEvtWeights(unsigned int i) const;
 	
 	unsigned int GetNProc(void) const;
 	TString GetAnaName(void) const;
@@ -48,7 +48,7 @@ class PConfig{
 	std::vector<double> xSections;
 	std::vector<long> totEvents;
 	std::vector<TString> treeNames;
-	std::vector<TString> evtWeights;
+	std::vector< std::vector<TString> > evtWeights;
 	unsigned int nProc, nInputVars;
 
 	TString anaName, outputDir, outputName, topology, mvaMethod;

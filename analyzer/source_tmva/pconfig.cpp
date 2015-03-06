@@ -24,6 +24,7 @@ PConfig::PConfig(TString configFile){
 	if(mvaMethod.Contains("MLP"))
 		topology = (string)cfg.Value("analysis","topology");
 	iterations = (unsigned int)cfg.Value("analysis","iterations");
+	commonEvtWeightsString = (string)cfg.Value("analysis","commonweights");
 	trainEntries = (unsigned int)cfg.Value("analysis","trainentries");
 	workingPoint = (double)cfg.Value("analysis","workingpoint");
 	lumi = (double)cfg.Value("analysis","lumi");
@@ -137,6 +138,10 @@ unsigned int PConfig::GetIterations(void) const{
 
 unsigned int PConfig::GetTrainEntries(void) const{
 	return trainEntries;
+}
+
+TString PConfig::GetCommonEvtWeightsString(void) const{
+	return commonEvtWeightsString;
 }
 
 double PConfig::GetWorkingPoint(void) const{

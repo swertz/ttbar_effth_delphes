@@ -26,6 +26,7 @@ class PConfig{
 	TString GetOutputName(void) const;
 	TString GetTopology(void) const;
 	TString GetMvaMethod(void) const;
+	TString GetCommonEvtWeightsString(void) const;
 	unsigned int GetIterations(void) const;
 	unsigned int GetTrainEntries(void) const;
 	double GetWorkingPoint(void) const;
@@ -51,7 +52,7 @@ class PConfig{
 	std::vector< std::vector<TString> > evtWeights;
 	unsigned int nProc, nInputVars;
 
-	TString anaName, outputDir, outputName, topology, mvaMethod;
+	TString anaName, outputDir, outputName, topology, mvaMethod, commonEvtWeightsString;
 	unsigned int iterations, trainEntries;
 	double workingPoint, lumi;
 	unsigned int histBins, plotBins;

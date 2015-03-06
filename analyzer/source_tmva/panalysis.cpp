@@ -117,18 +117,14 @@ void PAnalysis::DefineAndTrainFactory(void){
 	
 	OpenAllProc();
 	
-	// will first try without global weights. TO CHECK!
-	myFactory->AddSignalTree(myProc.at(mySig)->GetTree());
+	myFactory->AddSignalTree(myProc.at(mySig)->GetTree(), myProc.at(mySig)->GetGlobWeight());
 	for(unsigned int i=0; i<myBkgs.size(); i++)
-		myFactory->AddBackgroundTree(myProc.at(myBkgs.at(i))->GetTree());
-	/*myFactory->AddSignalTree(myProc.at(mySig)->GetTree(), myProc.at(mySig)->GetGlobWeight());
-	for(unsigned int i=0; i<myBkgs.size(); i++)
-		myFactory->AddBackgroundTree(myProc.at(myBkgs.at(i))->GetTree(), myProc.at(myBkgs.at(i))->GetGlobWeight());*/
+		myFactory->AddBackgroundTree(myProc.at(myBkgs.at(i))->GetTree(), myProc.at(myBkgs.at(i))->GetGlobWeight());
 
 	// Will also use weights defined in the input process dataset
 	// Careful if these weights are negative!
-	/*if(myConfig->GetEvtWeightsString() != "")
-		myFactory->SetWeightExpression(myConfig->GetEvtWeightsString());*/
+	if(myConfig->GetCommonEvtWeightsString() != "")
+		myFactory->SetWeightExpression(myConfig->GetCommonEvtWeightsString());
 
 	for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
 		myFactory->AddVariable(myConfig->GetInputVar(i));
@@ -232,6 +228,8 @@ void PAnalysis::DoHist(void){
 
 float PAnalysis::Transform(float input){
 	// BDT output is between -1 and 1 => get it between 0 and 1, just as NN
+	// And be sure all the output is between 0 and 1.
+
 	float output;
 	
 	if(myMvaMethod == "BDT")

@@ -24,18 +24,15 @@ class PAnalysis{
 	PAnalysis(PConfig *config);
 	~PAnalysis();
 
-	void DefineAndTrainFactory(unsigned int iterations=0, TString method="", TString topo="");
-	void DoHist(bool evalOnTrained=false);
+	void DefineAndTrainFactory(void);
+	void DoHist(void);
 	void DoPlot(void);
 	void DoROC(void);
-	void BkgEffWP(double workingPoint=0);
-	void BkgEffWPPrecise(double workingPoint=0);
+	void BkgEffWPPrecise(void);
 	//void FiguresOfMerit(void);
-	void WriteOutput(TString options="");
-	void WriteSplitRootFiles(TString outputDir="");
-	void WriteLog(TString output="");
-	double GetBkgEff(void) const;
-	double GetSigEff(void) const;
+	void WriteOutput(void);
+	void WriteSplitRootFiles(void);
+	void WriteResult(void);
 
 	private:
 
@@ -44,8 +41,8 @@ class PAnalysis{
 	void AddProc(PProc* data);
 	void OpenAllProc(void);
 	void CloseAllProc(void);
-	void FillStack(void);
-	float Transform(TString method, float output);
+	void FillStack(double integralSig);
+	float Transform(float output);
 	
 	TFile* myOutputFile;
 	THStack* myStack;
@@ -53,6 +50,7 @@ class PAnalysis{
 	int mySig;
 	std::vector<unsigned int> myBkgs; // we may train against several backgrounds
 	//double sRootB, sRootSB, sB;
+	bool myEvalOnTrained;
 	double myCut, myBkgEff, mySigEff;
 	long myMinMCNumberSig;
 	long myMinMCNumberBkg;
@@ -73,5 +71,7 @@ class PAnalysis{
 	TLine* myLine;
 	TLine* myCutLine;
 };
+
+bool mvaOutputSorter(std::vector<float> i, std::vector<float> j);
 
 #endif

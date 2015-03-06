@@ -22,12 +22,12 @@ int main(int argc, char **argv){
 	myAna->DoPlot();
 	myAna->DoROC();
 	myAna->BkgEffWPPrecise();
-	if(myConfig->GetOutputTasks().Contains("results"))
+	if(myConfig->GetOutputTasks().Contains("output"))
 		myAna->WriteOutput();
 	if(myConfig->GetOutputTasks().Contains("split"))
 		myAna->WriteSplitRootFiles();
-	if(myConfig->GetOutputTasks().Contains("log"))
-		myAna->WriteLog();
+	if(myConfig->GetOutputTasks().Contains("result"))
+		myAna->WriteResult();
 
 	delete myAna;
 	delete myConfig;

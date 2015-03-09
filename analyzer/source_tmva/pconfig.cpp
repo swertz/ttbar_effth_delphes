@@ -24,10 +24,10 @@ PConfig::PConfig(TString configFile){
 	if(mvaMethod.Contains("MLP"))
 		topology = (string)cfg.Value("analysis","topology");
 	iterations = (unsigned int)cfg.Value("analysis","iterations");
+	commonEvtWeightsString = (string)cfg.Value("analysis","commonweights");
 	trainEntries = (unsigned int)cfg.Value("analysis","trainentries");
 	workingPoint = (double)cfg.Value("analysis","workingpoint");
 	lumi = (double)cfg.Value("analysis","lumi");
-	genWeight = (string)cfg.Value("analysis","genweight");
 	histBins = (unsigned int)cfg.Value("analysis","histbins");
 	plotBins = (unsigned int)cfg.Value("analysis","plotbins");
 	writeOptions = (string)cfg.Value("analysis","writeoptions");
@@ -55,6 +55,19 @@ PConfig::PConfig(TString configFile){
 		totEvents.push_back( (long)cfg.Value("proc_"+SSTR(i),"genevents") );
 		treeNames.push_back( (string)cfg.Value("proc_"+SSTR(i),"treename") );
 		colors.push_back( TranslateColor((string)cfg.Value("proc_"+SSTR(i),"color")) );
+		
+		std::vector<TString> thisWeights;
+		TString weightString = (string)cfg.Value("proc_"+SSTR(i),"evtweight");
+		TObjArray* tempArray = weightString.Tokenize("*");
+		for(int k=0; k<tempArray->GetEntries(); k++){
+			TObjString* tempObj = (TObjString*) tempArray->At(k);
+			TString weightName = (TString) tempObj->GetString();
+			if(weightName != "")
+				thisWeights.push_back((TString) tempObj->GetString());
+		}
+		delete tempArray;
+		evtWeights.push_back(thisWeights);
+		
 		nProc++;
 	}
 }
@@ -85,6 +98,10 @@ long PConfig::GetTotEvents(unsigned int i) const{
 
 TString PConfig::GetTreeName(unsigned int i) const{
 	return treeNames.at(i);
+}
+
+std::vector<TString> PConfig::GetEvtWeights(unsigned int i) const{
+	return evtWeights.at(i);
 }
 
 unsigned int PConfig::GetNProc(void) const{
@@ -123,16 +140,16 @@ unsigned int PConfig::GetTrainEntries(void) const{
 	return trainEntries;
 }
 
+TString PConfig::GetCommonEvtWeightsString(void) const{
+	return commonEvtWeightsString;
+}
+
 double PConfig::GetWorkingPoint(void) const{
 	return workingPoint;
 }
 
 double PConfig::GetLumi(void) const{
 	return lumi;
-}
-
-TString PConfig::GetGenWeight(void) const{
-	return genWeight;
 }
 
 unsigned int PConfig::GetHistBins(void) const{

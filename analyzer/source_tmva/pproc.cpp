@@ -65,10 +65,6 @@ void PProc::Close(void){
 	myFile->Close();
 }
 
-void PProc::SetHistReweight(double reweight){
-	myHistReweight = reweight;
-}
-
 TString PProc::GetPath(void) const{
 	return myPath;
 }
@@ -179,10 +175,6 @@ double PProc::GetEvtWeight(void) const{
 		weight *= (*i);
 	
 	return (double) weight;
-}
-
-double PProc::GetHistReweight(void) const{
-	return myHistReweight;
 }
 
 double* PProc::GetInputVar(TString varName){

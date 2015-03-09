@@ -18,7 +18,6 @@ class PProc{
 	PProc(PConfig *config, unsigned int num);
 	~PProc();
 
-	void SetHistReweight(double reweight);
 	void Open(void);
 	void Close(void);
 
@@ -39,7 +38,6 @@ class PProc{
 	double GetYieldAbs(void) const;
 	double GetYieldAbs(TString condition);
 	double GetGlobWeight(void) const;
-	double GetHistReweight(void) const;
 	double *GetInputVar(TString varName);
 	TH1D* GetHist(void) const;
 	TTree* GetTree(void) const;
@@ -64,7 +62,6 @@ class PProc{
 	double myEntries;
 	double myEffEntries;
 	double myEffEntriesAbs;
-	double myHistReweight;
 	Color_t myColor;
 
 	std::vector<double> myInputVars;

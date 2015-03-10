@@ -200,8 +200,9 @@ void PAnalysis::DoHist(void){
 		proc->Open();
 
 		for(long i=0; i<proc->GetTree()->GetEntries(); i++){
-			if(proc->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !myEvalOnTrained)
-				continue;
+			// this would have to be discussed
+			//if(proc->GetType() >= 0 && i%2==0 && i < 2*myConfig->GetTrainEntries() && !myEvalOnTrained)
+			//	continue;
 			
 			proc->GetTree()->GetEntry(i);
 			

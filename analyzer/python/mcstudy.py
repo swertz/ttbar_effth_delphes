@@ -194,6 +194,7 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		dataHist.FillRandom(mcSumHist, totEvents)
 		templateCfg.mvaCfg["datahisto"] = dataHist
 
+		# Do the fit
 		fitResults = templateFit(templateCfg)
 		
 		# Otherwise ROOT complains because of possible memory leak:

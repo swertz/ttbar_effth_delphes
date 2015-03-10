@@ -86,11 +86,11 @@ def analyseResults(cfg, results, locks, tree, level):
 
 	# For now: take most discriminating MVA. One might decide to do other things,
 	# such as take best best MVA, provided one has enough MC to continue (otherwise, take second-best, and so on)
-	for i,thisCfg in enumerate([ result[4] for result in results ]):
-		if bkgEff < float(cfg.mvaCfg["maxbkgeff"]) or float(cfg.mvaCfg["maxbkgeff"]) == 0.:
+	for i,result in enumerate(results):
+		if result[1] > float(cfg.mvaCfg["maxbkgeff"]):
 			if cfg.mvaCfg["removebadana"]:
-				os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
-			del results[i]
+				os.system("rm "+result[4].mvaCfg["outputdir"]+"/"+result[4].mvaCfg["name"]+"*")
+	results = [ result for result in results if result[1] < float(cfg.mvaCfg["maxbkgeff"]) ]
 
 	bestMva = results[0][4]
 	removeSigLike = False

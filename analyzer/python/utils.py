@@ -10,23 +10,6 @@ import copy
 import sys
 import ROOT
 
-######## CLEAN BLANKS #############################################################
-def cleanBlanks(item):
-	""" Gets a string, and returns the string after having removed any blank spaces at the beginning
-	or end of the string. Caution: in-place modification of the string! """
-	if len(item) > 0:
-		while item[0] == " ":
-			item = item[1:]
-			if len(item) == 0:
-				break
-	if len(item) > 0:
-		while item[len(item)-1] == " ":
-			item = item[:len(item)-1]
-			if len(item) == 0:
-				break
-	return item
-
-
 ######## CLASS MC STUDY CONFIG #####################################################
 
 class PMCConfig:
@@ -46,15 +29,15 @@ class PMCConfig:
 			lines = [ line.split("=") for line in lines ]
 			for line in lines:
 				# removing blank spaces before and after the "="
-				line = [ cleanBlanks(item) for item in line ]
+				line = [ item.strip() for item in line ]
 				if line[0].find("param") >= 0:
 						paramSet = {}
 						paramList = line[1].split(";")
 						for param in paramList:
 							name = param.split(":")[0]
-							name = cleanBlanks(name)
+							name = name.strip()
 							value = param.split(":")[1]
-							value = cleanBlanks(value)
+							value = value.strip()
 							value = float(value)
 							paramSet[name] = value
 						self.params.append(paramSet)
@@ -127,7 +110,7 @@ class PConfig:
 
 					for line in tempCfgTable:
 						# removing blank spaces before and after the "="
-						tupleLine = [ cleanBlanks(item) for item in line ]
+						tupleLine = [ item.strip() for item in line ]
 						cfgTable.append(tuple(tupleLine))
 
 					self.mvaCfg = dict(cfgTable)
@@ -143,7 +126,7 @@ class PConfig:
 
 					for line in tempCfgTable:
 						# removing blank spaces before and after the "="
-						tupleLine = [ cleanBlanks(item) for item in line ]
+						tupleLine = [ item.strip() for item in line ]
 						cfgTable.append(tuple(tupleLine))
 
 					if len(cfgTable) > 0:
@@ -229,9 +212,16 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 	outFile = ROOT.TFile(histFileName, "RECREATE")
 
 	for proc in templateCfg.procCfg:
+		
+		procFile = TFile(proc["path"], "READ")
+		procTree = procFile.Get(proc["treename"])
+		procTotEntries = procTree.GetEntries()
+		procFile.Close()
+		
 		proc["histname"] = proc["name"] + "_Branch"
 
 		hist = ROOT.TH1D(proc["name"] + "_Branch", proc["name"] + " Branch yields", nBins, 0, nBins)
+		hist.Sumw2()
 		
 		for i,branch in enumerate(MCResult.branches):
 			branchName = branch[1]
@@ -239,6 +229,7 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 			hist.GetXaxis().SetBinLabel(i+1, branchName)
 			hist.SetBinContent(i+1, float(branch[2][ proc["name"] ]))
 
+		hist.SetEntries(procTotEntries)
 		hist.Write()
 
 	outFile.Close()

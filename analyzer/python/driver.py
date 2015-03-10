@@ -98,7 +98,7 @@ class tryMisChief(Thread):
 				else:
 					# Something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
 					with self.locks["stdout"]:
-						print "== Level " + str(level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
+						print "== Level " + str(self.level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
 
 		# Sort the resulting according to decreasing discrimination
 		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
@@ -204,7 +204,11 @@ def printTree(cfg, tree):
 				print "== Error opening " + fileName + "."
 				sys.exit(1)
 			tree = file.Get(proc["treename"])
-			expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*tree.GetEntries()/int(proc["genevents"])
+			tree.Draw("This->GetReadEntry()>>tempHist", proc["evtweight"], "goff")
+			tempHist = TH1F(gDirectory.Get("tempHist"))
+			effEntries = tempHist.Integral()
+			del tempHist
+			expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
 			print "=== " + proc["name"] + ": " + str(tree.GetEntries()) + " MC events, " \
 				+ "{0:.1f}".format(expectedEvents) + " expected events."
 			file.Close()
@@ -227,7 +231,11 @@ def writeResults(cfg, tree):
 					print "== Error opening " + fileName + "."
 					sys.exit(1)
 				tree = file.Get(proc["treename"])
-				expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*tree.GetEntries()/int(proc["genevents"])
+				tree.Draw("This->GetReadEntry()>>tempHist", proc["evtweight"], "goff")
+				tempHist = TH1F(gDirectory.Get("tempHist"))
+				effEntries = tempHist.Integral()
+				del tempHist
+				expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
 				outFile.write(proc["name"] + "={0:.3f}".format(expectedEvents) + ",")
 				file.Close()
 			outFile.write("\n")
@@ -273,26 +281,35 @@ def plotResults(cfg, tree):
 	for i,proc in enumerate(cfg.procCfg):
 		
 		treeYields[ proc["name"] ] = TH1D(proc["name"] + "_yields", "Branch yields for " + proc["name"], nBr, 0, nBr)
+		treeYields[ proc["name"] ].Sumw2()
 		
 		treeMVAs[ proc["name"] ] = TH1D(proc["name"] + "_MVAs", "MVA histograms for " + proc["name"], nBrSkimmed*nFitBins, 0, nBrSkimmed*nFitBins)
+		treeMVAs[ proc["name"] ].Sumw2()
 
 		procFile = TFile(proc["path"], "READ")
 		procTree = procFile.Get(proc["treename"])
-		procTotMC = procTree.GetEntries()
+		procTree.Draw("This->GetReadEntry()>>tempHist", "abs("+proc["evtweight"]+")", "goff")
+		tempHist = TH1F(gDirectory.Get("tempHist"))
+		procTotEffEntriesAbs = tempHist.Integral()
+		del tempHist
+		procTotEntries = procTree.GetEntries()
 		procFile.Close()
 		
 		for j,branch in enumerate(tree):
 		
 			branchProcFile = TFile(branch + "_proc_" + proc["name"] + ".root", "READ")
 			branchTree = branchProcFile.Get(proc["treename"])
-			branchMC = branchTree.GetEntries()
+			branchTree.Draw("This->GetReadEntry()>>tempHist", proc["evtweight"], "goff")
+			branchTempHist = TH1F(gDirectory.Get("tempHist"))
+			branchEffEntries = branchTempHist.Integral()
+			del branchTempHist
 			branchProcFile.Close()
 
-			branchEffs.SetBinContent(j+1, i+1, 100.*float(branchMC)/procTotMC)
+			branchEffs.SetBinContent(j+1, i+1, 100.*branchEffEntries/procTotEffEntriesAbs)
 			branchEffs.GetYaxis().SetBinLabel(i+1, proc["name"])
 			branchEffs.GetXaxis().SetBinLabel(j+1, branch)
 
-			branchYield = branchMC * float(cfg.mvaCfg["lumi"]) * float(proc["xsection"]) / int(proc["genevents"])
+			branchYield = branchEffEntries * float(cfg.mvaCfg["lumi"]) * float(proc["xsection"]) / int(proc["genevents"])
 			treeYields[ proc["name"] ].SetBinContent(j+1, branchYield)
 			treeYields[ proc["name"] ].GetXaxis().SetBinLabel(j+1, branch)
 
@@ -312,6 +329,7 @@ def plotResults(cfg, tree):
 
 		file.cd()
 
+		treeYields[ proc["name"] ].SetEntries(procTotEntries)
 		treeYields[ proc["name"] ].Write()
 		lst.Add(treeYields[ proc["name"] ])
 		treeMVAs[ proc["name"] ].Write()

@@ -102,7 +102,7 @@ def templateFit(templateCfg):
 			valRange = float( proc["range"] )
 			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
 				"Variable for process " + proc["name"], \
-				0., -valRange*expect, valRange*expect)
+				0., -valRange*abs(expect), valRange*abs(expect))
 			sigYields[ proc["name"] ] = expect
 		else:
 			procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
@@ -291,7 +291,6 @@ def fillHistos(cfg, dataHist = False):
 	nBins = int(cfg.mvaCfg["nbins"])
 	varMin = float(cfg.mvaCfg["varmin"])
 	varMax = float(cfg.mvaCfg["varmax"])
-	genWeight = cfg.mvaCfg["genweight"]
 	lumi = float(cfg.mvaCfg["lumi"])
 
 	for proc in cfg.procCfg:
@@ -303,14 +302,15 @@ def fillHistos(cfg, dataHist = False):
 		
 		file = TFile(proc["path"])
 		tree = file.Get(proc["treename"])
-		nEntries = tree.GetEntriesFast()
+		evtWeightsString = proc["evtweight"]
+		evtWeights = [ weight for weight in evtWeightsString.split("*") if weight != "" ]
 
 		for event in tree:
-			
-			weight = tree.__getattr__(genWeight) * lumi * \
-					float(proc["xsection"]) / float(proc["genevents"])
+			weight = lumi * float(proc["xsection"]) / float(proc["genevents"])
+			for wgt in evtWeights:
+				weight *= tree.__getattr__(wgt)
 			hist.Fill(tree.__getattr__(inputVar), weight)
-		
+
 		proc["histo"] = hist
 
 		file.Close()

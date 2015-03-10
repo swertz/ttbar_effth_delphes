@@ -14,13 +14,19 @@ A collection of patches to
 See https://cp3.irmp.ucl.ac.be/projects/cp3admin/wiki/UsersPage/Physics/Exp/MEMforTopEffTh
 
 - analyzer:
-	* TMVA: A C++ program which reads a config file (see examples/tmva_standalone_example.conf),
+	* tmva: A C++ program which reads a config file (see examples/tmva_standalone_example.conf),
 			uses ROOT::TMVA to separate a signal from brackgrounds, and evaluates the resulting NN or BDT
 			on all the processes defined, to separate them into signal-like or background-like samples.
-			Usage: $ make tmva
-				   $ mkdir outdir_specified_in_config_file
-				   $ ./tmva examples/config_file.conf
+			Usage: 
+```
+$ make tmva
+$ mkdir outdir_specified_in_config_file
+$ ./tmva examples/config_file.conf
+```
 
 	* python/driver.py: Builds a tree of "boxes" separating different processes according to
 						a user-defined strategy. See examples/mischief_example.conf for more details.
-						Usage: $ python/driver.py config_file.conf relative_path_to_tmva_executable
+						Usage: 
+```
+$ python/driver.py config_file.conf relative_path_to_tmva_executable
+```

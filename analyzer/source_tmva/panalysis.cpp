@@ -108,7 +108,7 @@ void PAnalysis::DefineAndTrainFactory(void){
 	(TMVA::gConfig().GetIONames()).fWeightFileDir = myConfig->GetOutputDir();
 	
 	#ifdef P_LOG
-		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "DrawProgressBar");
+		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "!DrawProgressBar");
 	#else
 		myFactory = (TMVA::Factory*) new TMVA::Factory(myName, myOutputFile, "Silent:!DrawProgressBar");
 	#endif

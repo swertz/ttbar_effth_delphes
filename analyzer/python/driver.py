@@ -39,7 +39,7 @@ class tryMisChief(Thread):
 			os.makedirs(self.cfg.mvaCfg["outputdir"])
 
 		# Define new configurations based on the one passed to this "try":
-		configs = defineNewCfgs(self.cfg)
+		configs = defineNewCfgs(self.cfg, self.locks, self.tree, self.level)
 		
 		# Define threads with the new configurations
 		threads = []
@@ -93,8 +93,7 @@ class tryMisChief(Thread):
 				bkgEff = float(logResults[1])
 				
 				if bkgEff > 0.:
-					if bkgEff < float(self.cfg.mvaCfg["maxbkgeff"]) or float(self.cfg.mvaCfg["maxbkgeff"]) == 0.:
-						mvaResults.append( (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
+					mvaResults.append( (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
 					
 				else:
 					# Something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
@@ -104,146 +103,47 @@ class tryMisChief(Thread):
 		# Sort the resulting according to decreasing discrimination
 		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
 
-		# If no analysis has enough MC, stop this branch and remove the bad analyses if asked for
-		# and log the previous node of the branch in the tree, if this node is not yet in it (it might have been added by another parallel branch)
-		if len( [ result for result in mvaResults if result[2] >= int(self.cfg.mvaCfg["minkeepevents"]) and result[3] >= int(self.cfg.mvaCfg["minkeepevents"]) ] ) == 0:
-			with self.locks["stdout"]:
-				print "== Level {0}: Found no MVA to have enough MC events. Stopping branch.".format(self.level)
-			if self.level != 1:
-				with self.locks["tree"]:
-					branch = self.cfg.mvaCfg["previousbranch"]
-					if not self.tree.__contains__(branch):
-						self.tree.append(branch)
-			if self.cfg.mvaCfg["removebadana"] == "y":
-				for thisCfg in configs:
-					os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
-				os.system("rmdir "+self.cfg.mvaCfg["outputdir"])
-			return 0
+		# Decide what to do next and define next configs
+		nextConfigs = analyseResults(self.cfg, mvaResults, self.locks, self.tree, self.level)
 
-		# For now: take most discriminating MVA. One might decide to do other things,
-		# such as take best best MVA, provided one has enough MC to continue (otherwise, take second-best, and so on)
+		# Launch and define next threads, if any
+		if len(nextConfigs) != 0:
+			nextThreads = []
 
-		bestMva = mvaResults[0][4]
-		removeSigLike = False
-		removeBkgLike = False
-		stopSigLike = False
-		stopBkgLike = False
-		
-		if mvaResults[0][2] < int(self.cfg.mvaCfg["minkeepevents"]):
-			removeSigLike = True
-		else:
-			removeSigLike = False
-		
-		if mvaResults[0][2] < int(self.cfg.mvaCfg["minmcevents"]):
-			stopSigLike = True
-		else:
-			stopSigLike = False
-		
-		if mvaResults[0][3] < int(self.cfg.mvaCfg["minkeepevents"]):
-			removeBkgLike = True
-		else:
-			removeBkgLike = False
-		
-		if mvaResults[0][3] < int(self.cfg.mvaCfg["minmcevents"]):
-			stopBkgLike = True
-		else:
-			stopBkgLike = False
+			for thisCfg in nextConfigs:
+				thisThread = tryMisChief(self.level+1, thisCfg, self.locks, self.tree)
+				nextThreads.append(thisThread)
 
-		# if we have found a good analysis:
-		with self.locks["stdout"]:
-			print "== Level {0}: Found best MVA to be {1}.".format(self.level, bestMva.mvaCfg["name"])
-	
-		# removing the others
-		if self.cfg.mvaCfg["removebadana"] == "y":
-			for thisCfg in configs:
-				if thisCfg is not bestMva: 
-					os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
-		
-		# if the sig/bkg-like subsets doesn't have enough MC => remove this subset, but still keep branch if enough MC events
-		if stopSigLike:
-			if removeSigLike:
-				if self.cfg.mvaCfg["removebadana"] == "y":
-					os.system("rm " + bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike*")
-				with self.locks["stdout"]:
-					print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events => excluding it.".format(self.level, bestMva.mvaCfg["name"])
-			else:
-				with self.locks["stdout"]:
-					print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events to train another MVA => stopping here.".format(self.level, bestMva.mvaCfg["name"])
-				with self.locks["tree"]:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-					self.tree.append(branch)
-		
-		if stopBkgLike:
-			if removeBkgLike:
-				if self.cfg.mvaCfg["removebadana"] == "y":
-					os.system("rm " + bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike*")
-				with self.locks["stdout"]:
-					print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events => excluding it.".format(self.level, bestMva.mvaCfg["name"])
-			else:
-				with self.locks["stdout"]:
-					print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events to train another MVA => stopping here.".format(self.level, bestMva.mvaCfg["name"])
-				with self.locks["tree"]:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-					self.tree.append(branch)
+			for thread in nextThreads:
+				thread.start()
 
-		# if max level reached, stop this branch and log results in tree
-		if self.level == int(self.cfg.mvaCfg["maxlevel"]):
-			with self.locks["stdout"]:
-				print "== Level {0}: Reached max level. Stopping the branch.".format(self.level)
-			with self.locks["tree"]:
-				if not removeSigLike:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-					if not self.tree.__contains__(branch):
-						self.tree.append(branch)
-				if not removeBkgLike:
-					branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-					if not self.tree.__contains__(branch):
-						self.tree.append(branch)
-			return 0
-		
-		# starting two new "tries", one for signal-like events, the other one for background-like
-		# unless one of those doesn't have enough MC
-		cfgSigLike = copy.deepcopy(bestMva)
-		cfgBkgLike = copy.deepcopy(bestMva)
+			for thread in nextThreads:
+				thread.join()
 
-		cfgSigLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_SigLike"
-		cfgSigLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-
-		cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
-		cfgBkgLike.mvaCfg["previousbranch"] = self.cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-
-		for proc in cfgSigLike.procCfg:
-			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
-			if proc["signal"] == "-1":
-				proc["signal"] = "1"
-		for proc in cfgBkgLike.procCfg:
-			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
-			if proc["signal"] == "-1":
-				proc["signal"] = "1"
-
-		threadSig = tryMisChief(self.level+1, cfgSigLike, self.locks, self.tree)
-		threadBkg = tryMisChief(self.level+1, cfgBkgLike, self.locks, self.tree)
-
-		if not stopSigLike:
-			threadSig.start()
-		if not stopBkgLike:
-			threadBkg.start()
-
-		if not stopSigLike:
-			threadSig.join()
-		if not stopBkgLike:
-			threadBkg.join()
-
-######## CLASS LAUNCHMISCHIEF #####################################################
+######## MODULAR TREE ############################################################
 # Define new configuration objects based on chosen tree-building strategy 
 
-def defineNewCfgs(cfg):
+def defineNewCfgs(cfg, locks, tree, level):
 
 	if cfg.mvaCfg["mode"] == "operators":
-		return treeStrategyOps.defineNewCfgs(cfg)
+		return treeStrategyOps.defineNewCfgs(cfg, locks, tree, level)
 
 	elif cfg.mvaCfg["mode"] == "MIS":
-		return treeStrategyMIS.defineNewCfgs(cfg)
+		return treeStrategyMIS.defineNewCfgs(cfg, locks, tree, level)
+
+	else:
+		print "== Tree building strategy not properly defined."
+		sys.exit(1)
+
+# Decide what to based on the results of the tmvas:
+
+def analyseResults(cfg, results, locks, tree, level):
+
+	if cfg.mvaCfg["mode"] == "operators":
+		return treeStrategyOps.analyseResults(cfg, results, locks, tree, level)
+
+	elif cfg.mvaCfg["mode"] == "MIS":
+		return treeStrategyMIS.analyseResults(cfg, results, locks, tree, level)
 
 	else:
 		print "== Tree building strategy not properly defined."

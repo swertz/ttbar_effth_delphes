@@ -14,6 +14,7 @@ PProc::PProc(PConfig* config, unsigned int num){
 	myColor = myConfig->GetColor(num);
 	myXSection = myConfig->GetXSection(num);
 	myHist = (TH1D*) new TH1D(myName+"_output", "MVA output", myConfig->GetHistBins(), 0., 1.);
+	myHist->Sumw2();
 	myPath = myConfig->GetPath(num);
 	myTreeName = myConfig->GetTreeName(num);
 	myGenMCEvents = (double)myConfig->GetTotEvents(num);

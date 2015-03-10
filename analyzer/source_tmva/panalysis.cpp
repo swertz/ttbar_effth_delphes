@@ -7,7 +7,6 @@
 #include <TMVA/Reader.h>
 #include <TMVA/Tools.h>
 #include <TMVA/Config.h>
-#include "TROOT.h"
 #include "panalysis.h"
 
 #define SSTR( x ) dynamic_cast< std::ostringstream & > \

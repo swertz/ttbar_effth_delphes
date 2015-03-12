@@ -251,7 +251,7 @@ def writeResults(cfg, tree):
 ######## PLOT RESULTS #############################################################
 # Create ROOT file with, for each process, plots:
 # - one bin/branch (=yields)
-# - juxtaposing the MVA outputs for each branch
+# - juxtaposing the MVA outputs for each branch ==> to do: also for "half-branches"
 # - 2D plot with efficiencies for each branch
 
 def plotResults(cfg, tree):
@@ -349,9 +349,37 @@ def plotResults(cfg, tree):
 			branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
 
 	file.cd()
+	
 	branchEffs.Write()
+	cnv = ROOT.TCanvas("cnv_branch_effs", "Branch Efficiencies", 600, 600)
+	pad = ROOT.TPad("branch_effs", "Branch Efficiencies", 0, 0, 1, 1, 0)
+	pad.Draw()
+	pad.cd()
+	branchEffs.SetStats(ROOT.kFalse)
+	branchEffs.Draw("COL,TEXT,Z")
+	cnv.Write()
+	delete cnv
+
 	branchYields.Write()
+	cnv = ROOT.TCanvas("cnv_branch_yield", "Branch Yields", 600, 600)
+	pad = ROOT.TPad("branch_yield", "Branch Yields", 0, 0, 1, 1, 0)
+	pad.Draw()
+	pad.cd()
+	pad.SetLogz()
+	branchYields.Draw("COL,TEXT,Z")
+	cnv.Write()
+	delete cnv
+
 	branchComps.Write()
+	cnv = ROOT.TCanvas("cnv_branch_comps", "Branch Compositions", 600, 600)
+	pad = ROOT.TPad("branch_comps", "Branch Compositions", 0, 0, 1, 1, 0)
+	pad.Draw()
+	pad.cd()
+	pad.SetLogz()
+	branchComps.Draw("COL,TEXT,Z")
+	cnv.Write()
+	delete cnv
+
 	file.Close()
 
 ######## MAIN #############################################################

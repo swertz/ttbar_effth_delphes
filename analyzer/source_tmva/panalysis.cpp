@@ -312,18 +312,20 @@ void PAnalysis::DoROC(void){
 	
 	double countS = myProc.at(mySig)->GetHist()->Integral();
 	double totS;
-	if(myEvalOnTrained)
-		totS = myProc.at(mySig)->GetYieldAbs();
-	else
-		totS = myProc.at(mySig)->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");
+	//if(myEvalOnTrained)
+		//totS = myProc.at(mySig)->GetYieldAbs();
+		totS = myProc.at(mySig)->GetHist()->Integral();
+	/*else
+		totS = myProc.at(mySig)->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");*/
 	
 	double countBkg = 0, totBkg = 0;
 	for(unsigned int i=0; i<myBkgs.size(); i++){
 		countBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
-		if(myEvalOnTrained)
-			totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs();
-		else
-			totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");
+		//if(myEvalOnTrained)
+			//totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs();
+			totBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
+		/*else
+			totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");*/
 	}
 	
 	unsigned int nBins = myConfig->GetHistBins();

@@ -213,7 +213,7 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 
 	for proc in templateCfg.procCfg:
 		
-		procFile = TFile(proc["path"], "READ")
+		procFile = ROOT.TFile(proc["path"], "READ")
 		procTree = procFile.Get(proc["treename"])
 		procTotEntries = procTree.GetEntries()
 		procFile.Close()
@@ -221,6 +221,7 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 		proc["histname"] = proc["name"] + "_Branch"
 
 		hist = ROOT.TH1D(proc["name"] + "_Branch", proc["name"] + " Branch yields", nBins, 0, nBins)
+		hist.SetDirectory(outFile)
 		hist.Sumw2()
 		
 		for i,branch in enumerate(MCResult.branches):

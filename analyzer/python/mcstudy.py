@@ -50,8 +50,10 @@ def mcStudyMain(mcStudyFile):
 		corrList = {}
 		weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
 		weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
+		weightedNormHist.SetDirectory(subDir)
 		resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 10)
 		resHist.SetBit(ROOT.TH1.kCanRebin)
+		resHist.SetDirectory(subDir)
 		
 		histDict["weightedNorm"] = weightedNormHist
 		histDict["chisq"] = resHist
@@ -65,10 +67,12 @@ def mcStudyMain(mcStudyFile):
 				
 				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -0.5, 0.5)
 				myHist.SetBit(ROOT.TH1.kCanRebin)
+				myHist.SetDirectory(subDir)
 				histDict[procN] = myHist
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
 					procN+" Std. Dev. (GeV^{-2})", 100, 0., 1.)
 				myVarHist.SetBit(ROOT.TH1.kCanRebin)
+				myVarHist.SetDirectory(subDir)
 				histDict[procN+"_StdDev"] = myVarHist
 				
 				varVect.append(procN)
@@ -93,6 +97,7 @@ def mcStudyMain(mcStudyFile):
 		elif myMCStudy.cfg["mode"] == "template":
 			myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
 			myHist.SetBit(ROOT.TH1.kCanRebin)
+			myHist.SetDirectory(subDir)
 			histDict["minNLL"] = myHist
 			
 			mcStudyTemplate(myConfig, paramSet, histDict, pseudoNumber)
@@ -107,6 +112,7 @@ def mcStudyMain(mcStudyFile):
 			
 			myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
 			myHist.SetBit(ROOT.TH1.kCanRebin)
+			myHist.SetDirectory(subDir)
 			histDict["minNLL"] = myHist
 			
 			templateCfg = convertWgtLstSqToTemplate(myConfig, myMCResult, myMCStudy.cfg["histFile"])
@@ -121,6 +127,7 @@ def mcStudyMain(mcStudyFile):
 		
 		nVar = len(varVect)
 		corrHist = ROOT.TH2D("Correlations_hist","Correlations", nVar, 0, nVar, nVar, 0, nVar)
+		corrHist.SetDirectory(subDir)
 		for i,proc in enumerate(sorted(varVect)):
 			for j,proc2 in enumerate(sorted(varVect, reverse=True)):
 				if i == j:

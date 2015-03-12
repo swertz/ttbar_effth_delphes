@@ -100,6 +100,12 @@ class tryMisChief(Thread):
 					with self.locks["stdout"]:
 						print "== Level " + str(self.level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
 
+		# Maybe everything went wrong:
+		if len(mvaResults) == 0:
+			with self.locks["stdout"]:
+				print "== Level "+ str(self.level) + ": Every analysis failed. Stopping branch."
+			return 0
+		
 		# Sort the resulting according to decreasing discrimination
 		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
 
@@ -175,6 +181,7 @@ class launchMisChief(Thread):
 		commandString = sys.argv[argExec] + " " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".conf"
 		commandString += " > " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".log 2>&1"
 
+		# it would be annoying if, say, outputdir was "&& rm -rf *"
 		if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
 			with self.locks["stdout"]:
 				print "== Looks like a security issue..."
@@ -185,7 +192,7 @@ class launchMisChief(Thread):
 		self.cfg.mvaCfg["outcode"] = result
 		if result != 0:
 			with self.locks["stdout"]:
-				print "== Something went wrong (error code " + str(result) + ") in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ". Excluding it."
+				print "== Something went wrong (error code " + str(result) + ") in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "."
 
 ######## ANALYSE TREE #############################################################
 # Print tree structure and branch yields

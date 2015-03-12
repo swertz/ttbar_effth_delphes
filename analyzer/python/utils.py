@@ -132,6 +132,13 @@ class PConfig:
 					if len(cfgTable) > 0:
 						self.procCfg.append(dict(cfgTable))
 
+	def countProcesses(self, signal):
+		count = 0
+		for proc in self.procCfg:
+			if signal.__contains__(proc["signal"]):
+				count += 1
+		return count
+
 ######## CONVERT COLOR #####################################################
 
 def convertColor(name):

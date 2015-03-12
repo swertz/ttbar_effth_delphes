@@ -45,6 +45,11 @@ class PMCConfig:
 					self.cfg[line[0]] = line[1]
 
 ######## CLASS PRESULT #############################################################
+# Class contains a list containing, for each branch:
+# [id, branch name, {proc1: yield, proc2: yield, ...}]
+# It can be initialize from a result file given by driver.py,
+# Or from an already existing PResult (giving the structure of the tree),
+# and a RDS giving yields for each process in each branch.
 
 class PResult:
 
@@ -217,18 +222,24 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
 	templateCfg.mvaCfg["numcpu"] = "1"
 
 	outFile = ROOT.TFile(histFileName, "RECREATE")
+	if outFile.IsZombie():
+		print "== In convertWgtLstSqToTemplate: file " + histFileName + " could not be created."
+		sys.exit(1)
 
 	for proc in templateCfg.procCfg:
 		
 		procFile = ROOT.TFile(proc["path"], "READ")
+		if procFile.IsZombie():
+			print "== In convertWgtLstSqToTemplate: file " + proc["path"] + " could not be opened."
+			sys.exit(1)
 		procTree = procFile.Get(proc["treename"])
 		procTotEntries = procTree.GetEntries()
 		procFile.Close()
 		
 		proc["histname"] = proc["name"] + "_Branch"
 
+		outFile.cd()
 		hist = ROOT.TH1D(proc["name"] + "_Branch", proc["name"] + " Branch yields", nBins, 0, nBins)
-		hist.SetDirectory(outFile)
 		hist.Sumw2()
 		
 		for i,branch in enumerate(MCResult.branches):

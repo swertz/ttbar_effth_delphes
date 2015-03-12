@@ -349,36 +349,40 @@ def plotResults(cfg, tree):
 			branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
 
 	file.cd()
-	
+
+	gROOT.SetBatch(kTRUE);
+
 	branchEffs.Write()
-	cnv = ROOT.TCanvas("cnv_branch_effs", "Branch Efficiencies", 600, 600)
-	pad = ROOT.TPad("branch_effs", "Branch Efficiencies", 0, 0, 1, 1, 0)
+	cnv = TCanvas("cnv_branch_effs", "Branch Efficiencies", 900, 600)
+	pad = TPad("branch_effs", "Branch Efficiencies", 0, 0, 1, 1, 0)
 	pad.Draw()
 	pad.cd()
-	branchEffs.SetStats(ROOT.kFalse)
+	branchEffs.SetStats(kFALSE)
 	branchEffs.Draw("COL,TEXT,Z")
 	cnv.Write()
-	delete cnv
+	del cnv
 
 	branchYields.Write()
-	cnv = ROOT.TCanvas("cnv_branch_yield", "Branch Yields", 600, 600)
-	pad = ROOT.TPad("branch_yield", "Branch Yields", 0, 0, 1, 1, 0)
+	cnv = TCanvas("cnv_branch_yield", "Branch Yields", 900, 600)
+	pad = TPad("branch_yield", "Branch Yields", 0, 0, 1, 1, 0)
 	pad.Draw()
 	pad.cd()
+	branchYields.SetStats(kFALSE)
 	pad.SetLogz()
 	branchYields.Draw("COL,TEXT,Z")
 	cnv.Write()
-	delete cnv
+	del cnv
 
 	branchComps.Write()
-	cnv = ROOT.TCanvas("cnv_branch_comps", "Branch Compositions", 600, 600)
-	pad = ROOT.TPad("branch_comps", "Branch Compositions", 0, 0, 1, 1, 0)
+	cnv = TCanvas("cnv_branch_comps", "Branch Compositions", 900, 600)
+	pad = TPad("branch_comps", "Branch Compositions", 0, 0, 1, 1, 0)
 	pad.Draw()
 	pad.cd()
+	branchComps.SetStats(kFALSE)
 	pad.SetLogz()
 	branchComps.Draw("COL,TEXT,Z")
 	cnv.Write()
-	delete cnv
+	del cnv
 
 	file.Close()
 

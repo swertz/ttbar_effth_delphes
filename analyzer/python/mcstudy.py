@@ -48,14 +48,15 @@ def mcStudyMain(mcStudyFile):
 
 		histDict = {}
 		corrList = {}
+
 		weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
 		weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
 		weightedNormHist.SetDirectory(subDir)
+		histDict["weightedNorm"] = weightedNormHist
+		
 		resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 10)
 		resHist.SetBit(ROOT.TH1.kCanRebin)
 		resHist.SetDirectory(subDir)
-		
-		histDict["weightedNorm"] = weightedNormHist
 		histDict["chisq"] = resHist
 
 		varVect = []
@@ -65,24 +66,29 @@ def mcStudyMain(mcStudyFile):
 				
 				procN = proc["name"]
 				
-				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (GeV^{-2})", 100, -0.5, 0.5)
+				myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (TeV^{-2})", 100, -0.1, 0.1)
 				myHist.SetBit(ROOT.TH1.kCanRebin)
 				myHist.SetDirectory(subDir)
 				histDict[procN] = myHist
+
 				myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
-					procN+" Std. Dev. (GeV^{-2})", 100, 0., 1.)
+					procN+" Std. Dev. (TeV^{-2})", 100, 0., 0.1)
 				myVarHist.SetBit(ROOT.TH1.kCanRebin)
 				myVarHist.SetDirectory(subDir)
 				histDict[procN+"_StdDev"] = myVarHist
 				
 				varVect.append(procN)
-				
+			
+				# corrList is added to the histDict to be passed to the MC study function,
+				# but will really be filled with numbers.
+				# The real correlation histogram will be defined later, based on these numbers
 				for j,proc2 in enumerate(myConfig.procCfg):
 					if proc2["signal"] == "1":
 						corrList[procN+"/"+proc2["name"]] = 0.
 
 		histDict["corrList"] = corrList
-
+		
+		# Number of pseudo-experiments we'll do
 		pseudoNumber = int(myMCStudy.cfg["pseudoNumber"])
 	
 		if myMCStudy.cfg["mode"] == "counting":
@@ -143,6 +149,17 @@ def mcStudyMain(mcStudyFile):
 			if hist.Integral() != 0 and hist.GetDimension() == 1:
 				hist.Scale(1./hist.Integral())
 			hist.Write()
+
+		ROOT.gROOT.SetBatch(ROOT.kTRUE);
+
+		cnv = ROOT.TCanvas("cnv_correlations", "Correlations", 900, 600)
+		pad = ROOT.TPad("corr", "Correlations", 0, 0, 1, 1, 0)
+		pad.Draw()
+		pad.cd()
+		histDict["corrList"].SetStats(ROOT.kFALSE)
+		histDict["corrList"].Draw("COL,TEXT,Z")
+		cnv.Write()
+		del cnv
 		
 	if myMCStudy.cfg["mode"] == "template":
 		outFile.cd()

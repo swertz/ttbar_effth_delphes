@@ -3,6 +3,7 @@
 import sys
 import os
 import copy
+import ROOT
 
 def defineNewCfgs(cfg, locks, tree, level):
 	""" Create specific tmva configuration object and return a list with all the configurations.
@@ -70,92 +71,40 @@ def analyseResults(cfg, results, locks, tree, level):
 		
 	# If no analysis has enough MC, stop this branch and remove the bad analyses if asked for
 	# and log the previous node of the branch in the tree, if this node is not yet in it (it might have been added by another parallel branch)
-	if len( [ result for result in results if result[2] >= int(cfg.mvaCfg["minkeepevents"]) and result[3] >= int(cfg.mvaCfg["minkeepevents"]) ] ) == 0:
-		with locks["stdout"]:
-			print "== Level {0}: Found no MVA to have enough MC events. Stopping branch.".format(level)
-		if level != 1:
-			with locks["tree"]:
-				branch = cfg.mvaCfg["previousbranch"]
-				if not tree.__contains__(branch):
-					tree.append(branch)
-		if cfg.mvaCfg["removebadana"] == "y":
-			for thisCfg in [ result[4] for result in results ]:
-				os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
-			os.system("rmdir "+cfg.mvaCfg["outputdir"])
-		return []
+	#if len( [ result for result in results if result[2] >= int(cfg.mvaCfg["minkeepevents"]) and result[3] >= int(cfg.mvaCfg["minkeepevents"]) ] ) == 0:
+	#	with locks["stdout"]:
+	#		print "== Level {0}: Found no MVA to have enough MC events. Stopping branch.".format(level)
+	#	if level != 1:
+	#		with locks["tree"]:
+	#			branch = cfg.mvaCfg["previousbranch"]
+	#			if not tree.__contains__(branch):
+	#				tree.append(branch)
+	#	if cfg.mvaCfg["removebadana"] == "y":
+	#		for thisCfg in [ result[4] for result in results ]:
+	#			os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
+	#		os.system("rmdir "+cfg.mvaCfg["outputdir"])
+	#	return []
 
-	# For now: take most discriminating MVA. One might decide to do other things,
-	# such as take best best MVA, provided one has enough MC to continue (otherwise, take second-best, and so on)
+	# Forget about (and delete is asked) MVAs who have not reached sufficient discrimination
 	for i,result in enumerate(results):
 		if result[1] > float(cfg.mvaCfg["maxbkgeff"]):
 			if cfg.mvaCfg["removebadana"]:
 				os.system("rm "+result[4].mvaCfg["outputdir"]+"/"+result[4].mvaCfg["name"]+"*")
 	results = [ result for result in results if result[1] < float(cfg.mvaCfg["maxbkgeff"]) ]
 
+	# If no MVA has sufficient discrimination, log previous half in tree and stop branch:
+	if len(results) == 0:
+		with locks["stdout"]:
+			print "== Level {0}: Found no MVA to have sufficient discrimination. Stopping branch.".format(level)
+		if level != 1:
+			with locks["tree"]:
+				branch = cfg.mvaCfg["previousbranch"]
+				if not tree.__contains__(branch):
+					tree.append(branch)
+		return []
+
+	# If max level reached, stop this branch and log best results in tree whatever MC it has
 	bestMva = results[0][4]
-	removeSigLike = False
-	removeBkgLike = False
-	stopSigLike = False
-	stopBkgLike = False
-	
-	if results[0][2] < int(cfg.mvaCfg["minkeepevents"]):
-		removeSigLike = True
-	else:
-		removeSigLike = False
-	
-	if results[0][2] < int(cfg.mvaCfg["minmcevents"]):
-		stopSigLike = True
-	else:
-		stopSigLike = False
-	
-	if results[0][3] < int(cfg.mvaCfg["minkeepevents"]):
-		removeBkgLike = True
-	else:
-		removeBkgLike = False
-	
-	if results[0][3] < int(cfg.mvaCfg["minmcevents"]):
-		stopBkgLike = True
-	else:
-		stopBkgLike = False
-
-	# if we have found a good analysis:
-	with locks["stdout"]:
-		print "== Level {0}: Found best MVA to be {1}.".format(level, bestMva.mvaCfg["name"])
-	
-	# removing the others
-	if cfg.mvaCfg["removebadana"] == "y":
-		for thisCfg in [ result[4] for result in results ]:
-			if thisCfg is not bestMva: 
-				os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
-	
-	# if the sig/bkg-like subsets doesn't have enough MC => remove this subset, but still keep branch if enough MC events
-	if stopSigLike:
-		if removeSigLike:
-			if cfg.mvaCfg["removebadana"] == "y":
-				os.system("rm " + bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike*")
-			with locks["stdout"]:
-				print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events => excluding it.".format(level, bestMva.mvaCfg["name"])
-		else:
-			with locks["stdout"]:
-				print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events to train another MVA => stopping here.".format(level, bestMva.mvaCfg["name"])
-			with locks["tree"]:
-				branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
-				tree.append(branch)
-	
-	if stopBkgLike:
-		if removeBkgLike:
-			if cfg.mvaCfg["removebadana"] == "y":
-				os.system("rm " + bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike*")
-			with locks["stdout"]:
-				print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events => excluding it.".format(level, bestMva.mvaCfg["name"])
-		else:
-			with locks["stdout"]:
-				print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events to train another MVA => stopping here.".format(level, bestMva.mvaCfg["name"])
-			with locks["tree"]:
-				branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
-				tree.append(branch)
-
-	# if max level reached, stop this branch and log results in tree
 	if level == int(cfg.mvaCfg["maxlevel"]):
 		with locks["stdout"]:
 			print "== Level {0}: Reached max level. Stopping the branch.".format(level)
@@ -169,30 +118,99 @@ def analyseResults(cfg, results, locks, tree, level):
 				if not tree.__contains__(branch):
 					tree.append(branch)
 		return []
-	
-	# starting two new "tries", one for signal-like events, the other one for background-like
-	# unless one of those doesn't have enough MC
+
+	# Find the best one 
 	cfgSigLike = copy.deepcopy(bestMva)
+	stopSigLike = False
 	cfgBkgLike = copy.deepcopy(bestMva)
+	stopBkgLike = False
+	
+	for result in results:
+		bestMva = result[4]
+		cfgSigLike = copy.deepcopy(bestMva)
+		cfgBkgLike = copy.deepcopy(bestMva)
+		myCfgs = {"sig": cfgSigLike, "bkg": cfgBkgLike}
 
-	cfgSigLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_SigLike"
-	cfgSigLike.mvaCfg["previousbranch"] = cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
+		for split in ["sig", "bkg"]:
 
-	cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
-	cfgBkgLike.mvaCfg["previousbranch"] = cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
+			for proc in myCfgs[split].procCfg:
 
-	for proc in cfgSigLike.procCfg:
-		proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
-		if proc["signal"] == "-1":
-			proc["signal"] = "1"
-	for proc in cfgBkgLike.procCfg:
-		proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
-		if proc["signal"] == "-1":
-			proc["signal"] = "1"
+				thisFile = ROOT.TFile(myCfgs[split].mvaCfg["outputdir"] + "/" + myCfgs[split].mvaCfg["name"] + "_" + split + "like_proc_" + proc["name"] + ".root", "READ")
+				thisTree = thisFile.Get(proc["treename"])
+				thisEntries = thisTree.GetEntries()
+				thisFile.Close()
 
+				if thisEntries < int(cfg.mvaCfg["minmcevents"]):
+					proc["signal"] = "-3"
+
+		nSig_Sig = cfgSigLike.countProcesses(["-1","1"]) > 0
+		nBkg_Sig = cfgSigLike.countProcesses(["-2","0"]) > 0
+		
+		nSig_Bkg = cfgBkgLike.countProcesses(["-1","1"]) > 0
+		nBkg_Bkg = cfgBkgLike.countProcesses(["-2","0"]) > 0
+
+		if ( not (nSig_Sig and nBkg_Sig) ) and ( not (nSig_Bkg and nBkg_Bkg) ):
+			if i == len(results) - 1:
+				bestMva = results[0][4]
+				cfgSigLike = copy.deepcopy(bestMva)
+				cfgBkgLike = copy.deepcopy(bestMva)
+				stopSigLike = True
+				stopBkgLike = True
+				break
+			else:
+				continue
+
+		if not (nSig_Sig and nBkg_Sig):
+			stopSigLike = True
+
+		if not (nSig_Bkg and nBkg_Bkg):
+			stopBkgLike = True
+
+		break		
+	
+	# We have found a good analysis:
+	with locks["stdout"]:
+		print "== Level {0}: Found best MVA to be {1}.".format(level, bestMva.mvaCfg["name"])
+	
+	# Removing the others if asked
+	if cfg.mvaCfg["removebadana"] == "y":
+		for thisCfg in [ result[4] for result in results if result[4].mvaCfg["name"] != bestMva.mvaCfg["name"] ]:
+			os.system("rm "+thisCfg.mvaCfg["outputdir"]+"/"+thisCfg.mvaCfg["name"]+"*")
+	
+	# Starting two new "tries", one for signal-like events, the other one for background-like
+	# unless one of those doesn't have enough MC => stop here, and log result in tree 
 	if not stopSigLike:
+		cfgSigLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_SigLike"
+		cfgSigLike.mvaCfg["previousbranch"] = cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
+		
+		for proc in cfgSigLike.procCfg:
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
+			if proc["signal"] == "-1":
+				proc["signal"] = "1"
+		
 		configs.append(cfgSigLike)
+	else:
+		with locks["stdout"]:
+			print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events to train another MVA => stopping here.".format(level, bestMva.mvaCfg["name"])
+		with locks["tree"]:
+			branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_siglike"
+			tree.append(branch)
+	
 	if not stopBkgLike:
+		cfgBkgLike.mvaCfg["outputdir"] = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_BkgLike"
+		cfgBkgLike.mvaCfg["previousbranch"] = cfg.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
+
+		for proc in cfgBkgLike.procCfg:
+			proc["path"] = bestMva.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
+			if proc["signal"] == "-1":
+				proc["signal"] = "1"
+		
 		configs.append(cfgBkgLike)
+	else:
+		with locks["stdout"]:
+			print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events to train another MVA => stopping here.".format(level, bestMva.mvaCfg["name"])
+		with locks["tree"]:
+			branch = bestMva.mvaCfg["outputdir"] + "/" + bestMva.mvaCfg["name"] + "_bkglike"
+			tree.append(branch)
 
 	return configs

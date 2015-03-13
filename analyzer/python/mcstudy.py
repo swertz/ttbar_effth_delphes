@@ -136,11 +136,7 @@ def mcStudyMain(mcStudyFile):
 		corrHist.SetDirectory(subDir)
 		for i,proc in enumerate(sorted(varVect)):
 			for j,proc2 in enumerate(sorted(varVect, reverse=True)):
-				if i == j:
-					# factor 0.5 since this bin is filled twice when looping over proc and proc2
-					corrHist.SetBinContent(i+1, j+1, 0.5*corrList[proc+"/"+proc2]/pseudoNumber)
-				else:
-					corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
+				corrHist.SetBinContent(i+1, j+1, corrList[proc+"/"+proc2]/pseudoNumber)
 				corrHist.GetXaxis().SetBinLabel(i+1, proc)
 				corrHist.GetYaxis().SetBinLabel(j+1, proc2)
 		histDict["corrList"] = corrHist

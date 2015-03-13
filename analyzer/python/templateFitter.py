@@ -26,7 +26,7 @@ def templateFitterMain(templateCfgFileName):
 
 	print "== Reading configuration file {0}".format(templateCfgFileName)
 	templateCfg = PConfig(templateCfgFileName)
-	outFile = TFile(templateCfg.mvaCfg["outFile"], "RECREATE")
+	outFile = TFile(templateCfg.mvaCfg["outfile"], "RECREATE")
 
 	if templateCfg.mvaCfg["options"].find("fill") >= 0:
 		# Fill histograms for different processes
@@ -199,7 +199,7 @@ def templateFit(templateCfg):
 	fitResults["chisq"] = chisq
 	fitResults["nDoF"] = nDoF
 	fitResults["corrHist"] = corrHist
-
+	
 	return fitResults
 
 ######## WRITE PLOTS FOR FIT RESULTS ####################################################

@@ -226,7 +226,7 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 		minNLL = fitResults["minNLL"]
 		chisq = fitResults["chisq"]
 		nDoF = fitResults["nDoF"]
-		
+
 		weighteddsquare = 0.
 		
 		for proc in templateCfg.procCfg:

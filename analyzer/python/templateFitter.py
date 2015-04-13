@@ -64,7 +64,7 @@ def templateFitterMain(templateCfgFileName):
 				print "=== {0}/{1}: {2:.2f}".format(sig, sig2, corr[sig + "/" + sig2])
 	print ""
 	
-	plotTemplateFitResults(templateCfg, fittedVars)
+	plotTemplateFitResults(templateCfg, fittedVars, outFile)
 
 	corrHist.Write()
 	
@@ -204,19 +204,19 @@ def templateFit(templateCfg):
 
 ######## WRITE PLOTS FOR FIT RESULTS ####################################################
 
-def	plotTemplateFitResults(cfg, fittedVars):
+def	plotTemplateFitResults(cfg, fittedVars, dir=None):
 	# Plot the fit results and write them
 	# The built-in RooFit functions can't be used since some of the "PDFs" may 
 	# have negative values (RooFit can't stomach it).
 
 	cnv = TCanvas("fit_canvas", "Maximum Likelihood fit on " + cfg.mvaCfg["inputvar"] + ": result")
-	
+
 	pad = TPad()
 	pad.SetTitle(cnv.GetTitle())
 	
 	legend = TLegend(0.6,0.6,0.89,0.89)
 	legend.SetFillColor(0)
-	
+
 	dataHist = cfg.mvaCfg["datahisto"].Clone("temp_data_hist")
 	dataHist.SetTitle(cnv.GetTitle())
 	dataHist.SetLineWidth(2)
@@ -236,7 +236,6 @@ def	plotTemplateFitResults(cfg, fittedVars):
 	maxY = 0.
 
 	for proc in cfg.procCfg:
-		
 		temp = proc["histo"].Clone("temp_hist")
 		
 		if proc["signal"] == "1":
@@ -282,6 +281,8 @@ def	plotTemplateFitResults(cfg, fittedVars):
 	
 	legend.Draw("same")
 	
+	if dir is t None:
+		dir.cd()
 	cnv.Write()
 
 ######## FILL HISTOGRAMS #############################################################

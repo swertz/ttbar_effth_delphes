@@ -14,41 +14,48 @@ argExec = 2
 from ROOT import *
 import sys
 import os
-from threading import Thread,RLock
+from threading import Thread
+from threading import RLock
 import time
 import copy
 from subprocess import call
+import pickle
 
 from utils import PConfig
 import treeStrategyOps
 import treeStrategyMIS
 
+from treeStructure import MISTree
+from treeStructure import MISBox
+from treeStructure import MISAnalysis
+
 ######## CLASS TRYMISCHIEF #####################################################
 
 class tryMisChief(Thread):
 
-	def __init__(self, level, cfg, locks, tree):
+	def __init__(self, box, locks):
 		Thread.__init__(self)
-		self.level = level
-		self.cfg = cfg
+		self.box = box
 		self.locks = locks
-		self.tree = tree
 
 	def run(self):
-		if not os.path.isdir(self.cfg.mvaCfg["outputdir"]):
-			os.makedirs(self.cfg.mvaCfg["outputdir"])
+		self.log("Starting try.")
+
+		if not os.path.isdir(self.box.cfg.mvaCfg["outputdir"]):
+			os.makedirs(self.box.cfg.mvaCfg["outputdir"])
 
 		# Define new configurations based on the one passed to this "try":
-		configs = defineNewCfgs(self.cfg, self.locks, self.tree, self.level)
+		defineNewCfgs(self.box, self.locks)
 		
 		# Define threads with the new configurations
 		threads = []
-		for thisCfg in configs:
-			myThread = launchMisChief(self.level, thisCfg, self.locks)
+		for thisMVA in self.box.MVA:
+			myThread = launchMisChief(thisMVA, self.locks)
 			threads.append(myThread)
 		
 		with self.locks["stdout"]:
-			print "== Level {0}: Starting {1} mva threads.".format(self.level, len(threads))
+			self.log("Will start " + str(len(threads)) + " threads.")
+			print "== Level {0}: Starting {1} mva threads.".format(self.box.level, len(threads))
 
 		# Launching the analyses and waiting for them to finish
 		for thread in threads:
@@ -56,69 +63,29 @@ class tryMisChief(Thread):
 		for thread in threads:
 			thread.join()
 		
-		# Find the one giving the best results (as long as it fulfills the conditions)
-		# (it would be nice to have several ways to choose the best one...)
-		# If an analysis only has enough MC events in the sig-/bkg-selection, only keep that part
-		# It may be that no analysis has enough MC events to continue => stop branch
-		# It there are not enough MC events to keep the branch, remove it
-		
-		# exclude the ones that didn't end successfully ("outcode" != 0) :
-		configs = [ cfg for cfg in configs if cfg.mvaCfg["outcode"] == 0 ]
-		if len(configs) == 0:
+		self.log("Threads finished.")
+
+		# Exclude the ones that didn't end successfully (no result tuple)
+		goodMVAs = [ mva for mva in self.box.MVA if mva.result is not None ]
+		if len(goodMVAs) == 0:
+			self.log("All analysis failed. Stopping branch.")
 			with self.locks["stdout"]:
-				print "== Level {0}: All analyses seem to have failed. Stopping branch.".format(self.level)
+				print "== Level {0}: All analyses seem to have failed. Stopping branch.".format(self.box.level)
 			return 0
 
-		# Build a list containing a tuple (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, config)
-		# The list will be used to select the best MVA (by some criteria) and to decide whether to:
-		# - Define two new branches, one for the signal subset, one for the background subset, and go on with the training
-		# - Do not go on with one of the subsets, because of insufficient MC for training, 
-		#	but either keep the corresponding box (sufficient MC for box)
-		#	or forget about it and continue training on the other subset.
-		# - Stop here (no good MVA, or no sufficient MC for training), but for each subset, either
-		#	keep the corresponding box (sufficient MC for box)
-		#	or forget about it.
-
-		mvaResults = []
-		
-		for thisCfg in configs:
-			with open(thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["log"], "r") as logFile:
-				
-				logResults = [ line for line in logFile.read().split("\n") if line != "" ]
-				
-				minMCEventsSig = int(logResults[2])
-				minMCEventsBkg = int(logResults[3])
-				
-				sigEff = float(logResults[0])
-				bkgEff = float(logResults[1])
-				
-				if bkgEff > 0.:
-					mvaResults.append( (sigEff, bkgEff, minMCEventsSig, minMCEventsBkg, thisCfg) )
-					
-				else:
-					# Something went wrong. Remove this analysis from pool and the other ones go on, but don't remove the files (=> investigate problem)
-					with self.locks["stdout"]:
-						print "== Level " + str(self.level) + ": Something went wrong in analysis " + thisCfg.mvaCfg["outputdir"] + "/" + thisCfg.mvaCfg["name"] + ". Excluding it."
-
-		# Maybe everything went wrong:
-		if len(mvaResults) == 0:
-			with self.locks["stdout"]:
-				print "== Level "+ str(self.level) + ": Every analysis failed. Stopping branch."
-			return 0
-		
-		# Sort the resulting according to decreasing discrimination
-		mvaResults.sort(reverse = True, key = lambda entry: entry[0]/entry[1] )
-
-		# Decide what to do next and define next configs
-		nextConfigs = analyseResults(self.cfg, mvaResults, self.locks, self.tree, self.level)
+		# Decide what to do next and define next boxes 
+		analyseResults(self.box, self.locks)
+		nextBoxes = [ box for box in self.box.daughters if not box.isEnd ]
 
 		# Launch and define next threads, if any
-		if len(nextConfigs) != 0:
+		if len(nextBoxes) != 0:
 			nextThreads = []
 
-			for thisCfg in nextConfigs:
-				thisThread = tryMisChief(self.level+1, thisCfg, self.locks, self.tree)
+			for thisBox in nextBoxes:
+				thisThread = tryMisChief(thisBox, self.locks)
 				nextThreads.append(thisThread)
+
+				self.log("Will launch " + str(len(nextThreads)) + " new tries and pass the hand.")
 
 			for thread in nextThreads:
 				thread.start()
@@ -126,16 +93,18 @@ class tryMisChief(Thread):
 			for thread in nextThreads:
 				thread.join()
 
+		self.log("Try finished successfully.")
+
 ######## MODULAR TREE ############################################################
 # Define new configuration objects based on chosen tree-building strategy 
 
-def defineNewCfgs(cfg, locks, tree, level):
+def defineNewCfgs(box, locks):
 
-	if cfg.mvaCfg["mode"] == "operators":
-		return treeStrategyOps.defineNewCfgs(cfg, locks, tree, level)
+	if box.cfg.mvaCfg["mode"] == "operators":
+		return treeStrategyOps.defineNewCfgs(box, locks)
 
-	elif cfg.mvaCfg["mode"] == "MIS":
-		return treeStrategyMIS.defineNewCfgs(cfg, locks, tree, level)
+	elif box.cfg.mvaCfg["mode"] == "MIS":
+		return treeStrategyMIS.defineNewCfgs(box, locks)
 
 	else:
 		print "== Tree building strategy not properly defined."
@@ -143,13 +112,13 @@ def defineNewCfgs(cfg, locks, tree, level):
 
 # Decide what to based on the results of the tmvas:
 
-def analyseResults(cfg, results, locks, tree, level):
+def analyseResults(box, locks):
 
-	if cfg.mvaCfg["mode"] == "operators":
-		return treeStrategyOps.analyseResults(cfg, results, locks, tree, level)
+	if box.cfg.mvaCfg["mode"] == "operators":
+		return treeStrategyOps.analyseResults(box, locks)
 
-	elif cfg.mvaCfg["mode"] == "MIS":
-		return treeStrategyMIS.analyseResults(cfg, results, locks, tree, level)
+	elif box.cfg.mvaCfg["mode"] == "MIS":
+		return treeStrategyMIS.analyseResults(box, locks)
 
 	else:
 		print "== Tree building strategy not properly defined."
@@ -159,27 +128,34 @@ def analyseResults(cfg, results, locks, tree, level):
 # Launch a MVA based on a configuration passed by tryMisChief
 
 class launchMisChief(Thread):
-	def __init__(self, level, cfg, locks):
+	def __init__(self, MVA, locks):
 		Thread.__init__(self)
-		self.level = level
-		self.cfg = cfg
+		self.MVA = MVA
 		self.locks = locks
 
 	def run(self):
 		# write the config file that will be used for this analysis
-		with open(self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".conf", "w") as configFile:
-			for i,proc in enumerate(self.cfg.procCfg):
+		with open(self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".conf", "w") as configFile:
+			
+			self.MVA.log("Writing config file.")
+			
+			for i,proc in enumerate(self.MVA.cfg.procCfg):
+				
 				configFile.write("[proc_" + str(i) + "]\n")
+				
 				for key, value in proc.items():
 					configFile.write(key + " = " + value + "\n")
+				
 				configFile.write("\n")
+			
 			configFile.write("[analysis]\n")
-			for key, value in self.cfg.mvaCfg.items():
+			
+			for key, value in self.MVA.cfg.mvaCfg.items():
 				configFile.write(key + " = " + str(value) + "\n")
 
 		# launch the program on this config file
-		commandString = sys.argv[argExec] + " " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".conf"
-		commandString += " > " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + ".log 2>&1"
+		commandString = sys.argv[argExec] + " " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".conf"
+		commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
 
 		# it would be annoying if, say, outputdir was "&& rm -rf *"
 		if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
@@ -187,66 +163,36 @@ class launchMisChief(Thread):
 				print "== Looks like a security issue..."
 			sys.exit(1)
 
+		self.MVA.log("Calling " + commandString + ".")
+
 		result = call(commandString, shell=True)
 
-		self.cfg.mvaCfg["outcode"] = result
+		self.MVA.log("Finished. Output code = " + str(result) + ".")
+		self.MVA.outcode = result
 		if result != 0:
 			with self.locks["stdout"]:
-				print "== Something went wrong (error code " + str(result) + ") in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "."
+				print "== Something went wrong (error code " + str(result) + ") in analysis " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + "."
+		else:
+			self.MVA.fetchResults()
 
 ######## ANALYSE TREE #############################################################
 # Print tree structure and branch yields
 
 def printTree(cfg, tree):
+	tree.log("Printing analysis results.")
 	print "== Results of the analysis:"
-
-	for branch in tree:
-	
-		print "== Branch " + branch + ":"
-
-		for proc in cfg.procCfg:
-			fileName = branch + "_proc_" + proc["name"] + ".root"
-			file = TFile(fileName, "READ")
-			if file.IsZombie():
-				print "== Error opening " + fileName + "."
-				sys.exit(1)
-			tree = file.Get(proc["treename"])
-			tree.Draw("This->GetReadEntry()>>tempHist", proc["evtweight"], "goff")
-			tempHist = TH1F(gDirectory.Get("tempHist"))
-			effEntries = tempHist.Integral()
-			del tempHist
-			expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
-			print "=== " + proc["name"] + ": " + str(tree.GetEntries()) + " MC events, " \
-				+ "{0:.1f}".format(expectedEvents) + " expected events."
-			file.Close()
+	tree.print()
 
 ######## WRITE RESULTS #############################################################
 # Write tree structure and branch yields to a file
 
-def writeResults(cfg, tree):
-	fileName = cfg.mvaCfg["outputdir"] + "/" + cfg.mvaCfg["name"] + "_results.out"
+def writeResults(tree):
+	fileName = tree.cfg.mvaCfg["outputdir"] + "/" + tree.cfg.mvaCfg["name"] + "_results.out"
+	tree.log("Writing analysis results to " + fileName + ".")
 	print "== Writing results to " + fileName + "."
 
 	with open(fileName, "w") as outFile:
-		count = 0
-		for branch in tree:
-			outFile.write(str(count) + ":" + branch + ":")
-			for proc in cfg.procCfg:
-				fileName = branch + "_proc_" + proc["name"] + ".root"
-				file = TFile(fileName, "READ")
-				if file.IsZombie():
-					print "== Error opening " + fileName + "."
-					sys.exit(1)
-				tree = file.Get(proc["treename"])
-				tree.Draw("This->GetReadEntry()>>tempHist", proc["evtweight"], "goff")
-				tempHist = TH1F(gDirectory.Get("tempHist"))
-				effEntries = tempHist.Integral()
-				del tempHist
-				expectedEvents = float(cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
-				outFile.write(proc["name"] + "={0:.3f}".format(expectedEvents) + ",")
-				file.Close()
-			outFile.write("\n")
-			count += 1
+		tree.write(outFile)
 
 ######## PLOT RESULTS #############################################################
 # Create ROOT file with, for each process, plots:
@@ -394,18 +340,17 @@ def driverMain(cfgFile):
 	print "============================================="
 	print "== Reading configuration file {0}".format(cfgFile)
 	myConfig = PConfig(cfgFile)
+	myTree = MISTree(myConfig)
 	locks = {}
 	locks["stdout"] = RLock()
-	locks["tree"] = RLock()
-	tree = []
-	mainThread = tryMisChief(1, myConfig, locks, tree)
+	mainThread = tryMisChief(myTree.firstBox, locks)
 	print "== Starting main thread."
 	mainThread.start()
 	mainThread.join()
 	print "== Main thread stopped."
-	printTree(myConfig, tree)
-	writeResults(myConfig, tree)
-	plotResults(myConfig, tree)
+	printTree(myTree)
+	writeResults(myTree)
+	plotResults(myTree)
 	print "============================================="
 
 if __name__ == "__main__":

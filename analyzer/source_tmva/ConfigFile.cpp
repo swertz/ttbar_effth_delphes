@@ -34,7 +34,7 @@ ConfigFile::ConfigFile(std::string const& configFile) {
 
     if (line[0] == '[') {
       inSection=trim(line.substr(1,line.find(']')-1));
-	  nSections++;
+      nSections++;
       continue;
     }
 
@@ -72,6 +72,6 @@ Chameleon const& ConfigFile::Value(std::string const& section, std::string const
 }
 
 int ConfigFile::GetNSections(void){
-	return nSections;
+  return nSections;
 }
 

@@ -17,11 +17,11 @@ def defineNewCfgs(box, locks):
     
     count = 0
 
-    for proc in box.cfg.procCfg:
-        if proc["signal"] == "1" and box.cfg.mvaCfg["removefrompool"] == "y":
-            proc["signal"] = "-3"
+    for name, proc in box.cfg.procCfg.items():
+        if proc["signal"] == 1 and box.cfg.mvaCfg["removefrompool"]:
+            proc["signal"] = -3
 
-        if proc["signal"] == "1" or proc["signal"] == "-1":
+        if proc["signal"] == 1 or proc["signal"] == -1:
             # copy previous configuration and adapt it
             thisCfg = copy.deepcopy(box.cfg)
             bkgName = ""
@@ -38,23 +38,23 @@ def defineNewCfgs(box, locks):
             count += 1
             count2 = 0
 
-            for proc2 in thisCfg.procCfg:
+            for name2, proc2 in thisCfg.procCfg.items():
 
-                if proc2["signal"] == "1" or proc2["signal"] == "-1":
+                if proc2["signal"] == 1 or proc2["signal"] == -1:
                     count2 += 1
                     if count2 == count:
-                        proc2["signal"] = "1"
+                        proc2["signal"] = 1
                     else:
-                        proc2["signal"] = "-1"
+                        proc2["signal"] = -1
 
-                if proc2["signal"] == "-2":
-                    proc2["signal"] = "0"
-                if proc2["signal"] == "0":
-                    bkgName += "_" + proc2["name"]
+                if proc2["signal"] == -2:
+                    proc2["signal"] = 0
+                if proc2["signal"] == 0:
+                    bkgName += "_" + name2
                     inputVar += proc2["weightname"] + ","
 
-            thisCfg.mvaCfg["name"] = proc["name"] + "_vs" + bkgName
-            thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvar"] + "," + inputVar + proc["weightname"]
+            thisCfg.mvaCfg["name"] = name + "_vs" + bkgName
+            thisCfg.mvaCfg["inputvar"] = ','.join(thisCfg.mvaCfg["otherinputvars"] + [inputVar + proc["weightname"]])
             thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
@@ -77,7 +77,7 @@ def analyseResults(box, locks):
     for i,mva in enumerate(goodMVA):
         if mva.result[1] > float(box.cfg.mvaCfg["maxbkgeff"]):
             mva.log("MVA doesn't reach the minimum discrimination.")
-            if box.cfg.mvaCfg["removebadana"] == "y":
+            if box.cfg.mvaCfg["removebadana"]:
                 mva.log("Delete output files.")
                 os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
     goodMVA = [ mva for mva in goodMVA if mva.result[1] < float(box.cfg.mvaCfg["maxbkgeff"]) ]
@@ -89,7 +89,7 @@ def analyseResults(box, locks):
             print "== Level {0}: Found no MVA to have sufficient discrimination. Stopping branch.".format(box.level)
         
         if box.level != 1:
-            if box.cfg.mvaCfg["removebadana"] == "y":
+            if box.cfg.mvaCfg["removebadana"]:
                 box.log("Removing output directory of this unsatisfactory try.")
                 os.system("rmdir " + box.cfg.mvaCfg["outputdir"])
             # The box we're in is an "end" box
@@ -113,12 +113,12 @@ def analyseResults(box, locks):
         # Sig-like branch
         cfgSigLike = copy.deepcopy(bestMVA.cfg)
         
-        for proc in cfgSigLike.procCfg:
-            if proc["signal"] == "-1":
-                proc["signal"] = "1"
-            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
-            proc["entries"] = str(bestMVA.entries["sig"][ proc["name"] ])
-            proc["yield"] = str(bestMVA.yields["sig"][ proc["name"] ])
+        for name, proc in cfgSigLike.procCfg.items():
+            if proc["signal"] == -1:
+                proc["signal"] = 1
+            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + name + ".root"
+            proc["entries"] = str(bestMVA.entries["sig"][name])
+            proc["yield"] = str(bestMVA.yields["sig"][name])
         
         sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
         sigBox.isEnd = True
@@ -127,19 +127,19 @@ def analyseResults(box, locks):
         # Bkg-like branch
         cfgBkgLike = copy.deepcopy(bestMVA.cfg)
         
-        for proc in cfgBkgLike.procCfg:
-            if proc["signal"] == "-1":
-                proc["signal"] = "1"
-            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
-            proc["entries"] = str(bestMVA.entries["bkg"][ proc["name"] ])
-            proc["yield"] = str(bestMVA.yields["bkg"][ proc["name"] ])
+        for name, proc in cfgBkgLike.procCfg.items():
+            if proc["signal"] == -1:
+                proc["signal"] = 1
+            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"
+            proc["entries"] = str(bestMVA.entries["bkg"][name])
+            proc["yield"] = str(bestMVA.yields["bkg"][name])
         
         bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
         bkgBox.isEnd = True
         box.goodMVA.bkgLike = bkgBox
     
         # Removing the others if asked
-        if box.cfg.mvaCfg["removebadana"] == "y":
+        if box.cfg.mvaCfg["removebadana"]:
             box.log("Removing output files of MVAs we're not keeping.")
             for mva in [ mva for mva in goodMVA if mva.cfg.mvaCfg["name"] != bestMVA.cfg.mvaCfg["name"] ]:
                 os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
@@ -159,15 +159,15 @@ def analyseResults(box, locks):
         myCfgs = {"sig": cfgSigLike, "bkg": cfgBkgLike}
 
         for split in ["sig", "bkg"]:
-            for proc in myCfgs[split].procCfg:
-                if mva.entries[split][ proc["name"] ] < int(box.cfg.mvaCfg["minmcevents"]):
-                    proc["signal"] = "-3"
+            for name, proc in myCfgs[split].procCfg.items():
+                if mva.entries[split][name] < int(box.cfg.mvaCfg["minmcevents"]):
+                    proc["signal"] = -3
 
-        nSig_Sig = cfgSigLike.countProcesses(["-1","1"]) > 0
-        nBkg_Sig = cfgSigLike.countProcesses(["-2","0"]) > 0
+        nSig_Sig = cfgSigLike.countProcesses([-1, 1]) > 0
+        nBkg_Sig = cfgSigLike.countProcesses([-2, 0]) > 0
         
-        nSig_Bkg = cfgBkgLike.countProcesses(["-1","1"]) > 0
-        nBkg_Bkg = cfgBkgLike.countProcesses(["-2","0"]) > 0
+        nSig_Bkg = cfgBkgLike.countProcesses([-1, 1]) > 0
+        nBkg_Bkg = cfgBkgLike.countProcesses([-2, 0]) > 0
 
         if ( not (nSig_Sig and nBkg_Sig) ) and ( not (nSig_Bkg and nBkg_Bkg) ):
             if i == len(results) - 1:
@@ -196,7 +196,7 @@ def analyseResults(box, locks):
         print "== Level {0}: Found best MVA to be {1}.".format(box.level, bestMVA.cfg.mvaCfg["name"])
     
     # Removing the others if asked
-    if box.cfg.mvaCfg["removebadana"] == "y":
+    if box.cfg.mvaCfg["removebadana"]:
         box.log("Removing output files of MVAs we're not keeping.")
         for mva in [ mva for mva in goodMVA if mva.cfg.mvaCfg["name"] != bestMVA.cfg.mvaCfg["name"] ]:
             os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
@@ -206,12 +206,12 @@ def analyseResults(box, locks):
     
     # Sig-like branch
     cfgSigLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike"
-    for proc in cfgSigLike.procCfg:
-        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
-        proc["entries"] = str(bestMVA.entries["sig"][ proc["name"] ])
-        proc["yield"] = str(bestMVA.yields["sig"][ proc["name"] ])
-        if proc["signal"] == "-1":
-            proc["signal"] = "1"
+    for name, proc in cfgSigLike.procCfg.items():
+        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + name + ".root"
+        proc["entries"] = str(bestMVA.entries["sig"][name])
+        proc["yield"] = str(bestMVA.yields["sig"][name])
+        if proc["signal"] == -1:
+            proc["signal"] = 1
 
     sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
     bestMVA.sigLike = sigBox 
@@ -226,12 +226,12 @@ def analyseResults(box, locks):
     # Bkg-like branch
     cfgBkgLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike"
 
-    for proc in cfgBkgLike.procCfg:
-        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
-        proc["entries"] = str(bestMVA.entries["bkg"][ proc["name"] ])
-        proc["yield"] = str(bestMVA.yields["bkg"][ proc["name"] ])
-        if proc["signal"] == "-1":
-            proc["signal"] = "1"
+    for name, proc in cfgBkgLike.procCfg.items():
+        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"
+        proc["entries"] = str(bestMVA.entries["bkg"][name])
+        proc["yield"] = str(bestMVA.yields["bkg"][name])
+        if proc["signal"] == -1:
+            proc["signal"] = 1
     
     bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
     bestMVA.bkgLike = bkgBox 

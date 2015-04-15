@@ -55,28 +55,28 @@ class MISAnalysis:
                 self.effEntries[split] = {}
                 self.yields[split] = {}
 
-                for proc in self.cfg.procCfg:
+                for name, proc in self.cfg.procCfg.items():
 
-                    file = ROOT.TFile(self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "like_proc_" + proc["name"] + ".root", "READ")
+                    file = ROOT.TFile(self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "like_proc_" + name + ".root", "READ")
                     if file.IsZombie():
                         print "== Error opening " + fileName + "."
                         self.log("Error opening " + fileName + ".")
                         sys.exit(1)
 
                     myTree = file.Get(proc["treename"])
-                    self.entries[split][ proc["name"] ] = myTree.GetEntries()
+                    self.entries[split][name] = myTree.GetEntries()
 
-                    histName = self.box.name.replace("/","-") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + proc["name"]
+                    histName = self.box.name.replace("/","-") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
                     myTree.Draw("This->GetReadEntry()>>" + histName, proc["evtweight"], "goff")
                     tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
                     effEntries = tempHist.Integral()
                     del tempHist
-                    self.effEntries[split][ proc["name"] ] = effEntries
-                    self.yields[split][ proc["name"] ] = float(self.cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
+                    self.effEntries[split][name] = effEntries
+                    self.yields[split][name] = float(self.cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
                     
                     file.Close()
 
-                    self.log("Process " + proc["name"] + ": " + str(self.entries[split][ proc["name"] ]) + "MC events, " + "{0:.1f}".format(self.yields[split][ proc["name"] ]) + " expected events.")
+                    self.log("Process " + name + ": " + str(self.entries[split][name]) + "MC events, " + "{0:.1f}".format(self.yields[split][name]) + " expected events.")
                 
                 self.log("")
 
@@ -148,11 +148,11 @@ class MISBox:
             for i in range(self.level):
                 _str += "="
             _str += " Box " + self.name + ", level " + str(self.level) + ":\n"
-            for proc in self.cfg.procCfg:
+            for name, proc in self.cfg.procCfg.items():
                 _str += "==="
                 for i in range(self.level):
                     _str += "="
-                _str += " Process " + proc["name"] + ": " + proc["entries"] + " MC events, " + proc["yield"] + " expected events.\n"
+                _str += " Process " + name + ": " + proc["entries"] + " MC events, " + proc["yield"] + " expected events.\n"
             _str += "\n\n"
         else:
             for box in self.daughters:
@@ -169,8 +169,8 @@ class MISBox:
     def write(self, outFile):
         if self.isEnd:
             outFile.write(":" + self.name + ":")
-            for proc in self.cfg.procCfg:
-                outFile.write(proc["name"] + "=" + proc["yield"] + ",")
+            for name, proc in self.cfg.procCfg.items():
+                outFile.write(name + "=" + proc["yield"] + ",")
             outFile.write("\n")
         else:
             for box in self.daughters:
@@ -247,15 +247,17 @@ class MISTree:
         treeYields = {} # Key = process name, entry = histogram of branch yields
         treeMVAs = {} # Key = process name, entry = histogram of juxtaposed MVA outputs
  
-        for i,proc in enumerate(self.cfg.procCfg):
+        i = 0
+        for name, proc in self.cfg.procCfg.items():
             
-            treeYields[ proc["name"] ] = ROOT.TH1D(proc["name"] + "_yields", "Branch yields for " + proc["name"], nBr, 0, nBr)
-            treeYields[ proc["name"] ].Sumw2()
+            treeYields[name] = ROOT.TH1D(name + "_yields", "Branch yields for " + name, nBr, 0, nBr)
+            treeYields[name].Sumw2()
             
-            #treeMVAs[ proc["name"] ] = TROOT.H1D(proc["name"] + "_MVAs", "MVA histograms for " + proc["name"], nBrSkimmed*nFitBins, 0, nBrSkimmed*nFitBins)
-            #treeMVAs[ proc["name"] ].Sumw2()
+            #treeMVAs[name] = TROOT.H1D(name + "_MVAs", "MVA histograms for " + name, nBrSkimmed*nFitBins, 0, nBrSkimmed*nFitBins)
+            #treeMVAs[name].Sumw2()
     
-            procFile = ROOT.TFile(proc["path"], "READ")
+            # FIXME: Support multiple input files
+            procFile = ROOT.TFile(proc["path"][0], "READ")
             procTree = procFile.Get(proc["treename"])
             procTree.Draw("This->GetReadEntry()>>tempHist", "abs("+proc["evtweight"]+")", "goff")
             tempHist = ROOT.TH1F(ROOT.gDirectory.Get("tempHist"))
@@ -266,18 +268,18 @@ class MISTree:
             
             for j,box in enumerate(endBoxes):
 
-                branchEffEntries = box.effEntries[ proc["name"] ]
-                branchYield = box.yields[ proc["name"] ]
+                branchEffEntries = box.effEntries[name]
+                branchYield = box.yields[name]
             
                 branchEffs.SetBinContent(j+1, i+1, 100.*branchEffEntries/procTotEffEntriesAbs)
-                branchEffs.GetYaxis().SetBinLabel(i+1, proc["name"])
+                branchEffs.GetYaxis().SetBinLabel(i+1, name)
                 branchEffs.GetXaxis().SetBinLabel(j+1, box.name)
     
-                treeYields[ proc["name"] ].SetBinContent(j+1, branchYield)
-                treeYields[ proc["name"] ].GetXaxis().SetBinLabel(j+1, box.name)
+                treeYields[name].SetBinContent(j+1, branchYield)
+                treeYields[name].GetXaxis().SetBinLabel(j+1, box.name)
     
                 branchYields.SetBinContent(j+1, i+1, branchYield)
-                branchYields.GetYaxis().SetBinLabel(i+1, proc["name"])
+                branchYields.GetYaxis().SetBinLabel(i+1, name)
                 branchYields.GetXaxis().SetBinLabel(j+1, box.name)
     
             #for j,branch in enumerate(skimmedTree):
@@ -292,10 +294,11 @@ class MISTree:
     
             file.cd()
     
-            treeYields[ proc["name"] ].SetEntries(procTotEntries)
-            treeYields[ proc["name"] ].Write()
-            lst.Add(treeYields[ proc["name"] ])
+            treeYields[name].SetEntries(procTotEntries)
+            treeYields[name].Write()
+            lst.Add(treeYields[name])
             #treeMVAs[ proc["name"] ].Write()
+            i += 1
     
         branchTotals.Merge(lst)
         branchComps = branchYields.Clone("branch_comps")
@@ -372,4 +375,3 @@ class MISTree:
 
     def log(self, line = ""):
         self._log += line + "\n"
-        

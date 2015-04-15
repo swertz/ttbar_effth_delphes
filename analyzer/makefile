@@ -1,5 +1,5 @@
-CXXFLAGS := -O3 -std=c++0x -Wall -l $(shell root-config --cflags)
-LIBS := $(shell root-config --libs --glibs) -lTMVA
+CXXFLAGS := -O2 -g $(shell root-config --cflags) -Wall
+LIBS := $(shell root-config --ldflags --libs --glibs) -lTMVA
 CXX := g++
 
 sourcedir_tmva := source_tmva/
@@ -9,11 +9,11 @@ objects_tmva := $(objdir_tmva)/main.o $(objdir_tmva)/panalysis.o $(objdir_tmva)/
 all: tmva makefile
 
 tmva: $(objects_tmva) makefile
-	$(CXX) $(LIBS) $(objects_tmva) -o $@
+	$(CXX) -o $@ $(objects_tmva) $(LIBS)  
 
 $(objdir_tmva)/%.o: $(sourcedir_tmva)/%.cpp $(sourcedir_tmva)/*.h
 	if test ! -d $(objdir_tmva); then mkdir $(objdir_tmva); fi
-	$(CXX) $(CXXFLAGS) $(LIBS) -c $< -o $@
+	$(CXX) -o $@ $(CXXFLAGS) -c $< 
 
 .PHONY: clean
 clean:

@@ -9,8 +9,9 @@ from treeStructure import MISAnalysis
 from treeStructure import MISBox 
 
 def defineNewCfgs(box, locks):
-    """ Create specific tmva configuration object and define a list with all the configurations.
-    Each of them will be used to launch a thread. The list is stored in box.MVA."""
+    """ Create specific tmva configuration objects ("PConfig") based on the current "box.cfg".
+    Use them to create MVA objects ("MISAnalysis"), which are then stored in "box.MVA".
+    Each of them will be used to launch a thread.."""
     
     configs = []
     
@@ -74,23 +75,23 @@ def analyseResults(box, locks):
 
     # Forget about (and delete is asked) MVAs who have not reached sufficient discrimination
     for i,mva in enumerate(goodMVA):
-        if mva.result[1] > float(cfg.mvaCfg["maxbkgeff"]):
+        if mva.result[1] > float(box.cfg.mvaCfg["maxbkgeff"]):
             mva.log("MVA doesn't reach the minimum discrimination.")
-            if box.cfg.mvaCfg["removebadana"]:
+            if box.cfg.mvaCfg["removebadana"] == "y":
                 mva.log("Delete output files.")
-                os.system("rm " + mva.mvaCfg["outputdir"] + "/" + mva.mvaCfg["name"] + "*")
+                os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
     goodMVA = [ mva for mva in goodMVA if mva.result[1] < float(box.cfg.mvaCfg["maxbkgeff"]) ]
 
     # If no MVA has sufficient discrimination, log current box in tree and stop branch:
     if len(goodMVA) == 0:
         box.log("Found no MVA to have enough discrimination. Stopping here.")
         with locks["stdout"]:
-            print "== Level {0}: Found no MVA to have sufficient discrimination. Stopping branch.".format(level)
+            print "== Level {0}: Found no MVA to have sufficient discrimination. Stopping branch.".format(box.level)
         
-        if level != 1:
-            if cfg.mvaCfg["removebadana"]:
+        if box.level != 1:
+            if box.cfg.mvaCfg["removebadana"] == "y":
                 box.log("Removing output directory of this unsatisfactory try.")
-                os.system("rmdir " + cfg.mvaCfg["outputdir"])
+                os.system("rmdir " + box.cfg.mvaCfg["outputdir"])
             # The box we're in is an "end" box
             box.isEnd = True
         
@@ -115,13 +116,12 @@ def analyseResults(box, locks):
         for proc in cfgSigLike.procCfg:
             if proc["signal"] == "-1":
                 proc["signal"] = "1"
-            proc["path"] = bestMVA["outputdir"] + "/" + bestMVA["name"] + "_siglike_proc_" + proc["name"] + ".root"
+            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + proc["name"] + ".root"
             proc["entries"] = str(bestMVA.entries["sig"][ proc["name"] ])
             proc["yield"] = str(bestMVA.yields["sig"][ proc["name"] ])
         
-        sigBox = MISBox(box, cfgSigLike)
+        sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
         sigBox.isEnd = True
-        sigBox.name = box.name + "/" + bestMVA["outputname"] + "_SigLike"
         box.goodMVA.sigLike = sigBox
 
         # Bkg-like branch
@@ -130,14 +130,19 @@ def analyseResults(box, locks):
         for proc in cfgBkgLike.procCfg:
             if proc["signal"] == "-1":
                 proc["signal"] = "1"
-            proc["path"] = bestMVA["outputdir"] + "/" + bestMVA["name"] + "_bkglike_proc_" + proc["name"] + ".root"
+            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + proc["name"] + ".root"
             proc["entries"] = str(bestMVA.entries["bkg"][ proc["name"] ])
             proc["yield"] = str(bestMVA.yields["bkg"][ proc["name"] ])
         
-        bkgBox = MISBox(box, cfgBkgLike)
+        bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
         bkgBox.isEnd = True
-        bkgBox.name = box.name + "/" + bestMVA["outputname"] + "_BkgLike"
         box.goodMVA.bkgLike = bkgBox
+    
+        # Removing the others if asked
+        if box.cfg.mvaCfg["removebadana"] == "y":
+            box.log("Removing output files of MVAs we're not keeping.")
+            for mva in [ mva for mva in goodMVA if mva.cfg.mvaCfg["name"] != bestMVA.cfg.mvaCfg["name"] ]:
+                os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
         
         return 0
 
@@ -197,7 +202,7 @@ def analyseResults(box, locks):
             os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
     
     # Starting two new "tries", one for signal-like events, the other one for background-like
-    # unless one of those doesn't have enough MC => stop here, and log result in tree 
+    # unless one of those doesn't have enough MC => stop here, and define that daughter box as end-box. 
     
     # Sig-like branch
     cfgSigLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike"
@@ -208,15 +213,14 @@ def analyseResults(box, locks):
         if proc["signal"] == "-1":
             proc["signal"] = "1"
 
-    sigBox = MISBox(box, cfgSigLike)
+    sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
     bestMVA.sigLike = sigBox 
-    sigBox.name = box.name + "/" + bestMVA["outputname"] + "_SigLike"
     
     if stopSigLike:
         box.log("Sig-like part of best analysis has no process with enough MC to train => stop that branch.")
         bestMVA.log("Sig-like part has no process with enough MC to train => stop that branch.")
         with locks["stdout"]:
-            print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events to train another MVA => stopping here.".format(box.level, bestMVA.mvaCfg["name"])
+            print "== Level {0}: {1} is the best MVA, but sig-like subset doesn't have enough MC events to train another MVA => stopping here.".format(box.level, bestMVA.cfg.mvaCfg["name"])
         sigBox.isEnd = True
     
     # Bkg-like branch
@@ -229,9 +233,8 @@ def analyseResults(box, locks):
         if proc["signal"] == "-1":
             proc["signal"] = "1"
     
-    bkgBox = MISBox(box, cfgBkgLike)
+    bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
     bestMVA.bkgLike = bkgBox 
-    bkgBox.name = box.name + "/" + bestMVA["outputname"] + "_BkgLike"
 
     if stopBkgLike:
         box.log("Bkg-like part of best analysis has no process with enough MC to train => stop that branch.")

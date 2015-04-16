@@ -9,6 +9,7 @@
 import copy
 import sys
 import ROOT
+import yaml
 
 ######## CLASS MC STUDY CONFIG #####################################################
 
@@ -89,57 +90,24 @@ class PConfig:
 
     def __init__(self, cfgFileName):
         self.mvaCfg = {}
-        self.procCfg = []
+
+        # key is process / dataset name, value is process configuration
+        self.procCfg = {}
 
         with open(cfgFileName, "r") as cfgFile:
-            # splitting the file content into sections (starting with a "[")
-            cfgSections = cfgFile.read().split("[")
-            for section in cfgSections:
 
-                # skipping comment lines (starting with a "#")
-                if section[0] == "#":
-                    continue
+            configuration = yaml.load(cfgFile)
 
-                # section title goes up to "]"
-                sectionTitle = section.split("]")[0]
-                sectionContent = section.split("]")[1]
+            if not 'datasets' in configuration:
+                print('You must have at leat one dataset...')
+                sys.exit(1)
 
-                if sectionTitle == "analysis":
-
-                    tempCfgTable = [ line for line in sectionContent.split("\n") ] # divide the lines
-                    tempCfgTable = [ line for line in tempCfgTable if line is not "" ] # avoid empty lines
-                    tempCfgTable = [ line for line in tempCfgTable if line[0] is not "#" ] # avoid lines starting with a '#'
-                    tempCfgTable = [ line.split("#")[0] for line in tempCfgTable ] # there could be a commen further along: keep only what's before the '#'
-                    tempCfgTable = [ line.split("=") for line in tempCfgTable ] # split the name of the entry and the entry itself
-                    cfgTable = []
-
-                    for line in tempCfgTable:
-                        # removing blank spaces before and after the "="
-                        tupleLine = [ item.strip() for item in line ]
-                        cfgTable.append(tuple(tupleLine))
-
-                    self.mvaCfg = dict(cfgTable)
-
-                elif sectionTitle.find("proc_") >= 0:
-
-                    tempCfgTable = [ line for line in sectionContent.split("\n") ]
-                    tempCfgTable = [ line for line in tempCfgTable if line is not "" ]
-                    tempCfgTable = [ line for line in tempCfgTable if line[0] is not "#" ]
-                    tempCfgTable = [ line.split("#")[0] for line in tempCfgTable ]
-                    tempCfgTable = [ line.split("=") for line in tempCfgTable ]
-                    cfgTable = []
-
-                    for line in tempCfgTable:
-                        # removing blank spaces before and after the "="
-                        tupleLine = [ item.strip() for item in line ]
-                        cfgTable.append(tuple(tupleLine))
-
-                    if len(cfgTable) > 0:
-                        self.procCfg.append(dict(cfgTable))
+            self.procCfg = configuration['datasets']
+            self.mvaCfg = configuration['analysis']
 
     def countProcesses(self, signal):
         count = 0
-        for proc in self.procCfg:
+        for name, proc in self.procCfg.items():
             if signal.__contains__(proc["signal"]):
                 count += 1
         return count

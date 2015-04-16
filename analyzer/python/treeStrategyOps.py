@@ -170,7 +170,7 @@ def analyseResults(box, locks):
         nBkg_Bkg = cfgBkgLike.countProcesses([-2, 0]) > 0
 
         if ( not (nSig_Sig and nBkg_Sig) ) and ( not (nSig_Bkg and nBkg_Bkg) ):
-            if i == len(results) - 1:
+            if i == len(goodMVA) - 1:
                 bestMVA = goodMVA[0]
                 cfgSigLike = copy.deepcopy(bestMVA.cfg)
                 cfgBkgLike = copy.deepcopy(bestMVA.cfg)
@@ -240,7 +240,7 @@ def analyseResults(box, locks):
         box.log("Bkg-like part of best analysis has no process with enough MC to train => stop that branch.")
         bestMVA.log("Bkg-like part has no process with enough MC to train => stop that branch.")
         with locks["stdout"]:
-            print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events to train another MVA => stopping here.".format(level, bestMva.mvaCfg["name"])
+            print "== Level {0}: {1} is the best MVA, but bkg-like subset doesn't have enough MC events to train another MVA => stopping here.".format(box.level, bestMVA.cfg.mvaCfg["name"])
         bkgBox.isEnd = True
 
 if __name__ == "__main__":

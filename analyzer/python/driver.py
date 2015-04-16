@@ -11,7 +11,7 @@
 argConf = 1
 argExec = 2
 
-from ROOT import *
+from ROOT import gROOT, kTRUE
 import sys
 import os
 from threading import Thread
@@ -204,7 +204,7 @@ def driverMain(cfgFile):
     mainThread = tryMisChief(myTree.firstBox, locks)
     
     # Tell ROOT to shut the hell up
-    ROOT.gROOT.SetBatch(ROOT.kTRUE);
+    gROOT.SetBatch(kTRUE);
     
     print "== Starting main thread."
     mainThread.start()

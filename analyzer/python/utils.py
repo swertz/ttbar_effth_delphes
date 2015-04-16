@@ -108,7 +108,7 @@ class PConfig:
     def countProcesses(self, signal):
         count = 0
         for name, proc in self.procCfg.items():
-            if signal.__contains__(proc["signal"]):
+            if proc["signal"] in signal:
                 count += 1
         return count
 

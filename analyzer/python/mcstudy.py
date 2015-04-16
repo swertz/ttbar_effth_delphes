@@ -170,7 +170,7 @@ def mcStudyMain(mcStudyFile):
 def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
     print "== Doing MC Study: template fits on " + templateCfg.mvaCfg["inputvar"] + "."
 
-    if not templateCfg.procCfg[0].__contains__("histo"):
+    if "histo" not int templateCfg.procCfg[0]:
         
         if templateCfg.mvaCfg["options"].find("fill") >= 0:
             # Fill histograms with the variable used for the fit, and store them in the

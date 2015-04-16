@@ -268,12 +268,12 @@ def    plotTemplateFitResults(cfg, fittedVars, dir=None):
     dataHist.SetAxisRange(1.1*minY, 1.1*maxY, "Y")
     
     xTitle = cfg.mvaCfg["inputvar"]
-    if cfg.mvaCfg.keys().__contains__("inputvarunit"):
+    if "inputvarunit" incfg.mvaCfg.keys():
         xTitle += " (" + cfg.mvaCfg["inputvarunit"] + ")"
     dataHist.SetXTitle(xTitle)
     
     yTitle = "Events/" + str(dataHist.GetBinWidth(1))
-    if cfg.mvaCfg.keys().__contains__("inputvarunit"):
+    if "inputvarunit" in cfg.mvaCfg.keys():
         yTitle += " " + cfg.mvaCfg["inputvarunit"]
     dataHist.SetYTitle(yTitle)
     
@@ -337,18 +337,18 @@ def fillHistos(cfg, dataHist = False):
 def getHistos(cfg, dataHist = False):
     file = 0 
     
-    if cfg.mvaCfg.keys().__contains__("histfile"):
+    if "histfile" in cfg.mvaCfg.keys():
         file = TFile(cfg.mvaCfg["histfile"], "READ")
 
     for proc in cfg.procCfg:
-        if not cfg.mvaCfg.keys().__contains__("histfile"):
+        if "histfile" not in cfg.mvaCfg.keys():
             file = TFile(proc["histfile"], "READ")
 
         proc["histo"] = file.Get(proc["histname"])
         # Necessary so that the histogram persists in memory after the file is closed
         proc["histo"].SetDirectory(0)
 
-        if not cfg.mvaCfg.keys().__contains__("histfile"):
+        if "histfile" not in cfg.mvaCfg.keys():
             file.Close()
     
     if file.IsOpen():

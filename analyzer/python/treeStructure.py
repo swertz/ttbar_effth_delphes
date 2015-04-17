@@ -66,17 +66,20 @@ class MISAnalysis:
                     myTree = file.Get(proc["treename"])
                     self.entries[split][name] = myTree.GetEntries()
 
-                    histName = self.box.name.replace("/","-") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
+                    histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
                     myTree.Draw("This->GetReadEntry()>>" + histName, proc["evtweight"], "goff")
                     tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
-                    effEntries = tempHist.Integral()
+                    effEntries = 0
+                    # This has to be done because TH1F::Integral() sometimes misteriously returns 0.0
+                    for i in range(1, tempHist.GetNbinsX()):
+                        effEntries += tempHist.GetBinContent(i)
                     del tempHist
                     self.effEntries[split][name] = effEntries
-                    self.yields[split][name] = float(self.cfg.mvaCfg["lumi"])*float(proc["xsection"])*effEntries/int(proc["genevents"])
+                    self.yields[split][name] = self.cfg.mvaCfg["lumi"]*proc["xsection"]*effEntries/proc["genevents"]
                     
                     file.Close()
 
-                    self.log("Process " + name + ": " + str(self.entries[split][name]) + "MC events, " + "{0:.1f}".format(self.yields[split][name]) + " expected events.")
+                    self.log("Process " + name + ": " + str(self.entries[split][name]) + " MC events, " + "{0:.1f}".format(self.yields[split][name]) + " expected events.")
                 
                 self.log("")
 
@@ -233,6 +236,7 @@ class MISTree:
 
         # Retrieve all the final boxes
         endBoxes = self.getEndBoxes()
+        endBoxes.sort(key = lambda box: box.name)
 
         nBr = len(endBoxes)
         nProc = len(self.cfg.procCfg)
@@ -247,8 +251,11 @@ class MISTree:
         treeYields = {} # Key = process name, entry = histogram of branch yields
         treeMVAs = {} # Key = process name, entry = histogram of juxtaposed MVA outputs
  
+        # Sorting the processes by name
+        processes = self.cfg.procCfg.items()
+        processes.sort(key = lambda item: item[0], reverse = True)
         i = 0
-        for name, proc in self.cfg.procCfg.items():
+        for name, proc in processes:
             
             treeYields[name] = ROOT.TH1D(name + "_yields", "Branch yields for " + name, nBr, 0, nBr)
             treeYields[name].Sumw2()
@@ -256,7 +263,7 @@ class MISTree:
             #treeMVAs[name] = TROOT.H1D(name + "_MVAs", "MVA histograms for " + name, nBrSkimmed*nFitBins, 0, nBrSkimmed*nFitBins)
             #treeMVAs[name].Sumw2()
     
-            # FIXME: Support multiple input files
+            # FIXME: Support multiple input files (maybe not needed)?
             procFile = ROOT.TFile(proc["path"][0], "READ")
             procTree = procFile.Get(proc["treename"])
             procTree.Draw("This->GetReadEntry()>>tempHist", "abs("+proc["evtweight"]+")", "goff")

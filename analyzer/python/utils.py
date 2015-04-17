@@ -11,6 +11,14 @@ import sys
 import ROOT
 import yaml
 
+######## valueToString #####################################################
+
+def valueToString(value):
+    if isinstance(value, list):
+        return ','.join(str(x) for x in value)
+    else:
+        return str(value)
+
 ######## CLASS MC STUDY CONFIG #####################################################
 
 class PMCConfig:

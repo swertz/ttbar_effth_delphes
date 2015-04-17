@@ -163,13 +163,13 @@ def analyseResults(box, locks):
                 if mva.entries[split][name] < int(box.cfg.mvaCfg["minmcevents"]):
                     proc["signal"] = -3
 
-        nSig_Sig = cfgSigLike.countProcesses([-1, 1]) > 0
-        nBkg_Sig = cfgSigLike.countProcesses([-2, 0]) > 0
+        nSig_SigLike = cfgSigLike.countProcesses([-1, 1]) > 0
+        nBkg_SigLike = cfgSigLike.countProcesses([-2, 0]) > 0
         
-        nSig_Bkg = cfgBkgLike.countProcesses([-1, 1]) > 0
-        nBkg_Bkg = cfgBkgLike.countProcesses([-2, 0]) > 0
+        nSig_BkgLike = cfgBkgLike.countProcesses([-1, 1]) > 0
+        nBkg_BkgLike = cfgBkgLike.countProcesses([-2, 0]) > 0
 
-        if ( not (nSig_Sig and nBkg_Sig) ) and ( not (nSig_Bkg and nBkg_Bkg) ):
+        if ( not (nSig_SigLike and nBkg_SigLike) ) and ( not (nSig_BkgLike and nBkg_BkgLike) ):
             if i == len(goodMVA) - 1:
                 bestMVA = goodMVA[0]
                 cfgSigLike = copy.deepcopy(bestMVA.cfg)
@@ -180,10 +180,10 @@ def analyseResults(box, locks):
             else:
                 continue
 
-        if not (nSig_Sig and nBkg_Sig):
+        if not (nSig_SigLike and nBkg_SigLike):
             stopSigLike = True
 
-        if not (nSig_Bkg and nBkg_Bkg):
+        if not (nSig_BkgLike and nBkg_BkgLike):
             stopBkgLike = True
 
         break        

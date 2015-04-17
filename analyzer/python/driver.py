@@ -21,6 +21,7 @@ import copy
 from subprocess import call
 
 from utils import PConfig
+from utils import valueToString
 import treeStrategyOps
 import treeStrategyMIS
 
@@ -134,12 +135,6 @@ class launchMisChief(Thread):
         self.locks = locks
 
     def run(self):
-        def valueToString(value):
-            if isinstance(value, list):
-                return ','.join(str(x) for x in value)
-            else:
-                return str(value)
-
         # write the config file that will be used for this analysis
         with open(self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".conf", "w") as configFile:
 

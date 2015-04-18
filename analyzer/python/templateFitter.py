@@ -268,7 +268,7 @@ def    plotTemplateFitResults(cfg, fittedVars, dir=None):
     dataHist.SetAxisRange(1.1*minY, 1.1*maxY, "Y")
     
     xTitle = cfg.mvaCfg["inputvar"]
-    if "inputvarunit" incfg.mvaCfg.keys():
+    if "inputvarunit" in cfg.mvaCfg.keys():
         xTitle += " (" + cfg.mvaCfg["inputvarunit"] + ")"
     dataHist.SetXTitle(xTitle)
     

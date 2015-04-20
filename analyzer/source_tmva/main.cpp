@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 #include "panalysis.h"
 #include "pconfig.h"
@@ -7,6 +8,7 @@
 using namespace std;
 
 int main(int argc, char **argv){
+
   PConfig* myConfig = 0;
   if(argc > 1)
     myConfig = new PConfig(argv[1]);
@@ -22,11 +24,14 @@ int main(int argc, char **argv){
   myAna->DoPlot();
   myAna->DoROC();
   myAna->BkgEffWPPrecise();
-  if(myConfig->GetOutputTasks().Contains("output"))
+  
+  if(contains(myConfig->GetOutputTasks(), "output"))
     myAna->WriteOutput();
-  if(myConfig->GetOutputTasks().Contains("split"))
+
+  if(contains(myConfig->GetOutputTasks(), "split"))
     myAna->WriteSplitRootFiles();
-  if(myConfig->GetOutputTasks().Contains("result"))
+
+  if(contains(myConfig->GetOutputTasks(), "result"))
     myAna->WriteResult();
 
   delete myAna;

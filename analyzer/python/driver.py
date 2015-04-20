@@ -19,6 +19,7 @@ from threading import RLock
 import time
 import copy
 from subprocess import call
+import yaml
 
 from utils import PConfig
 from utils import valueToString
@@ -136,29 +137,19 @@ class launchMisChief(Thread):
 
     def run(self):
         # write the config file that will be used for this analysis
-        with open(self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".conf", "w") as configFile:
+        configFileName = os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["name"] + ".yml")
+        with open(configFileName, "w") as configFile:
 
             self.MVA.log("Writing config file.")
 
-            i = 0
-            for name, proc in self.MVA.cfg.procCfg.items():
+            mvaConfig = {}
+            mvaConfig["datasets"] = self.MVA.cfg.procCfg
+            mvaConfig["analysis"] = self.MVA.cfg.mvaCfg
 
-                configFile.write("[proc_" + str(i) + "]\n")
-                configFile.write("name = %s\n" % name)
-
-                for key, value in proc.items():
-                    configFile.write(key + " = " + valueToString(value) + "\n")
-
-                configFile.write("\n")
-                i += 1
-
-            configFile.write("[analysis]\n")
-
-            for key, value in self.MVA.cfg.mvaCfg.items():
-                configFile.write(key + " = " + valueToString(value) + "\n")
+            yaml.dump(mvaConfig, configFile)
 
         # launch the program on this config file
-        commandString = sys.argv[argExec] + " " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".conf"
+        commandString = sys.argv[argExec] + " " + configFileName
         commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
 
         # it would be annoying if, say, outputdir was "&& rm -rf *"

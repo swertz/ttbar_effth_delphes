@@ -13,6 +13,8 @@ import pickle
 import sys
 import copy
 
+from utils import weightsToString
+
 ######## CLASS ANALYSIS #####################################################
 
 class MISAnalysis:
@@ -67,7 +69,7 @@ class MISAnalysis:
                     self.entries[split][name] = myTree.GetEntries()
 
                     histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
-                    myTree.Draw("This->GetReadEntry()>>" + histName, proc["evtweight"], "goff")
+                    myTree.Draw("This->GetReadEntry()>>" + histName, weightsToString(proc["evtweight"]), "goff")
                     tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
                     effEntries = 0
                     # This has to be done because TH1F::Integral() sometimes misteriously returns 0.0
@@ -266,7 +268,7 @@ class MISTree:
             # FIXME: Support multiple input files (maybe not needed)?
             procFile = ROOT.TFile(proc["path"][0], "READ")
             procTree = procFile.Get(proc["treename"])
-            procTree.Draw("This->GetReadEntry()>>tempHist", "abs("+proc["evtweight"]+")", "goff")
+            procTree.Draw("This->GetReadEntry()>>tempHist", "abs(%s)" % weightsToString(proc["evtweight"]), "goff")
             tempHist = ROOT.TH1F(ROOT.gDirectory.Get("tempHist"))
             procTotEffEntriesAbs = tempHist.Integral()
             del tempHist

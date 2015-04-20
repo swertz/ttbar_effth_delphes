@@ -25,7 +25,7 @@ def defineNewCfgs(box, locks):
             # copy previous configuration and adapt it
             thisCfg = copy.deepcopy(box.cfg)
             bkgName = ""
-            inputVar = ""
+            inputVar = []
 
             # This part adapts each new analysis from the current one:
             # in particular, which process is signal ("1"), which is background ("0"), 
@@ -51,10 +51,10 @@ def defineNewCfgs(box, locks):
                     proc2["signal"] = 0
                 if proc2["signal"] == 0:
                     bkgName += "_" + name2
-                    inputVar += proc2["weightname"] + ","
+                    inputVar.append(proc2["weightname"])
 
             thisCfg.mvaCfg["name"] = name + "_vs" + bkgName
-            thisCfg.mvaCfg["inputvar"] = ','.join(thisCfg.mvaCfg["otherinputvars"] + [inputVar + proc["weightname"]])
+            thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvars"] + inputVar + [proc["weightname"]]
             thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"
@@ -116,7 +116,7 @@ def analyseResults(box, locks):
         for name, proc in cfgSigLike.procCfg.items():
             if proc["signal"] == -1:
                 proc["signal"] = 1
-            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + name + ".root"
+            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + name + ".root"]
             proc["entries"] = str(bestMVA.entries["sig"][name])
             proc["yield"] = str(bestMVA.yields["sig"][name])
         
@@ -130,7 +130,7 @@ def analyseResults(box, locks):
         for name, proc in cfgBkgLike.procCfg.items():
             if proc["signal"] == -1:
                 proc["signal"] = 1
-            proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"
+            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"]
             proc["entries"] = str(bestMVA.entries["bkg"][name])
             proc["yield"] = str(bestMVA.yields["bkg"][name])
         
@@ -207,7 +207,7 @@ def analyseResults(box, locks):
     # Sig-like branch
     cfgSigLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike"
     for name, proc in cfgSigLike.procCfg.items():
-        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + name + ".root"
+        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + name + ".root"]
         proc["entries"] = str(bestMVA.entries["sig"][name])
         proc["yield"] = str(bestMVA.yields["sig"][name])
         if proc["signal"] == -1:
@@ -227,7 +227,7 @@ def analyseResults(box, locks):
     cfgBkgLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike"
 
     for name, proc in cfgBkgLike.procCfg.items():
-        proc["path"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"
+        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"]
         proc["entries"] = str(bestMVA.entries["bkg"][name])
         proc["yield"] = str(bestMVA.yields["bkg"][name])
         if proc["signal"] == -1:

@@ -230,3 +230,8 @@ def convertWgtLstSqToTemplate(treeCfg, MCResult, histFileName, mode="fixBkg"):
     outFile.Close()
 
     return templateCfg
+
+def weightsToString(weights):
+    """Convert a list of weights to a string representation"""
+
+    return " * ".join(weights)

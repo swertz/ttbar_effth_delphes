@@ -1,147 +1,151 @@
-#include <string>
 #include <sstream>
 #include <iostream>
 #include <map>
 #include <cstdlib>
-#include "TObjArray.h"
-#include "TObjString.h"
 
+#include <TColor.h>
 #include "pconfig.h"
 
-#define SSTR( x ) dynamic_cast< std::ostringstream & > \
-        ( std::ostringstream() << std::dec << x ).str()
+#include <boost/algorithm/string.hpp>
+#include "yaml-cpp/yaml.h"
 
-using namespace std;
+PConfig::PConfig(const std::string& configFile){
 
-PConfig::PConfig(TString configFile){
-  ConfigFile cfg(configFile.Data());
+  // Init colors map
+  colorMap["kWhite"] = kWhite;
+  colorMap["kBlack"] = kBlack;
+  colorMap["kGray"] = kGray;
+  colorMap["kRed"] = kRed;
+  colorMap["kGreen"] = kGreen;
+  colorMap["kBlue"] = kBlue;
+  colorMap["kYellow"] = kYellow;
+  colorMap["kMagenta"] = kMagenta;
+  colorMap["kCyan"] = kCyan;
+  colorMap["kOrange"] = kOrange;
+  colorMap["kSpring"] = kSpring;
+  colorMap["kTeal"] = kTeal;
+  colorMap["kAzure"] = kAzure;
+  colorMap["kViolet"] = kViolet;
+  colorMap["kPink"] = kPink;
 
-  anaName = (string)cfg.Value("analysis","name");
-  outputDir = (string)cfg.Value("analysis","outputdir");
-  outputName = (string)cfg.Value("analysis","outputname");
-  mvaMethod = (string)cfg.Value("analysis","mvamethod");
+  YAML::Node root = YAML::LoadFile(configFile);
+
+  const YAML::Node& analysis = root["analysis"];
+
+  anaName = analysis["name"].as<std::string>();
+  outputDir = analysis["outputdir"].as<std::string>();
+  outputName = analysis["outputname"].as<std::string>();
+  mvaMethod = analysis["mvamethod"].as<std::string>();
+  
   topology = "";
-  if(mvaMethod.Contains("MLP"))
-    topology = (string)cfg.Value("analysis","topology");
-  iterations = (unsigned int)cfg.Value("analysis","iterations");
-  commonEvtWeightsString = (string)cfg.Value("analysis","commonweights");
-  trainEntries = (unsigned int)cfg.Value("analysis","trainentries");
-  workingPoint = (double)cfg.Value("analysis","workingpoint");
-  lumi = (double)cfg.Value("analysis","lumi");
-  histBins = (unsigned int)cfg.Value("analysis","histbins");
-  plotBins = (unsigned int)cfg.Value("analysis","plotbins");
-  writeOptions = (string)cfg.Value("analysis","writeoptions");
-  outputTasks = (string)cfg.Value("analysis","outputtasks");
-  splitName = (string)cfg.Value("analysis","splitname");
-  logName = (string)cfg.Value("analysis","log");
+  if(mvaMethod.find("MLP") != std::string::npos)
+    topology = analysis["topology"].as<std::string>();
 
-  TString inputVarString = (string)cfg.Value("analysis","inputvar");
-  TObjArray* tempArray = inputVarString.Tokenize(",");
-  for(int k=0; k<tempArray->GetEntries(); k++){
-    TObjString* tempObj = (TObjString*) tempArray->At(k);
-    TString varName = (TString) tempObj->GetString();
-    if(varName != "")
-      inputVars.push_back(tempObj->GetString());
-  }
+  iterations = analysis["iterations"].as<uint64_t>();
+  commonEvtWeights = analysis["commonweights"].as<std::vector<std::string>>();
+  trainEntries = analysis["trainentries"].as<uint64_t>();
+  workingPoint = analysis["workingpoint"].as<double>();
+  lumi = analysis["lumi"].as<double>();
+  histBins = analysis["histbins"].as<int16_t>();
+  plotBins = analysis["plotbins"].as<int16_t>();
+  writeOptions = analysis["writeoptions"].as<std::vector<std::string>>();
+  outputTasks = analysis["outputtasks"].as<std::vector<std::string>>();
+  splitName = analysis["splitname"].as<std::string>();
+  logName = analysis["log"].as<std::string>();
+
+  inputVars = analysis["inputvar"].as<std::vector<std::string>>();
   nInputVars = inputVars.size();
-  delete tempArray;
 
+  const YAML::Node& datasets = root["datasets"];
   nProc = 0;
-  for(int i=0; i<cfg.GetNSections()-1; i++){
-    paths.push_back( (string)cfg.Value("proc_"+SSTR(i),"path") );
-    names.push_back( (string)cfg.Value("proc_"+SSTR(i),"name") );
-    types.push_back( (int)cfg.Value("proc_"+SSTR(i),"signal") );
-    xSections.push_back( (double)cfg.Value("proc_"+SSTR(i),"xsection") );
-    totEvents.push_back( (long)cfg.Value("proc_"+SSTR(i),"genevents") );
-    treeNames.push_back( (string)cfg.Value("proc_"+SSTR(i),"treename") );
-    colors.push_back( TranslateColor((string)cfg.Value("proc_"+SSTR(i),"color")) );
-    
-    std::vector<TString> thisWeights;
-    TString weightString = (string)cfg.Value("proc_"+SSTR(i),"evtweight");
-    TObjArray* tempArray = weightString.Tokenize("*");
-    for(int k=0; k<tempArray->GetEntries(); k++){
-      TObjString* tempObj = (TObjString*) tempArray->At(k);
-      TString weightName = (TString) tempObj->GetString();
-      if(weightName != "")
-        thisWeights.push_back((TString) tempObj->GetString());
-    }
-    delete tempArray;
-    evtWeights.push_back(thisWeights);
-    
+  for (YAML::const_iterator it = datasets.begin(); it != datasets.end(); ++it) {
+    std::string name = it->first.as<std::string>();
+    YAML::Node dataset = it->second;
+
+    paths.push_back(dataset["path"].as<std::vector<std::string>>()[0]);
+    names.push_back(name);
+    types.push_back(dataset["signal"].as<int>());
+    xSections.push_back(dataset["xsection"].as<double>());
+    totEvents.push_back(dataset["genevents"].as<uint64_t>());
+    treeNames.push_back(dataset["treename"].as<std::string>());
+    colors.push_back(TranslateColor(dataset["color"].as<std::string>()));
+
+    evtWeights.push_back(dataset["evtweight"].as<std::vector<std::string>>());
+
     nProc++;
   }
 }
 
-TString PConfig::GetPath(unsigned int i) const{
+std::string PConfig::GetPath(uint32_t i) const{
   return paths.at(i);
 }
 
-TString PConfig::GetName(unsigned int i) const{
+std::string PConfig::GetName(uint32_t i) const{
   return names.at(i);
 }
 
-int PConfig::GetType(unsigned int i) const{
+int8_t PConfig::GetType(uint32_t i) const{
   return types.at(i);
 }
 
-Color_t PConfig::GetColor(unsigned int i) const{
+int16_t PConfig::GetColor(uint32_t i) const{
   return colors.at(i);
 }
 
-double PConfig::GetXSection(unsigned int i) const{
+double PConfig::GetXSection(uint32_t i) const{
   return xSections.at(i);
 }
 
-long PConfig::GetTotEvents(unsigned int i) const{
+uint64_t PConfig::GetTotEvents(uint32_t i) const{
   return totEvents.at(i);
 }
 
-TString PConfig::GetTreeName(unsigned int i) const{
+std::string PConfig::GetTreeName(uint32_t i) const{
   return treeNames.at(i);
 }
 
-std::vector<TString> PConfig::GetEvtWeights(unsigned int i) const{
+std::vector<std::string> PConfig::GetEvtWeights(uint32_t i) const{
   return evtWeights.at(i);
 }
 
-unsigned int PConfig::GetNProc(void) const{
+uint32_t PConfig::GetNProc(void) const{
   return nProc;
 }
 
-unsigned int PConfig::GetNInputVars(void) const{
+uint32_t PConfig::GetNInputVars(void) const{
   return nInputVars;
 }
 
-TString PConfig::GetAnaName(void) const{
+std::string PConfig::GetAnaName(void) const{
   return anaName;
 }
 
-TString PConfig::GetOutputDir(void) const{
+std::string PConfig::GetOutputDir(void) const{
   return outputDir;
 }
 
-TString PConfig::GetOutputName(void) const{
+std::string PConfig::GetOutputName(void) const{
   return outputName;
 }
 
-TString PConfig::GetTopology(void) const{
+std::string PConfig::GetTopology(void) const{
   return topology;
 }
 
-TString PConfig::GetMvaMethod(void) const{
+std::string PConfig::GetMvaMethod(void) const{
   return mvaMethod;
 }
 
-unsigned int PConfig::GetIterations(void) const{
+uint64_t PConfig::GetIterations(void) const{
   return iterations;
 }
 
-unsigned int PConfig::GetTrainEntries(void) const{
+uint64_t PConfig::GetTrainEntries(void) const{
   return trainEntries;
 }
 
-TString PConfig::GetCommonEvtWeightsString(void) const{
-  return commonEvtWeightsString;
+std::vector<std::string> PConfig::GetCommonEvtWeights(void) const{
+  return commonEvtWeights;
 }
 
 double PConfig::GetWorkingPoint(void) const{
@@ -152,69 +156,53 @@ double PConfig::GetLumi(void) const{
   return lumi;
 }
 
-unsigned int PConfig::GetHistBins(void) const{
+int16_t PConfig::GetHistBins(void) const{
   return histBins;
 }
 
-unsigned int PConfig::GetPlotBins(void) const{
+int16_t PConfig::GetPlotBins(void) const{
   return plotBins;
 }
 
-TString PConfig::GetWriteOptions(void) const{
+std::vector<std::string> PConfig::GetWriteOptions(void) const{
   return writeOptions;
 }
 
-TString PConfig::GetOutputTasks(void) const{
+std::vector<std::string> PConfig::GetOutputTasks(void) const{
   return outputTasks;
 }
 
-TString PConfig::GetSplitName(void) const{
+std::string PConfig::GetSplitName(void) const{
   return splitName;
 }
 
-TString PConfig::GetLogName(void) const{
+std::string PConfig::GetLogName(void) const{
   return logName;
 }
 
-TString PConfig::GetInputVar(unsigned int i) const{
+std::string PConfig::GetInputVar(uint32_t i) const{
   return inputVars.at(i);
 }
 
-Color_t PConfig::TranslateColor(TString color) const{
-  Color_t finalColor = 0;
-  vector<TString> tempColor;
-  TObjArray* tempArray = color.Tokenize("+");
-  for(int k=0; k<tempArray->GetEntries(); k++){
-    TObjString* tempObj = (TObjString*) tempArray->At(k);
-    tempColor.push_back(tempObj->GetString());
+int16_t PConfig::TranslateColor(const std::string& color) const{
+  int16_t finalColor = 0;
+
+  std::vector<std::string> tempColor;
+  boost::split(tempColor, color, boost::is_any_of("+"));
+
+  if (tempColor.size() > 2) {
+    std::cerr << "[WARN] Invalid color specified: " << color << std::endl;
+    return 0;
   }
-  if(tempColor.size() > 2){
-    cerr << "Invalid color specified!\n",
-    exit(1);
-  }
-  if(tempColor.at(0).Contains("k")){
-    map<TString, Color_t> colorMap;
-    colorMap["kWhite"] = kWhite;
-    colorMap["kBlack"] = kBlack;
-    colorMap["kGray"] = kGray;
-    colorMap["kRed"] = kRed;
-    colorMap["kGreen"] = kGreen;
-    colorMap["kBlue"] = kBlue;
-    colorMap["kYellow"] = kYellow;
-    colorMap["kMagenta"] = kMagenta;
-    colorMap["kCyan"] = kCyan;
-    colorMap["kOrange"] = kOrange;
-    colorMap["kSpring"] = kSpring;
-    colorMap["kTeal"] = kTeal;
-    colorMap["kAzure"] = kAzure;
-    colorMap["kViolet"] = kViolet;
-    colorMap["kPink"] = kPink;
-    finalColor = colorMap[tempColor.at(0)];
+
+  if (tempColor.at(0).find("k") != std::string::npos) {
+    finalColor = colorMap.at(tempColor.at(0));
     if(tempColor.size() == 2)
-      finalColor += tempColor.at(1).Atoi();
-  }else{
-    finalColor += tempColor.at(0).Atoi();
+      finalColor += std::stoi(tempColor.at(1));
+  } else {
+    finalColor += std::stoi(tempColor.at(0));
   }
+
   return finalColor;
 }
   

@@ -122,8 +122,14 @@ void PAnalysis::DefineAndTrainFactory(void){
 
   // Will also use weights defined in the input process dataset
   // Careful if these weights are negative!
-  if(myConfig->GetCommonEvtWeightsString() != "")
-    myFactory->SetWeightExpression(myConfig->GetCommonEvtWeightsString());
+  std::vector<std::string> commonWeights = myConfig->GetCommonEvtWeights();
+  if (commonWeights.size() > 0) {
+    std::string expression = commonWeights[0];
+    for (auto it = commonWeights.begin() + 1; it != commonWeights.end(); ++it)
+      expression += " * " + *it;
+
+    myFactory->SetWeightExpression(expression);
+  }
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
     myFactory->AddVariable(myConfig->GetInputVar(i));
@@ -260,7 +266,7 @@ void PAnalysis::DoPlot(void){
   myStack = (THStack*) new THStack("output_stack","MVA output");
   
   for(unsigned int j=0; j<myProc.size(); j++)
-    myLegend->AddEntry(myProc.at(j)->GetHist(), myProc.at(j)->GetName(), "f");
+    myLegend->AddEntry(myProc.at(j)->GetHist(), myProc.at(j)->GetName().c_str(), "f");
 
   TH1D* tempSigHist = (TH1D*) myProc.at(mySig)->GetHist()->Rebin(myConfig->GetHistBins()/myConfig->GetPlotBins(),"rebinned");
 
@@ -379,9 +385,9 @@ void PAnalysis::BkgEffWPPrecise(void){
     exit(1);
   }
 
-  TString condition = "";
+  std::string condition;
   if(!myEvalOnTrained)
-    condition = "!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")";
+    condition = "!(Entry$%2==0 && Entry$ < " + std::to_string(2*myConfig->GetTrainEntries()) + ")";
 
   // We will evaluate the MVA on the signal, build a vector of (MVA output, weight), sort it according to increasing values of MVA output, and find the MVA cut value X s.t. abs(sum(weights|mva<=X))/sum(abs(weights)) = working point
 
@@ -400,7 +406,7 @@ void PAnalysis::BkgEffWPPrecise(void){
   
   vector< vector<float> > mvaOutput;
 
-  for(long i=0; i<tree->GetEntries(); i++){
+  for(uint64_t i=0; i < static_cast<uint64_t>(tree->GetEntries()); i++){
     if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
       continue;
 
@@ -464,7 +470,7 @@ void PAnalysis::BkgEffWPPrecise(void){
 
     double integral = 0;
 
-    for(long i=0; i<proc->GetTree()->GetEntries(); i++){
+    for(uint64_t i=0; i < static_cast<uint64_t>(proc->GetTree()->GetEntries()); i++){
       if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
         continue;
       
@@ -547,23 +553,23 @@ void PAnalysis::WriteOutput(void){
     cout << "Writing output to " << myOutput << ".root.\n"; 
   #endif
   
-  TString options = myConfig->GetWriteOptions();
+  const std::vector<std::string>& options = myConfig->GetWriteOptions();
 
   myOutputFile->cd();
   
-  if(myCnvEff && options.Contains("ROC"))
+  if(myCnvEff && contains(options, "ROC"))
     myCnvEff->Write("ROC");
   
-  if(myCnvPlot && options.Contains("plot"))
+  if(myCnvPlot && contains(options, "plot"))
     myCnvPlot->Write("Plot");
 
-  if(myProc.at(0)->GetHist()->GetEntries() && options.Contains("hist")){
+  if(myProc.at(0)->GetHist()->GetEntries() && contains(options, "hist")) {
     for(unsigned int i=0; i<myProc.size(); i++){
       myProc.at(i)->GetHist()->Write();
     }
   }
   
-  if(myROC && options.Contains("ROC"))
+  if(myROC && contains(options, "ROC"))
     myROC->Write("ROC curve");
 }
 

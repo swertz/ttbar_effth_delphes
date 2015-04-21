@@ -13,7 +13,7 @@ PProc::PProc(PConfig* config, unsigned int num){
   myType = myConfig->GetType(num);
   myColor = myConfig->GetColor(num);
   myXSection = myConfig->GetXSection(num);
-  myHist = (TH1D*) new TH1D(myName+"_output", "MVA output", myConfig->GetHistBins(), 0., 1.);
+  myHist = (TH1D*) new TH1D((myName + "_output").c_str(), "MVA output", myConfig->GetHistBins(), 0., 1.);
   myHist->Sumw2();
   myPath = myConfig->GetPath(num);
   myTreeName = myConfig->GetTreeName(num);
@@ -26,15 +26,15 @@ PProc::PProc(PConfig* config, unsigned int num){
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
     myInputVars.push_back(0);
 
-  myFile = (TFile*) new TFile(myPath, "READ");
+  myFile = (TFile*) new TFile(myPath.c_str(), "READ");
   if(myFile->IsZombie()){
     cerr << "Failure opening file " << myPath << ".\n";
     exit(1);
   }
-  myTree = (TTree*) myFile->Get(myTreeName);
-  myEntries = (double)myTree->GetEntries();
+  myTree = (TTree*) myFile->Get(myTreeName.c_str());
+  myEntries = (double) myTree->GetEntries();
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", GetEvtWeightsString(), "goff");
+  myTree->Draw("This->GetReadEntry()>>tempHist", GetEvtWeightsString().c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
   myEffEntries = tempHist->Integral();
   delete tempHist;
@@ -47,34 +47,34 @@ void PProc::Open(void){
   // return the input variables or weights associated with the event
   // being read at the moment.
   
-  myFile = (TFile*) new TFile(myPath, "READ");
+  myFile = (TFile*) new TFile(myPath.c_str(), "READ");
   if(myFile->IsZombie()){
     cerr << "Failure opening file " << myPath << ".\n";
     exit(1);
   }
   
-  myTree = (TTree*) myFile->Get(myTreeName);
+  myTree = (TTree*) myFile->Get(myTreeName.c_str());
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
-    myTree->SetBranchAddress(myConfig->GetInputVar(i), &myInputVars.at(i));
+    myTree->SetBranchAddress(myConfig->GetInputVar(i).c_str(), &myInputVars.at(i));
   
   for(unsigned int i = 0; i < myEvtWeightNames.size(); ++i)
-    myTree->SetBranchAddress(myEvtWeightNames.at(i), &myEvtWeights.at(i));
+    myTree->SetBranchAddress(myEvtWeightNames.at(i).c_str(), &myEvtWeights.at(i));
 }
 
 void PProc::Close(void){
   myFile->Close();
 }
 
-TString PProc::GetPath(void) const{
+std::string PProc::GetPath(void) const{
   return myPath;
 }
 
-TString PProc::GetName(void) const{
+std::string PProc::GetName(void) const{
   return myName;
 }
 
-int PProc::GetType(void) const{
+int8_t PProc::GetType(void) const{
   return myType;
 }
 
@@ -94,14 +94,14 @@ double PProc::GetEffEntries(void) const{
   return myEffEntries;
 }
 
-double PProc::GetEffEntries(TString condition){
+double PProc::GetEffEntries(const std::string& condition){
   // Return effective number of entries, based on the condition
 
   bool wasOpen = myFile->IsOpen();
   if(!wasOpen)
     Open();
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", "(" + condition + ")*" + GetEvtWeightsString(), "goff");
+  myTree->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*" + GetEvtWeightsString()).c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
   delete tempHist;
@@ -116,7 +116,7 @@ double PProc::GetEffEntriesAbs(void) const{
   return myEffEntriesAbs;
 }
 
-double PProc::GetEffEntriesAbs(TString condition){
+double PProc::GetEffEntriesAbs(const std::string& condition){
   // Return effective number of entries, based on the condition
   // Using the sum of abs(weight)
 
@@ -124,7 +124,7 @@ double PProc::GetEffEntriesAbs(TString condition){
   if(!wasOpen)
     Open();
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", "(" + condition + ")*abs("+GetEvtWeightsString()+")", "goff");
+  myTree->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*abs("+GetEvtWeightsString()+")").c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
   delete tempHist;
@@ -139,7 +139,7 @@ double PProc::GetYield(void) const{
   return myEffEntries*GetGlobWeight();
 }
 
-double PProc::GetYield(TString condition){
+double PProc::GetYield(const std::string& condition){
   return GetEffEntries(condition)*GetGlobWeight();
 }
 
@@ -147,7 +147,7 @@ double PProc::GetYieldAbs(void) const{
   return myEffEntriesAbs*GetGlobWeight();
 }
 
-double PProc::GetYieldAbs(TString condition){
+double PProc::GetYieldAbs(const std::string& condition){
   return GetEffEntriesAbs(condition)*GetGlobWeight();
 }
 
@@ -155,10 +155,10 @@ double PProc::GetGlobWeight(void) const{
   return myXSection*myConfig->GetLumi()/myGenMCEvents;
 }
 
-TString PProc::GetEvtWeightsString(void) const{
-  TString weight = myEvtWeightNames.at(0);
+std::string PProc::GetEvtWeightsString(void) const{
+  std::string weight = myEvtWeightNames.at(0);
 
-  for(std::vector<TString>::const_iterator i = myEvtWeightNames.begin() + 1; i != myEvtWeightNames.end(); ++i)
+  for(std::vector<std::string>::const_iterator i = myEvtWeightNames.begin() + 1; i != myEvtWeightNames.end(); ++i)
     weight += "*" + (*i);
 
   return weight;
@@ -178,7 +178,7 @@ double PProc::GetEvtWeight(void) const{
   return (double) weight;
 }
 
-double* PProc::GetInputVar(TString varName){
+double* PProc::GetInputVar(const std::string& varName){
   if(myTree->GetEntries() <= 0){
     cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
     exit(1);

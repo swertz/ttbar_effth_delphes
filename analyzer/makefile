@@ -8,16 +8,18 @@ EXTERNAL_LDFLAGS := -Lexternal/lib -lyaml-cpp
 
 sourcedir_tmva := source_tmva/
 objdir_tmva := objs_tmva/
-objects_tmva := $(objdir_tmva)/main.o $(objdir_tmva)/panalysis.o $(objdir_tmva)/pproc.o $(objdir_tmva)/pconfig.o $(objdir_tmva)/Chameleon.o $(objdir_tmva)/ConfigFile.o
+objects_tmva := $(objdir_tmva)/main.o $(objdir_tmva)/panalysis.o $(objdir_tmva)/pproc.o $(objdir_tmva)/pconfig.o
 
-all: tmva makefile
+all: tmva
 
-tmva: $(objects_tmva) makefile
+tmva: $(objects_tmva)
 	$(CXX) -o $@ $(objects_tmva) $(LDFLAGS) $(EXTERNAL_LDFLAGS) $(ROOT_LIBS)
 
-$(objdir_tmva)/%.o: $(sourcedir_tmva)/%.cpp $(sourcedir_tmva)/*.h
-	if test ! -d $(objdir_tmva); then mkdir $(objdir_tmva); fi
+$(objdir_tmva)/%.o: $(sourcedir_tmva)/%.cpp $(sourcedir_tmva)/*.h | $(objdir_tmva)
 	$(CXX) -o $@ $(CXXFLAGS) $(EXTERNAL_CXXFLAGS) -c $< 
+
+$(objdir_tmva):
+	if test ! -d $(objdir_tmva); then mkdir $(objdir_tmva); fi
 
 .PHONY: clean
 clean:

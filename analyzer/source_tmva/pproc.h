@@ -2,8 +2,7 @@
 #define DEF_NN_PPROC
 
 #include <iostream>
-#include "TFile.h"
-#include "TTree.h"
+#include "TChain.h"
 #include "TH1.h"
 #include "TColor.h"
 #include "TROOT.h"
@@ -20,7 +19,7 @@ class PProc{
   void Open(void);
   void Close(void);
 
-  std::string GetPath(void) const;
+  std::vector<std::string> GetPaths(void) const;
   std::string GetName(void) const;
   std::string GetEvtWeightsString(void) const;
   double GetEvtWeight(void) const;
@@ -48,11 +47,10 @@ class PProc{
   PConfig *myConfig;
 
   TH1D* myHist;
-  TTree* myTree;
-  TFile* myFile;
+  TChain* myChain;
 
   std::string myTreeName;
-  std::string myPath;
+  std::vector<std::string> myPaths;
   std::string myName;
   std::vector<std::string> myEvtWeightNames;
   int8_t myType;

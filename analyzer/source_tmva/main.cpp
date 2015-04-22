@@ -34,8 +34,8 @@ int main(int argc, char **argv){
   if(contains(myConfig->GetOutputTasks(), "result"))
     myAna->WriteResult();
 
-  delete myAna;
-  delete myConfig;
+  delete myAna; myAna = NULL;
+  delete myConfig; myConfig = NULL;
   
   return 0;
 }

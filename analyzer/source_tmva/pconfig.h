@@ -15,7 +15,7 @@ class PConfig{
   
   PConfig(const std::string& configFile);
 
-  std::string GetPath(uint32_t i) const;
+  std::vector<std::string> GetPaths(uint32_t i) const;
   std::string GetName(uint32_t i) const;
   int8_t GetType(uint32_t i) const;
   Color_t GetColor(uint32_t i) const;
@@ -46,7 +46,7 @@ class PConfig{
 
   private:
 
-  std::vector<std::string> paths;
+  std::vector< std::vector<std::string> > paths;
   std::vector<std::string> names;
   std::vector<int8_t> types;
   std::vector<int16_t> colors;

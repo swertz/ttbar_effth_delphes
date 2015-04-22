@@ -15,7 +15,7 @@ PProc::PProc(PConfig* config, unsigned int num){
   myXSection = myConfig->GetXSection(num);
   myHist = (TH1D*) new TH1D((myName + "_output").c_str(), "MVA output", myConfig->GetHistBins(), 0., 1.);
   myHist->Sumw2();
-  myPath = myConfig->GetPath(num);
+  myPaths = myConfig->GetPaths(num);
   myTreeName = myConfig->GetTreeName(num);
   myGenMCEvents = (double)myConfig->GetTotEvents(num);
   
@@ -26,48 +26,42 @@ PProc::PProc(PConfig* config, unsigned int num){
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
     myInputVars.push_back(0);
 
-  myFile = (TFile*) new TFile(myPath.c_str(), "READ");
-  if(myFile->IsZombie()){
-    cerr << "Failure opening file " << myPath << ".\n";
-    exit(1);
-  }
-  myTree = (TTree*) myFile->Get(myTreeName.c_str());
-  myEntries = (double) myTree->GetEntries();
+  myChain = new TChain(myTreeName.c_str());
+  for(auto &i: myPaths)
+    myChain->Add(i.c_str()); 
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", GetEvtWeightsString().c_str(), "goff");
+  myEntries = (double) myChain->GetEntries();
+
+  myChain->Draw("This->GetReadEntry()>>tempHist", GetEvtWeightsString().c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
   myEffEntries = tempHist->Integral();
-  delete tempHist;
-  
-  myFile->Close();
+  delete tempHist; tempHist = NULL;
+
+  delete myChain; myChain = NULL;
 }
 
 void PProc::Open(void){
-  // Opens the file and defines the branches so that the PProc methods
+  // Create the TChain and defines the branches so that the PProc methods
   // return the input variables or weights associated with the event
   // being read at the moment.
   
-  myFile = (TFile*) new TFile(myPath.c_str(), "READ");
-  if(myFile->IsZombie()){
-    cerr << "Failure opening file " << myPath << ".\n";
-    exit(1);
-  }
-  
-  myTree = (TTree*) myFile->Get(myTreeName.c_str());
+  myChain = new TChain(myTreeName.c_str());
+  for(auto &i: myPaths)
+    myChain->Add(i.c_str()); 
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
-    myTree->SetBranchAddress(myConfig->GetInputVar(i).c_str(), &myInputVars.at(i));
+    myChain->SetBranchAddress(myConfig->GetInputVar(i).c_str(), &myInputVars.at(i));
   
   for(unsigned int i = 0; i < myEvtWeightNames.size(); ++i)
-    myTree->SetBranchAddress(myEvtWeightNames.at(i).c_str(), &myEvtWeights.at(i));
+    myChain->SetBranchAddress(myEvtWeightNames.at(i).c_str(), &myEvtWeights.at(i));
 }
 
 void PProc::Close(void){
-  myFile->Close();
+  delete myChain; myChain = NULL;
 }
 
-std::string PProc::GetPath(void) const{
-  return myPath;
+std::vector<std::string> PProc::GetPaths(void) const{
+  return myPaths;
 }
 
 std::string PProc::GetName(void) const{
@@ -97,14 +91,14 @@ double PProc::GetEffEntries(void) const{
 double PProc::GetEffEntries(const std::string& condition){
   // Return effective number of entries, based on the condition
 
-  bool wasOpen = myFile->IsOpen();
+  bool wasOpen = myChain->GetEntries() > 0;
   if(!wasOpen)
     Open();
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*" + GetEvtWeightsString()).c_str(), "goff");
+  myChain->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*" + GetEvtWeightsString()).c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
-  delete tempHist;
+  delete tempHist; tempHist = NULL;
 
   if(!wasOpen)
     Close();
@@ -120,14 +114,14 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
   // Return effective number of entries, based on the condition
   // Using the sum of abs(weight)
 
-  bool wasOpen = myFile->IsOpen();
+  bool wasOpen = myChain->GetEntries() > 0;
   if(!wasOpen)
     Open();
 
-  myTree->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*abs("+GetEvtWeightsString()+")").c_str(), "goff");
+  myChain->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*abs("+GetEvtWeightsString()+")").c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
-  delete tempHist;
+  delete tempHist; tempHist = NULL;
 
   if(!wasOpen)
     Close();
@@ -158,28 +152,28 @@ double PProc::GetGlobWeight(void) const{
 std::string PProc::GetEvtWeightsString(void) const{
   std::string weight = myEvtWeightNames.at(0);
 
-  for(std::vector<std::string>::const_iterator i = myEvtWeightNames.begin() + 1; i != myEvtWeightNames.end(); ++i)
+  for(auto i = myEvtWeightNames.begin() + 1; i != myEvtWeightNames.end(); ++i)
     weight += "*" + (*i);
 
   return weight;
 }
 
 double PProc::GetEvtWeight(void) const{
-  if(myTree->GetEntries() <= 0){
+  if(myChain->GetEntries() <= 0){
     cerr << "Error in " << myName << "::GetEvtWeight(): can't return event weight without opening the process first.\n";
     exit(1);
   }
 
   float weight = 1.;
   
-  for(std::vector<float>::const_iterator i = myEvtWeights.begin(); i != myEvtWeights.end(); ++i)
-    weight *= (*i);
+  for(auto &i : myEvtWeights)
+    weight *= i;
   
   return (double) weight;
 }
 
 double* PProc::GetInputVar(const std::string& varName){
-  if(myTree->GetEntries() <= 0){
+  if(myChain->GetEntries() <= 0){
     cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
     exit(1);
   }
@@ -192,23 +186,15 @@ double* PProc::GetInputVar(const std::string& varName){
 }
 
 TTree* PProc::GetTree(void) const{
-  if(myTree->GetEntries() <= 0){
+  if(myChain->GetEntries() <= 0){
     cerr << "Error in " << myName << "::GetTree(): can't return TTree without opening the process first.\n";
     exit(1);
   }
-  return myTree;
+  return myChain;
 }
 
 TH1D* PProc::GetHist(void) const{
   return myHist;
-}
-
-TFile* PProc::GetFile(void) const{
-  if(myFile->IsZombie()){
-    cerr << "Error in " << myName << "::GetFile(): can't return TFile without opening the process first.\n";
-    exit(1);
-  }
-  return myFile;
 }
 
 Color_t PProc::GetColor(void) const{
@@ -223,6 +209,6 @@ PProc::~PProc(){
   #ifdef P_LOG
     cout << "Destroying PProc " << myName << "." << endl;
   #endif
-  delete myHist;
-  delete myFile;
+  delete myHist; myHist = NULL;
+  delete myChain; myChain = NULL;
 }

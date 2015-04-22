@@ -62,7 +62,7 @@ PConfig::PConfig(const std::string& configFile){
     std::string name = it->first.as<std::string>();
     YAML::Node dataset = it->second;
 
-    paths.push_back(dataset["path"].as<std::vector<std::string>>()[0]);
+    paths.push_back(dataset["path"].as<std::vector<std::string>>());
     names.push_back(name);
     types.push_back(dataset["signal"].as<int>());
     xSections.push_back(dataset["xsection"].as<double>());
@@ -76,7 +76,7 @@ PConfig::PConfig(const std::string& configFile){
   }
 }
 
-std::string PConfig::GetPath(uint32_t i) const{
+std::vector<std::string> PConfig::GetPaths(uint32_t i) const{
   return paths.at(i);
 }
 
@@ -205,4 +205,3 @@ int16_t PConfig::TranslateColor(const std::string& color) const{
 
   return finalColor;
 }
-  

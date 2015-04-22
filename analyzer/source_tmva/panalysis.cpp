@@ -44,10 +44,20 @@ PAnalysis::PAnalysis(PConfig *config){
     AddProc( (PProc*) new PProc(myConfig, i) );
 
   myOutputFile = (TFile*) new TFile(myOutput+".root", "RECREATE");
-  if(myOutputFile->IsZombie()){
+  if(!myOutputFile->IsOpen()){
     cerr << "Failure opening file " << myOutput+".root" << ".\n";
     exit(1);
   }
+
+  myStack = NULL;
+  myFactory = NULL;
+  myCnvTraining = NULL;
+  myCnvPlot = NULL;
+  myLegend = NULL;
+  myCnvEff = NULL;
+  myROC = NULL;
+  myLine = NULL;
+  myCutLine = NULL;
 }
 
 void PAnalysis::AddProc(PProc* proc){
@@ -102,7 +112,7 @@ void PAnalysis::DefineAndTrainFactory(void){
       cout << ".\n";
   #endif
 
-  // Change MVA output file
+  // Change MVA output file... Because myFactory::SetOutputDir() has been abducted by Aliens, do it a simpler way:
   TMVA::Tools::Instance();
   (TMVA::gConfig().GetIONames()).fWeightFileDir = myConfig->GetOutputDir();
   
@@ -229,7 +239,7 @@ void PAnalysis::DoHist(void){
     proc->Close();
   }
   
-  delete myReader;
+  delete myReader; myReader = NULL;
 }
 
 float PAnalysis::Transform(float input){
@@ -491,7 +501,7 @@ void PAnalysis::BkgEffWPPrecise(void){
 
   myBkgEff = abs(bkgSelectedYield)/bkgTotYieldAbs;
   
-  delete myReader;
+  delete myReader; myReader = NULL;
   
   #ifdef P_LOG
     cout << "For signal efficiency " << mySigEff << ", MVA cut is (precisely) " << myCut << ", and background efficiency is " << myBkgEff << ".\n";
@@ -602,7 +612,7 @@ void PAnalysis::WriteSplitRootFiles(void){
     TFile* outFileBkg = new TFile(outputDir + "/" + myName + "_bkglike_proc_" + proc->GetName() + ".root","RECREATE");
     TTree* treeBkg = proc->GetTree()->CloneTree(0);
     
-    if(outFileSig->IsZombie() || outFileBkg->IsZombie()){
+    if(!outFileSig->IsOpen() || !outFileBkg->IsOpen()){
       cerr << "Error creating split output files.\n";
       exit(1);
     }
@@ -626,12 +636,6 @@ void PAnalysis::WriteSplitRootFiles(void){
         treeSig->Fill();
     }
 
-    if(myMinMCNumberSig < 0 || treeSig->GetEntries() < myMinMCNumberSig)
-      myMinMCNumberSig = treeSig->GetEntries();
-    
-    if(myMinMCNumberBkg < 0 || treeBkg->GetEntries() < myMinMCNumberBkg)
-      myMinMCNumberBkg = treeBkg->GetEntries();
-
     outFileSig->cd();
     treeSig->Write();
     outFileSig->Close();
@@ -643,7 +647,7 @@ void PAnalysis::WriteSplitRootFiles(void){
     proc->Close();
   }
   
-  delete myReader;
+  delete myReader; myReader = NULL;
 }
 
 void PAnalysis::WriteResult(void){
@@ -660,12 +664,7 @@ void PAnalysis::WriteResult(void){
   
   ofstream logFile;
   logFile.open(output);
-  logFile << mySigEff << endl << myBkgEff << endl;
-  if(myMinMCNumberSig >= 0)
-    logFile << myMinMCNumberSig << endl;
-  if(myMinMCNumberBkg >= 0)
-    logFile << myMinMCNumberBkg << endl;
-  logFile << myCut;
+  logFile << mySigEff << endl << myBkgEff << endl << myCut;
   logFile.close();
 }  
 
@@ -674,24 +673,17 @@ PAnalysis::~PAnalysis(){
     cout << "Destroying PAnalysis " << myName << ".\n";
   #endif
 
-  for(unsigned i=0; i<myProc.size(); i++)
-    delete myProc.at(i);
-  if(myStack)
-    delete myStack;
-  if(myCnvPlot)
-    delete myCnvPlot;
-  if(myLegend)
-    delete myLegend;
-  if(myCnvEff)
-    delete myCnvEff;
-  if(myROC)
-    delete myROC;
-  if(myLine)
-    delete myLine;
-  if(myCutLine)
-    delete myCutLine;
-  delete myOutputFile;
-  if(myFactory)
-    delete myFactory;
+  for(unsigned i=0; i<myProc.size(); i++){
+    delete myProc.at(i); myProc.at(i) = NULL;
+  }
+  delete myStack; myStack = NULL;
+  delete myCnvPlot; myCnvPlot = NULL;
+  delete myLegend; myLegend = NULL;
+  delete myCnvEff; myCnvEff = NULL;
+  delete myROC; myROC = NULL;
+  delete myLine; myLine = NULL;
+  delete myCutLine; myCutLine = NULL;
+  delete myOutputFile; myOutputFile = NULL;
+  delete myFactory; myFactory = NULL;
 }
 

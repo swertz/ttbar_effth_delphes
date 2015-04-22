@@ -283,11 +283,11 @@ void PAnalysis::DoPlot(void){
   FillStack(tempSigHist->Integral());
   
   if(myStack->GetMaximum() > tempSigHist->GetMaximum()){
-    myStack->Draw("");
-    tempSigHist->Draw("same");
+    myStack->Draw("hist ][");
+    tempSigHist->Draw("same hist ][");
   }else{
-    tempSigHist->Draw("");
-    myStack->Draw("same");
+    tempSigHist->Draw("hist ][");
+    myStack->Draw("same hist ][");
   }
 
   myLegend->Draw();

@@ -41,7 +41,7 @@ class MISAnalysis:
             logResults = [ line for line in logFile.read().split("\n") if line != "" ]
             sigEff = float(logResults[0])
             bkgEff = float(logResults[1])
-            cut = float(logResults[4])
+            cut = float(logResults[2])
             
             self.log("Analysis result: " + str(sigEff) + " sig. efficiency vs. " + str(bkgEff) + " bkg. efficiency at MVA cut value = " + str(cut) + ".")
             

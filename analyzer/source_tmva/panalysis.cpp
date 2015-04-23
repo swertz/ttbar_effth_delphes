@@ -32,8 +32,6 @@ PAnalysis::PAnalysis(PConfig *config){
   myEvalOnTrained = false;
   myBkgEff = 0;
   mySigEff = 0;
-  myMinMCNumberSig = -1;
-  myMinMCNumberBkg = -1;
   
   myConfig = config;
   myName = myConfig->GetAnaName();
@@ -132,14 +130,7 @@ void PAnalysis::DefineAndTrainFactory(void){
 
   // Will also use weights defined in the input process dataset
   // Careful if these weights are negative!
-  std::vector<std::string> commonWeights = myConfig->GetCommonEvtWeights();
-  if (commonWeights.size() > 0) {
-    std::string expression = commonWeights[0];
-    for (auto it = commonWeights.begin() + 1; it != commonWeights.end(); ++it)
-      expression += " * " + *it;
-
-    myFactory->SetWeightExpression(expression);
-  }
+  myFactory->SetWeightExpression(myConfig->GetCommonEvtWeight().c_str());
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
     myFactory->AddVariable(myConfig->GetInputVar(i));
@@ -186,8 +177,8 @@ void PAnalysis::DefineAndTrainFactory(void){
   // Training and stuff
 
   myFactory->TrainAllMethods();
-  myFactory->TestAllMethods();
-  myFactory->EvaluateAllMethods();
+  //myFactory->TestAllMethods();
+  //myFactory->EvaluateAllMethods();
 
   CloseAllProc();
 }
@@ -376,7 +367,7 @@ void PAnalysis::DoROC(void){
 }
 
 // We will want to sort the (MVA,weight) vectors according to increasing MVA values
-bool mvaOutputSorter(vector<float> i, vector<float> j){ return i.at(0) < j.at(0); }
+bool mvaOutputSorter(std::vector<float> i, std::vector<float> j){ return i[0] < j[0]; }
 
 void PAnalysis::BkgEffWPPrecise(void){
   double workingPoint = myConfig->GetWorkingPoint();
@@ -390,8 +381,8 @@ void PAnalysis::BkgEffWPPrecise(void){
     DefineAndTrainFactory();
   }
   
-  if(workingPoint > 1 || workingPoint <= 0){
-    cerr << "Working point must be a double between 0 and 1!\n";
+  if(workingPoint >= 1 || workingPoint <= 0){
+    cerr << "Working point must be a double strictly between 0 and 1!\n";
     exit(1);
   }
 
@@ -401,7 +392,7 @@ void PAnalysis::BkgEffWPPrecise(void){
 
   // We will evaluate the MVA on the signal, build a vector of (MVA output, weight), sort it according to increasing values of MVA output, and find the MVA cut value X s.t. abs(sum(weights|mva<=X))/sum(abs(weights)) = working point
 
-  vector<float> inputs(myConfig->GetNInputVars());
+  std::vector<float> inputs(myConfig->GetNInputVars());
   
   TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
   for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
@@ -414,7 +405,7 @@ void PAnalysis::BkgEffWPPrecise(void){
   TTree* tree = sig->GetTree();
   float sigEffEntriesAbs = sig->GetEffEntriesAbs(condition);
   
-  vector< vector<float> > mvaOutput;
+  std::vector< std::vector<float> > mvaOutput;
 
   for(uint64_t i=0; i < static_cast<uint64_t>(tree->GetEntries()); i++){
     if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
@@ -426,7 +417,7 @@ void PAnalysis::BkgEffWPPrecise(void){
       inputs.at(k) = (float) *( sig->GetInputVar(myConfig->GetInputVar(k)) );
     float mva = Transform(myReader->EvaluateMVA(myName));
 
-    vector<float> outputAndWeight;
+    std::vector<float> outputAndWeight;
 
     outputAndWeight.push_back(mva);
     outputAndWeight.push_back((float)sig->GetEvtWeight());
@@ -446,7 +437,7 @@ void PAnalysis::BkgEffWPPrecise(void){
     if(1.-abs(integral)/sigEffEntriesAbs <= workingPoint)
       break;
     
-    integral += mvaOutput.at(i).at(1);
+    integral += mvaOutput[i][1];
     cutIndex++;
   }
 
@@ -454,9 +445,9 @@ void PAnalysis::BkgEffWPPrecise(void){
 
   // just a security in the limiting case of workingPoint = 0.
   if(cutIndex == tree->GetEntries())
-    myCut = (double) (*mvaOutput.end()).at(0) + 1.;
+    myCut = (double) (*mvaOutput.end())[0] + 1.;
   else
-    myCut = (double) mvaOutput.at(cutIndex).at(0);
+    myCut = (double) mvaOutput[cutIndex][0];
 
   sig->Close();
   

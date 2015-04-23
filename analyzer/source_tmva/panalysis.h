@@ -52,8 +52,6 @@ class PAnalysis{
   //double sRootB, sRootSB, sB;
   bool myEvalOnTrained;
   double myCut, myBkgEff, mySigEff;
-  long myMinMCNumberSig;
-  long myMinMCNumberBkg;
 
   TMVA::Factory* myFactory;
 

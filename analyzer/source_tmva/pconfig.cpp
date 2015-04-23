@@ -42,7 +42,7 @@ PConfig::PConfig(const std::string& configFile){
     topology = analysis["topology"].as<std::string>();
 
   iterations = analysis["iterations"].as<uint64_t>();
-  commonEvtWeights = analysis["commonweights"].as<std::vector<std::string>>();
+  commonEvtWeight = analysis["commonweights"].as<std::string>();
   trainEntries = analysis["trainentries"].as<uint64_t>();
   workingPoint = analysis["workingpoint"].as<double>();
   lumi = analysis["lumi"].as<double>();
@@ -70,7 +70,7 @@ PConfig::PConfig(const std::string& configFile){
     treeNames.push_back(dataset["treename"].as<std::string>());
     colors.push_back(TranslateColor(dataset["color"].as<std::string>()));
 
-    evtWeights.push_back(dataset["evtweight"].as<std::vector<std::string>>());
+    evtWeights.push_back(dataset["evtweight"].as<std::string>());
 
     nProc++;
   }
@@ -104,7 +104,7 @@ std::string PConfig::GetTreeName(uint32_t i) const{
   return treeNames.at(i);
 }
 
-std::vector<std::string> PConfig::GetEvtWeights(uint32_t i) const{
+std::string PConfig::GetEvtWeight(uint32_t i) const{
   return evtWeights.at(i);
 }
 
@@ -144,8 +144,8 @@ uint64_t PConfig::GetTrainEntries(void) const{
   return trainEntries;
 }
 
-std::vector<std::string> PConfig::GetCommonEvtWeights(void) const{
-  return commonEvtWeights;
+std::string PConfig::GetCommonEvtWeight(void) const{
+  return commonEvtWeight;
 }
 
 double PConfig::GetWorkingPoint(void) const{

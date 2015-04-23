@@ -19,12 +19,10 @@ PProc::PProc(PConfig* config, unsigned int num){
   myTreeName = myConfig->GetTreeName(num);
   myGenMCEvents = (double)myConfig->GetTotEvents(num);
   
-  myEvtWeightNames = myConfig->GetEvtWeights(num);
-  for(unsigned int i=0; i<myEvtWeightNames.size(); i++)
-    myEvtWeights.push_back(0);
+  myEvtWeightString = myConfig->GetEvtWeight(num);
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
-    myInputVars.push_back(0);
+    myInputVars[ myConfig->GetInputVar(i) ] = 0.;
 
   myChain = new TChain(myTreeName.c_str());
   for(auto &i: myPaths)
@@ -32,12 +30,14 @@ PProc::PProc(PConfig* config, unsigned int num){
 
   myEntries = (double) myChain->GetEntries();
 
-  myChain->Draw("This->GetReadEntry()>>tempHist", GetEvtWeightsString().c_str(), "goff");
+  myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
   myEffEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   delete myChain; myChain = NULL;
+
+  myWeightFormula = NULL;
 }
 
 void PProc::Open(void){
@@ -49,15 +49,20 @@ void PProc::Open(void){
   for(auto &i: myPaths)
     myChain->Add(i.c_str()); 
 
-  for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
-    myChain->SetBranchAddress(myConfig->GetInputVar(i).c_str(), &myInputVars.at(i));
-  
-  for(unsigned int i = 0; i < myEvtWeightNames.size(); ++i)
-    myChain->SetBranchAddress(myEvtWeightNames.at(i).c_str(), &myEvtWeights.at(i));
+  for(auto &var: myInputVars)
+    myChain->SetBranchAddress(var.first.c_str(), &var.second);
+ 
+  myWeightFormula = new TTreeFormula((myName + "_WeightFormula").c_str(), myEvtWeightString.c_str(), myChain);
+  // This is needed because we're using a TChain and not a TTree
+  // The formula needs to be updated (by calling TTreeFormula::UpdateFormulaLeaves()) 
+  // each time a new file of the chain is read.
+  // TChain::SetNotify() allows to do this automatically.
+  myChain->SetNotify(myWeightFormula);
 }
 
 void PProc::Close(void){
   delete myChain; myChain = NULL;
+  delete myWeightFormula; myWeightFormula = NULL;
 }
 
 std::vector<std::string> PProc::GetPaths(void) const{
@@ -91,11 +96,11 @@ double PProc::GetEffEntries(void) const{
 double PProc::GetEffEntries(const std::string& condition){
   // Return effective number of entries, based on the condition
 
-  bool wasOpen = myChain->GetEntries() > 0;
+  bool wasOpen = myChain != NULL;
   if(!wasOpen)
     Open();
 
-  myChain->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*" + GetEvtWeightsString()).c_str(), "goff");
+  myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
@@ -114,11 +119,11 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
   // Return effective number of entries, based on the condition
   // Using the sum of abs(weight)
 
-  bool wasOpen = myChain->GetEntries() > 0;
+  bool wasOpen = myChain != NULL;
   if(!wasOpen)
     Open();
 
-  myChain->Draw("This->GetReadEntry()>>tempHist", ("(" + condition + ")*abs("+GetEvtWeightsString()+")").c_str(), "goff");
+  myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
   double effEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
@@ -149,44 +154,28 @@ double PProc::GetGlobWeight(void) const{
   return myXSection*myConfig->GetLumi()/myGenMCEvents;
 }
 
-std::string PProc::GetEvtWeightsString(void) const{
-  std::string weight = myEvtWeightNames.at(0);
-
-  for(auto i = myEvtWeightNames.begin() + 1; i != myEvtWeightNames.end(); ++i)
-    weight += "*" + (*i);
-
-  return weight;
+std::string PProc::GetEvtWeightString(void) const{
+  return myEvtWeightString;
 }
 
 double PProc::GetEvtWeight(void) const{
-  if(myChain->GetEntries() <= 0){
+  if(!myChain){
     cerr << "Error in " << myName << "::GetEvtWeight(): can't return event weight without opening the process first.\n";
     exit(1);
   }
-
-  float weight = 1.;
-  
-  for(auto &i : myEvtWeights)
-    weight *= i;
-  
-  return (double) weight;
+  return myWeightFormula->EvalInstance();
 }
 
 double* PProc::GetInputVar(const std::string& varName){
-  if(myChain->GetEntries() <= 0){
+  if(!myChain){
     cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
     exit(1);
   }
-  for(unsigned int i=0; i<myConfig->GetNInputVars(); i++){
-    if(varName == myConfig->GetInputVar(i))
-      return &myInputVars.at(i);
-  }
-  cerr << "Error in " << myName << "::GetInputVar(): couldn't find input variable " << varName << ". Remember it has to be part of the input variables defined in the [analysis] section.\n";
-  exit(1);
+  return &myInputVars[varName];
 }
 
 TTree* PProc::GetTree(void) const{
-  if(myChain->GetEntries() <= 0){
+  if(!myChain){
     cerr << "Error in " << myName << "::GetTree(): can't return TTree without opening the process first.\n";
     exit(1);
   }
@@ -211,4 +200,5 @@ PProc::~PProc(){
   #endif
   delete myHist; myHist = NULL;
   delete myChain; myChain = NULL;
+  delete myWeightFormula; myWeightFormula = NULL;
 }

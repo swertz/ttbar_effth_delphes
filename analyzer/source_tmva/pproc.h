@@ -6,6 +6,7 @@
 #include "TH1.h"
 #include "TColor.h"
 #include "TROOT.h"
+#include "TTreeFormula.h"
 
 #include "defs.h"
 #include "pconfig.h"
@@ -21,7 +22,7 @@ class PProc{
 
   std::vector<std::string> GetPaths(void) const;
   std::string GetName(void) const;
-  std::string GetEvtWeightsString(void) const;
+  std::string GetEvtWeightString(void) const;
   double GetEvtWeight(void) const;
   int8_t GetType(void) const;
   double GetXSection(void) const;
@@ -48,11 +49,12 @@ class PProc{
 
   TH1D* myHist;
   TChain* myChain;
+  TTreeFormula* myWeightFormula;
 
   std::string myTreeName;
   std::vector<std::string> myPaths;
   std::string myName;
-  std::vector<std::string> myEvtWeightNames;
+  std::string myEvtWeightString;
   int8_t myType;
   double myXSection;
   double myGenMCEvents;
@@ -61,8 +63,7 @@ class PProc{
   double myEffEntriesAbs;
   int16_t myColor;
 
-  std::vector<double> myInputVars;
-  std::vector<float> myEvtWeights;
+  std::map<std::string, double> myInputVars;
 };
 
 bool compareProc(const PProc* lhs, const PProc* rhs);

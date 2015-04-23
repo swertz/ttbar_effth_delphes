@@ -1,6 +1,6 @@
 CXXFLAGS := -O2 -g -Wall $(shell root-config --cflags)
 LDFLAGS := $(shell root-config --ldflags)
-ROOT_LIBS := $(shell root-config --libs) -lTMVA
+ROOT_LIBS := $(shell root-config --libs) -lTMVA -lTreePlayer
 CXX := g++
 
 EXTERNAL_CXXFLAGS := -I/cvmfs/cp3.uclouvain.be/boost/boost-1.57.0-sl6_amd64_gcc49/include -Iexternal/include

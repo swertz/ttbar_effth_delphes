@@ -132,7 +132,7 @@ def convertColor(name):
     range = nameContent[0]
     add = 0
     if len(nameContent) == 2:
-        add = int(nameContent[1])
+        add = int(nameContent[1].strip())
 
     colorMap = {}
     colorMap["kWhite"] = ROOT.kWhite
@@ -151,7 +151,7 @@ def convertColor(name):
     colorMap["kViolet"] = ROOT.kViolet
     colorMap["kPink"] = ROOT.kPink
 
-    color = colorMap[range] + add
+    color = colorMap[range.strip()] + add
 
     return color
 

@@ -69,10 +69,10 @@ class MISAnalysis:
                     self.entries[split][name] = myTree.GetEntries()
 
                     histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
-                    myTree.Draw("This->GetReadEntry()>>" + histName, weightsToString(proc["evtweight"]), "goff")
+                    myTree.Draw("Entries$>>" + histName, proc["evtweight"], "goff")
                     tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
                     effEntries = 0
-                    # This has to be done because TH1F::Integral() sometimes misteriously returns 0.0
+                    # This has to be done because TH1F::Integral() sometimes mysteriously returns 0.0
                     for i in range(1, tempHist.GetNbinsX()):
                         effEntries += tempHist.GetBinContent(i)
                     del tempHist
@@ -268,9 +268,12 @@ class MISTree:
             # FIXME: Support multiple input files (maybe not needed)?
             procFile = ROOT.TFile(proc["path"][0], "READ")
             procTree = procFile.Get(proc["treename"])
-            procTree.Draw("This->GetReadEntry()>>tempHist", "abs(%s)" % weightsToString(proc["evtweight"]), "goff")
+            procTree.Draw("Entries$>>tempHist", "abs(%s)" % proc["evtweight"], "goff")
             tempHist = ROOT.TH1F(ROOT.gDirectory.Get("tempHist"))
-            procTotEffEntriesAbs = tempHist.Integral()
+            procTotEffEntriesAbs = 0.
+            # This has to be done because TH1F::Integral() sometimes mysteriously returns 0.0
+            for i in range(1, tempHist.GetNbinsX()):
+                procTotEffEntriesAbs += tempHist.GetBinContent(i)
             del tempHist
             procTotEntries = procTree.GetEntries()
             procFile.Close()

@@ -19,7 +19,7 @@ datasets:
         # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
         weightname: Weight_TT
         # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
-        evtweight: [GenWeight]
+        evtweight: GenWeight
     OtG:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OtG1_0/L1_OtG1_0_V0_chan_all_weighted.root"]
         signal: -1
@@ -28,7 +28,7 @@ datasets:
         genevents: 500000
         treename: Event
         weightname: Weight_OtG
-        evtweight: [GenWeight]
+        evtweight: GenWeight
     OG:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OG1_0/L1_OG1_0_V0_chan_all_weighted.root"]
         signal: -1
@@ -37,7 +37,7 @@ datasets:
         genevents: 500000
         treename: Event
         weightname: Weight_OG
-        evtweight: [GenWeight]
+        evtweight: GenWeight
     OC81qq:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OC81qq1_0/L1_OC81qq1_0_V0_chan_all_weighted.root"]
         signal: -1
@@ -46,7 +46,7 @@ datasets:
         genevents: 500000
         treename: Event
         weightname: Weight_OC81qq
-        evtweight: [GenWeight]
+        evtweight: GenWeight
     OC8ut:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OC8ut1_0/L1_OC8ut1_0_V0_chan_all_weighted.root"]
         signal: -1
@@ -55,7 +55,7 @@ datasets:
         genevents: 500000
         treename: Event
         weightname: Weight_OC8ut
-        evtweight: [GenWeight]
+        evtweight: GenWeight
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
@@ -66,7 +66,7 @@ analysis:
     # Mode: operators or MIS
     mode: operators
     # Weights common to all the processes, which will be passed to TMVA during training
-    commonweights: [GenWeight]
+    commonweights: GenWeight
     # MLP or BDT
     mvamethod: MLP
     # Used only if MLP

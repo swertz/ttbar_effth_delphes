@@ -177,8 +177,8 @@ void PAnalysis::DefineAndTrainFactory(void){
   // Training and stuff
 
   myFactory->TrainAllMethods();
-  //myFactory->TestAllMethods();
-  //myFactory->EvaluateAllMethods();
+  myFactory->TestAllMethods();
+  myFactory->EvaluateAllMethods();
 
   CloseAllProc();
 }
@@ -213,7 +213,7 @@ void PAnalysis::DoHist(void){
       proc->GetTree()->GetEntry(i);
       
       for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
+        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
       
       proc->GetHist()->Fill(Transform(myReader->EvaluateMVA(myName)), proc->GetEvtWeight()*proc->GetGlobWeight());
     }
@@ -274,11 +274,11 @@ void PAnalysis::DoPlot(void){
   FillStack(tempSigHist->Integral());
   
   if(myStack->GetMaximum() > tempSigHist->GetMaximum()){
-    myStack->Draw("hist ][");
-    tempSigHist->Draw("same hist ][");
+    myStack->Draw("hist");
+    tempSigHist->Draw("same hist");
   }else{
-    tempSigHist->Draw("hist ][");
-    myStack->Draw("same hist ][");
+    tempSigHist->Draw("hist");
+    myStack->Draw("same hist");
   }
 
   myLegend->Draw();
@@ -414,7 +414,7 @@ void PAnalysis::BkgEffWPPrecise(void){
     tree->GetEntry(i);
     
     for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-      inputs.at(k) = (float) *( sig->GetInputVar(myConfig->GetInputVar(k)) );
+      inputs.at(k) = (float) sig->GetInputVar(myConfig->GetInputVar(k));
     float mva = Transform(myReader->EvaluateMVA(myName));
 
     std::vector<float> outputAndWeight;
@@ -478,7 +478,7 @@ void PAnalysis::BkgEffWPPrecise(void){
       proc->GetTree()->GetEntry(i);
       
       for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
+        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
       
       if(Transform(myReader->EvaluateMVA(myName)) >= myCut)
         integral += proc->GetEvtWeight();
@@ -619,7 +619,7 @@ void PAnalysis::WriteSplitRootFiles(void){
     for(long i=0; i<proc->GetTree()->GetEntries(); i++){
       proc->GetTree()->GetEntry(i);
       for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) *proc->GetInputVar(myConfig->GetInputVar(k));
+        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
       mvaOutput = Transform(myReader->EvaluateMVA(myName));
       if(mvaOutput < myCut)
         treeBkg->Fill();

@@ -37,7 +37,7 @@ class PProc{
   double GetYieldAbs(void) const;
   double GetYieldAbs(const std::string& condition);
   double GetGlobWeight(void) const;
-  double *GetInputVar(const std::string& varName);
+  double GetInputVar(const std::string& varName);
   TH1D* GetHist(void) const;
   TTree* GetTree(void) const;
   TFile* GetFile(void) const;
@@ -63,7 +63,7 @@ class PProc{
   double myEffEntriesAbs;
   int16_t myColor;
 
-  std::map<std::string, double> myInputVars;
+  std::map<std::string, TTreeFormula*> myInputVars;
 };
 
 bool compareProc(const PProc* lhs, const PProc* rhs);

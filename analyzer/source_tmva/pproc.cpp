@@ -22,7 +22,7 @@ PProc::PProc(PConfig* config, unsigned int num){
   myEvtWeightString = myConfig->GetEvtWeight(num);
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
-    myInputVars[ myConfig->GetInputVar(i) ] = 0.;
+    myInputVars[ myConfig->GetInputVar(i) ] = NULL;
 
   myChain = new TChain(myTreeName.c_str());
   for(auto &i: myPaths)
@@ -47,22 +47,27 @@ void PProc::Open(void){
   
   myChain = new TChain(myTreeName.c_str());
   for(auto &i: myPaths)
-    myChain->Add(i.c_str()); 
+    myChain->Add(i.c_str());
 
-  for(auto &var: myInputVars)
-    myChain->SetBranchAddress(var.first.c_str(), &var.second);
- 
   myWeightFormula = new TTreeFormula((myName + "_WeightFormula").c_str(), myEvtWeightString.c_str(), myChain);
   // This is needed because we're using a TChain and not a TTree
   // The formula needs to be updated (by calling TTreeFormula::UpdateFormulaLeaves()) 
   // each time a new file of the chain is read.
   // TChain::SetNotify() allows to do this automatically.
   myChain->SetNotify(myWeightFormula);
+  
+  for(auto &var: myInputVars){
+    var.second = new TTreeFormula((var.first+ + "_InputVarFormula").c_str(), var.first.c_str(), myChain);
+    myChain->SetNotify(var.second);
+  }
 }
 
 void PProc::Close(void){
   delete myChain; myChain = NULL;
   delete myWeightFormula; myWeightFormula = NULL;
+  for(auto &var: myInputVars){
+    delete var.second; var.second = NULL;
+  }
 }
 
 std::vector<std::string> PProc::GetPaths(void) const{
@@ -166,12 +171,12 @@ double PProc::GetEvtWeight(void) const{
   return myWeightFormula->EvalInstance();
 }
 
-double* PProc::GetInputVar(const std::string& varName){
+double PProc::GetInputVar(const std::string& varName){
   if(!myChain){
     cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
     exit(1);
   }
-  return &myInputVars[varName];
+  return myInputVars[varName]->EvalInstance();
 }
 
 TTree* PProc::GetTree(void) const{
@@ -201,4 +206,7 @@ PProc::~PProc(){
   delete myHist; myHist = NULL;
   delete myChain; myChain = NULL;
   delete myWeightFormula; myWeightFormula = NULL;
+  for(auto &var: myInputVars){
+    delete var.second; var.second = NULL;
+  }
 }

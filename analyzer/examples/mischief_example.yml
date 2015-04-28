@@ -18,7 +18,7 @@ datasets:
         treename: Event
         # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
         weightname: Weight_TT
-        # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
+        # Formula used to get the event weights from branches in the TTree (can be any TFormula)
         evtweight: GenWeight
     OtG:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OtG1_0/L1_OtG1_0_V0_chan_all_weighted.root"]
@@ -62,14 +62,15 @@ analysis:
     name: firsttry
     outputdir: mischief_mlp
     # Use these variables for training, in addition to the MEM-weights (if given)
-    otherinputvars: []
+    # Each variable can be a TFormula of leaves present in the input files
+    otherinputvars: ["var1","-log(var2)"]
     # Mode: operators or MIS
     mode: operators
-    # Weights common to all the processes, which will be passed to TMVA during training
+    # Weights common to all the processes, which will be passed to TMVA during training (any TFormula)
     commonweights: GenWeight
     # MLP or BDT
     mvamethod: MLP
-    # Used only if MLP
+    # Topology used only if MLP (format: "N,N,...")
     topology: "3,3"
     # Used by both MLP and BDT. Caution: too many decision trees and too few input variables will cause problems
     iterations: 500

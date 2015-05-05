@@ -232,6 +232,18 @@ class TMVAReplayer:
         else:
             weightFormula = None
 
+        # Create cut formula
+        cut = None
+        if "cut" in self.root.cfg.mvaCfg and len(self.root.cfg.mvaCfg["cut"]) > 0:
+            cut = self.root.cfg.mvaCfg["cut"]
+
+        cutFormula = None
+        if cut is not None:
+            print("\nUsing global cut: '%s'" % cut)
+            cutFormula = ROOT.TTreeFormula("cut", cut, self.chain)
+            cutFormula.GetNdata()
+            self.chain.SetNotify(cutFormula)
+
         print("\nProcessing events...")
 
         i = 0
@@ -240,6 +252,10 @@ class TMVAReplayer:
 
             if i % 10000 == 0:
                 print("Event %d over %d" % (i + 1, self.chain.GetEntries()))
+
+            # Evaluate cut
+            if cutFormula is not None and cutFormula.EvalInstance() == 0:
+                continue
 
             weight = datasetWeight
             if weightFormula is not None:

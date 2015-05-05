@@ -1,0 +1,18 @@
+# List of input datasets
+datasets:
+    TT:
+        path: ["file.root"]
+        xsection: 19.81 # in pb
+        genevents: 1000000
+        # Name of the TTree containing the events
+        treename: Event
+        # Formula used to get the event weights from branches in the TTree (can be any TFormula)
+        evtweight: GenWeight
+
+# Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
+analysis:
+    trained_tree: 'mischief_mlp/firsttry_tree.p'
+    name: first_replay
+    outputdir: replay_output
+    # pb-1
+    lumi: 100000

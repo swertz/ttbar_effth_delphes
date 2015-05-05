@@ -11,7 +11,7 @@
 argConf = 1
 argExec = 2
 
-from ROOT import gROOT, kTRUE
+from ROOT import gROOT, kTRUE, TChain, TFile,TTreeFormula
 import sys
 import os
 from threading import Thread
@@ -126,6 +126,44 @@ def analyseResults(box, locks):
         print "== Tree building strategy not properly defined."
         sys.exit(1)
 
+# Apply the skimming of the input rootFiles before to launch the whole process. Redefines also the cfg with the skimmedRootFiles as input files
+def applySkimming(config):
+
+    stringFormula = config.mvaCfg["skimmingFormula"] 
+    skimmedRootFilesDir = config.mvaCfg["outputdir"]+"/skimmedRootFiles/"
+    if not os.path.isdir(skimmedRootFilesDir): os.system("mkdir "+skimmedRootFilesDir)
+
+    print "== Skimming the input rootFiles (if not already done) with the following formula : \n {0}".format(stringFormula)
+    for name,process in config.procCfg.items():
+
+        skimFileName = skimmedRootFilesDir + name + "_skimmed_" + str(hash(stringFormula)) + ".root" 
+        if not os.path.isfile(skimFileName) :
+
+            inChain = TChain(process["treename"])
+            for rootFile in process["path"]:
+                inChain.Add(rootFile)
+            inEntries = inChain.GetEntries()
+
+            print "Start to skim "+name+" having ", inEntries, " entries..."
+            formulaName = stringFormula.replace(' ', '_')
+            formula = TTreeFormula(formulaName, stringFormula, inChain)
+            formula.GetNdata()
+            inChain.SetNotify(formula)
+            
+            skimFile = TFile(skimFileName, "recreate")
+            skimChain = inChain.CloneTree(0)
+            
+            for entry in xrange(inEntries):
+                inChain.GetEntry(entry)
+                if formula.EvalInstance():
+                    skimChain.Fill()
+
+            skimChain.Write()
+            skimmedEntries = skimChain.GetEntries()
+            print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
+            skimFile.Close()
+        process["path"] = [skimFileName]
+
 ######## CLASS LAUNCHMISCHIEF #####################################################
 # Launch a MVA based on a configuration passed by tryMisChief
 
@@ -178,7 +216,12 @@ def driverMain(cfgFile):
     print "============================================="
     
     print "== Reading configuration file {0}".format(cfgFile)
+
     myConfig = PConfig(cfgFile)
+
+    if myConfig.mvaCfg["applySkimming"]:
+        applySkimming(myConfig)
+    
     myTree = MISTree(myConfig)
    
     # A locked RLock will force other threads to wait for the lock to be released before going on.

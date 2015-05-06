@@ -15,6 +15,8 @@ PProc::PProc(PConfig* config, unsigned int num){
   myXSection = myConfig->GetXSection(num);
   myHist = (TH1D*) new TH1D((myName + "_output").c_str(), "MVA output", myConfig->GetHistBins(), 0., 1.);
   myHist->Sumw2();
+  myAbsHist = (TH1D*) new TH1D((myName + "_output_absweights").c_str(), "MVA output (abs. weights)", myConfig->GetHistBins(), 0., 1.);
+  myAbsHist->Sumw2();
   myPaths = myConfig->GetPaths(num);
   myTreeName = myConfig->GetTreeName(num);
   myGenMCEvents = (double)myConfig->GetTotEvents(num);
@@ -191,6 +193,10 @@ TH1D* PProc::GetHist(void) const{
   return myHist;
 }
 
+TH1D* PProc::GetAbsHist(void) const{
+  return myAbsHist;
+}
+
 Color_t PProc::GetColor(void) const{
   return myColor;
 }
@@ -204,6 +210,7 @@ PProc::~PProc(){
     cout << "Destroying PProc " << myName << "." << endl;
   #endif
   delete myHist; myHist = NULL;
+  delete myAbsHist; myAbsHist = NULL;
   delete myChain; myChain = NULL;
   delete myWeightFormula; myWeightFormula = NULL;
   for(auto &var: myInputVars){

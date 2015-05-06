@@ -216,6 +216,7 @@ void PAnalysis::DoHist(void){
         inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
       
       proc->GetHist()->Fill(Transform(myReader->EvaluateMVA(myName)), proc->GetEvtWeight()*proc->GetGlobWeight());
+      proc->GetAbsHist()->Fill(Transform(myReader->EvaluateMVA(myName)), abs( proc->GetEvtWeight()*proc->GetGlobWeight() ) );
     }
 
     proc->GetHist()->SetLineWidth(3);
@@ -226,6 +227,15 @@ void PAnalysis::DoHist(void){
       proc->GetHist()->SetLineStyle(2);
     else
       proc->GetHist()->SetLineStyle(0);
+
+    proc->GetAbsHist()->SetLineWidth(3);
+    proc->GetAbsHist()->SetLineColor(proc->GetColor());
+    proc->GetAbsHist()->SetXTitle("MVA output");
+    proc->GetAbsHist()->SetStats(0);
+    if(proc->GetType() < 0)
+      proc->GetAbsHist()->SetLineStyle(2);
+    else
+      proc->GetAbsHist()->SetLineStyle(0);
 
     proc->Close();
   }
@@ -316,23 +326,14 @@ void PAnalysis::DoROC(void){
     cerr << "Cannot draw ROC curve without process histograms! Attempting to call DoHist().\n";
     DoHist();
   }
-  
+ 
   double countS = myProc.at(mySig)->GetHist()->Integral();
-  double totS;
-  //if(myEvalOnTrained)
-    //totS = myProc.at(mySig)->GetYieldAbs();
-    totS = myProc.at(mySig)->GetHist()->Integral();
-  /*else
-    totS = myProc.at(mySig)->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");*/
+  double totS = myProc.at(mySig)->GetAbsHist()->Integral();
   
   double countBkg = 0, totBkg = 0;
   for(unsigned int i=0; i<myBkgs.size(); i++){
     countBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
-    //if(myEvalOnTrained)
-      //totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs();
-      totBkg += myProc.at(myBkgs.at(i))->GetHist()->Integral();
-    /*else
-      totBkg += myProc.at(myBkgs.at(i))->GetYieldAbs("!(Entry$%2==0 && Entry$ < " + SSTR(2*myConfig->GetTrainEntries()) + ")");*/
+    totBkg += myProc.at(myBkgs.at(i))->GetAbsHist()->Integral();
   }
   
   unsigned int nBins = myConfig->GetHistBins();
@@ -343,13 +344,13 @@ void PAnalysis::DoROC(void){
     countS -= myProc.at(mySig)->GetHist()->GetBinContent(i);
     for(unsigned int j=0; j<myBkgs.size(); j++)
       countBkg -= myProc.at(myBkgs.at(j))->GetHist()->GetBinContent(i);
-    sigEff[i] = countS/totS;
-    bkgEff[i] = countBkg/totBkg;
+    sigEff[i] = abs(countS)/totS;
+    bkgEff[i] = abs(countBkg)/totBkg;
   }
 
-  sigEff[0] = 1.;
+  //sigEff[0] = 1.;
   sigEff[nBins+1] = 0.;
-  bkgEff[0] = 1.;
+  //bkgEff[0] = 1.;
   bkgEff[nBins+1] = 0.;
   
   myROC = (TGraph*) new TGraph(nBins+2, bkgEff, sigEff);
@@ -386,11 +387,14 @@ void PAnalysis::BkgEffWPPrecise(void){
     exit(1);
   }
 
-  std::string condition;
+  std::string condition = "";
   if(!myEvalOnTrained)
     condition = "!(Entry$%2==0 && Entry$ < " + std::to_string(2*myConfig->GetTrainEntries()) + ")";
 
-  // We will evaluate the MVA on the signal, build a vector of (MVA output, weight), sort it according to increasing values of MVA output, and find the MVA cut value X s.t. abs(sum(weights|mva<=X))/sum(abs(weights)) = working point
+  // We will evaluate the MVA on the signal, 
+  // build a vector of (MVA output, weight), 
+  // sort it according to increasing values of MVA output, 
+  // and find the MVA cut value X such that abs(sum(weights|mva>=X))/sum(abs(weights)) = working point
 
   std::vector<float> inputs(myConfig->GetNInputVars());
   
@@ -404,7 +408,14 @@ void PAnalysis::BkgEffWPPrecise(void){
   sig->Open();
   TTree* tree = sig->GetTree();
   float sigEffEntriesAbs = sig->GetEffEntriesAbs(condition);
+  float sigEffEntries = sig->GetEffEntries(condition);
   
+  if(workingPoint > abs(sigEffEntries)/sigEffEntriesAbs){
+    cout << "Error in BkgEffWPPrecise(): not possible to achieve requested working point, since the maximum attainable efficiency \
+given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << "." << endl;
+    exit(1);
+  }
+
   std::vector< std::vector<float> > mvaOutput;
 
   for(uint64_t i=0; i < static_cast<uint64_t>(tree->GetEntries()); i++){
@@ -426,22 +437,19 @@ void PAnalysis::BkgEffWPPrecise(void){
   }
 
   sort(mvaOutput.begin(), mvaOutput.end(), mvaOutputSorter);
-
-  // the sort is in ascending MVA values, so we have to cut at 1-workingPoint
+  
+  // the sort is in ascending MVA values, so we have to cut st. abs(sum(weights|mva>X))/sum(abs(weights)) = abs(sum(weights))/sum(abs(weights)) - working point
   int cutIndex = 0;
   float integral = 0.;
   for(unsigned int i = 0; i < mvaOutput.size(); ++i){
-    if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
-      continue;
-    
-    if(1.-abs(integral)/sigEffEntriesAbs <= workingPoint)
+    if( (abs(sigEffEntries) - abs(integral) )/sigEffEntriesAbs <= workingPoint)
       break;
     
     integral += mvaOutput[i][1];
     cutIndex++;
   }
 
-  mySigEff = 1. - abs(integral)/sigEffEntriesAbs;
+  mySigEff = (abs(sigEffEntries) - abs(integral))/sigEffEntriesAbs;
 
   // just a security in the limiting case of workingPoint = 0.
   if(cutIndex == tree->GetEntries())
@@ -451,10 +459,16 @@ void PAnalysis::BkgEffWPPrecise(void){
 
   sig->Close();
   
+  if(abs(mySigEff - workingPoint)/workingPoint > 0.1){
+    cout << "Error in BkgEffWPPrecise(): computed signal efficiency is more than 10% off from the requested working point." << endl;
+    exit(1);
+  }
+
+  
   // Draw cut line on plot canvas, if it exists
   if(myCnvPlot){
     myCnvPlot->cd();
-    myCutLine = (TLine*) new TLine(myCut,0,myCut,max(myStack->GetMaximum(), sig->GetHist()->GetMaximum()));
+    myCutLine = (TLine*) new TLine(myCut, min(myStack->GetMinimum(), sig->GetHist()->GetMinimum()), myCut, max(myStack->GetMaximum(), sig->GetHist()->GetMaximum()));
     myCutLine->SetLineWidth(3);
     myCutLine->Draw();
   }
@@ -493,6 +507,11 @@ void PAnalysis::BkgEffWPPrecise(void){
   myBkgEff = abs(bkgSelectedYield)/bkgTotYieldAbs;
   
   delete myReader; myReader = NULL;
+  
+  if(mySigEff*myBkgEff == 0.){
+    cout << "Error in BkgEffWPPrecise(): found cut value which rejects all the data!" << endl;
+    exit(1);
+  }
   
   #ifdef P_LOG
     cout << "For signal efficiency " << mySigEff << ", MVA cut is (precisely) " << myCut << ", and background efficiency is " << myBkgEff << ".\n";
@@ -567,6 +586,7 @@ void PAnalysis::WriteOutput(void){
   if(myProc.at(0)->GetHist()->GetEntries() && contains(options, "hist")) {
     for(unsigned int i=0; i<myProc.size(); i++){
       myProc.at(i)->GetHist()->Write();
+      myProc.at(i)->GetAbsHist()->Write();
     }
   }
   
@@ -585,7 +605,9 @@ void PAnalysis::WriteSplitRootFiles(void){
   }
   
   TString outputDir = myConfig->GetOutputDir();
-    
+   
+  // While double-type inputs are OK for TMVA training, evaluation requires float
+  // See http://sourceforge.net/p/tmva/mailman/message/33528693/ (no further answer received)
   vector<float> inputs(myConfig->GetNInputVars());
   TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
   for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)

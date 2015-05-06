@@ -59,7 +59,8 @@ class MISAnalysis:
 
                 for name, proc in self.cfg.procCfg.items():
 
-                    file = ROOT.TFile(self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "like_proc_" + name + ".root", "READ")
+                    fileName = self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "like_proc_" + name + ".root"
+                    file = ROOT.TFile(fileName, "READ")
                     if file.IsZombie():
                         print "== Error opening " + fileName + "."
                         self.log("Error opening " + fileName + ".")
@@ -257,6 +258,7 @@ class MISTree:
         processes = self.cfg.procCfg.items()
         processes.sort(key = lambda item: item[0], reverse = True)
         i = 0
+
         for name, proc in processes:
             
             treeYields[name] = ROOT.TH1D(name + "_yields", "Branch yields for " + name, nBr, 0, nBr)
@@ -272,8 +274,8 @@ class MISTree:
             tempHist = ROOT.TH1F(ROOT.gDirectory.Get("tempHist"))
             procTotEffEntriesAbs = 0.
             # This has to be done because TH1F::Integral() sometimes mysteriously returns 0.0
-            for i in range(1, tempHist.GetNbinsX()):
-                procTotEffEntriesAbs += tempHist.GetBinContent(i)
+            for k in range(1, tempHist.GetNbinsX()):
+                procTotEffEntriesAbs += tempHist.GetBinContent(k)
             del tempHist
             procTotEntries = procTree.GetEntries()
             procFile.Close()

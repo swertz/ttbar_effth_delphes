@@ -20,18 +20,25 @@ int main(int argc, char **argv){
   PAnalysis* myAna = new PAnalysis(myConfig);
 
   myAna->DefineAndTrainFactory();
-  myAna->DoHist();
-  myAna->DoPlot();
-  myAna->DoROC();
+  
+  if( contains(myConfig->GetWriteOptions(), "plot") || contains(myConfig->GetWriteOptions(), "hist") )
+    myAna->DoHist();
+  
+  if( contains(myConfig->GetWriteOptions(), "plot") )
+    myAna->DoPlot();
+  
+  if( contains(myConfig->GetWriteOptions(), "ROC") )
+    myAna->DoROC();
+
   myAna->BkgEffWPPrecise();
   
-  if(contains(myConfig->GetOutputTasks(), "output"))
+  if( contains(myConfig->GetOutputTasks(), "output") )
     myAna->WriteOutput();
 
-  if(contains(myConfig->GetOutputTasks(), "split"))
+  if( contains(myConfig->GetOutputTasks(), "split") )
     myAna->WriteSplitRootFiles();
 
-  if(contains(myConfig->GetOutputTasks(), "result"))
+  if( contains(myConfig->GetOutputTasks(), "result") )
     myAna->WriteResult();
 
   delete myAna; myAna = NULL;

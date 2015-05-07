@@ -3,13 +3,10 @@ datasets:
     TT:
         path: ["/home/fynu/swertz/storage/selectedSamples/ttbar_ll_14TeV/ttbar_ll/ttbar_ll_V0_chan_all_weighted.root"]
         # Signal codes:
-        # -1 ... Can be used as a signal to train a MVA
-        # -2 ... Can be used as a background to train a MVA
-        # -3 ... Will not be used for MVA training, but will be evaluated and passed along
-        # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
-        # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
-        # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
-        signal: -2
+        # 1 ... will be trained on, considered to be THE signal (give only one! for now...)
+        # 0 ... will be trained on, considered to be a background
+        # anything else: will not be trained on, but the MVA will be evaluated on this process to split the dataset
+        signal: 0
         # Any Root color, with composition (eg. kRed+1):
         color: kRed
         xsection: 19.81 # in pb
@@ -49,7 +46,7 @@ datasets:
         evtweight: GenWeight
     OC8ut:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OC8ut1_0/L1_OC8ut1_0_V0_chan_all_weighted.root"]
-        signal: -1
+        signal: 1
         color: kGreen
         xsection: 0.1377
         genevents: 500000
@@ -57,51 +54,36 @@ datasets:
         weightname: Weight_OC8ut
         evtweight: GenWeight
 
-# Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
+# Analysis: define options relative to the training and the output files
+
 analysis:
-    name: firsttry
-    outputdir: mischief_mlp
-    # Use these variables for training, in addition to the MEM-weights (if given)
-    # Each variable can be a TFormula of leaves present in the input files
-    otherinputvars: ["var1","-log(var2)"]
-    # Mode: operators or MIS
-    mode: operators
+    # Name of the analysis
+    # TMVA weights file will be name_mvamethod_name.weights.xml 
+    name: OC8ut_vs_TTbar
+    # Make the outputdir yourself!
+    outputdir: results/OC8ut_vs_TTbar/
+    # Name of the output root file containing the histograms, TMVA results, ...
+    outputname: OC8ut_vs_TTbar
+    # Variables used for training (each can be any TFormula!)
+    inputvar: [Weight_TT, Weight_OC8ut]
     # Weights common to all the processes, which will be passed to TMVA during training (any TFormula)
     commonweights: GenWeight
     # MLP or BDT
     mvamethod: MLP
-    # Topology used only if MLP (format: "N,N,...")
+    # Used only if MLP
     topology: "3,3"
-    # Used by both MLP and BDT. Caution: too many decision trees and too few input variables will cause problems
-    iterations: 500
+    # Used by both MLP and BDT. Caution: too many trees and too few input variables can cause problems
+    iterations: 200
     # Number of events used for training (= number of events used for testing!)
-    trainentries: 1000
+    trainentries: 3000
     # Will split events so as to keep this efficiency for the signal
     workingpoint: 0.5
-    # Consider analysis valid if background fraction < this value (set to 0 if no check needed):
-    maxbkgeff: 0.35
     # pb-1
     lumi: 100000
     # Bins in the histos used to draw the ROC curve and find cut value
     histbins: 200
     # Plotbins better be an exact divider of histbins (to be used in the "fancy plot")
     plotbins: 40
-    # To be used for the template fit (better be an exact divider of histbins)
-    fitbins: 20
-    # Min. number of expected events in a bin of any MVA template
-    minbincontent: 1
-    # Remove analysis results that were found to be non-optimal (true / false)
-    removebadana: true
-    # Remove from list of signals those that have already been trained against (true / false). NOTE: not yet implemented
-    removefrompool: false
-    # Stop branching when at least one sample has less MC events than this
-    # MUST BE AT LEAST TWICE AS LARGE AS TRAINENTRIES
-    minmcevents: 2000
-    # If not enough MC events to train a new NN, still keep the previous results if there
-    # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
-    minkeepevents: 500
-    # Stop branching when reached level (1=two subsets; 2=four subsets, ...):
-    maxlevel: 5
     # Options to control what is to be done and included in the output root file
     # hist: fill TH1's using each process' TMVA output
     # plot: do "fancy" plot with all the histograms
@@ -111,5 +93,8 @@ analysis:
     # result: write "result" file (name defined by "log" option
     # split: write root files for each process, split (bkg/sig-like) according to the mva cut value
     # output: write the root file containing the plot, histograms, ROC, TMVA output, ...
-    outputtasks: [output, result, split]
-
+    outputtasks: [result, split, output]
+    # Split root files will be of the format (splitname)_(sig/bkg)like_proc_(procname).root
+    splitname: OC8ut_vs_TTbar
+    # Name of the file containing signal efficiency, background efficiency, and cut value
+    log: OC8ut_vs_TTbar.log

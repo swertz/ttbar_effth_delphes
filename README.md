@@ -3,7 +3,7 @@
 The code consists of:
 
 1) plots: 
-Quick and dirty code to produce not too ugly plots from config files.
+Quick and dirty code to produce not too ugly plots from config files (to be updated).
 
 2) MG interference patches:
 A collection of patches to
@@ -11,14 +11,20 @@ A collection of patches to
  * Get MadWeight to compute weights according to the interference between an operator and the SM amplitude. See https://cp3.irmp.ucl.ac.be/projects/cp3admin/wiki/UsersPage/Physics/Exp/MEMforTopEffTh
 
 3) analyzer:
- * tmva: A C++ program which reads a config file (see examples/tmva_standalone_example.conf), uses ROOT::TMVA to separate a signal from brackgrounds, and evaluates the resulting NN or BDT on all the processes defined, to separate them into signal-like or background-like samples. Usage: 
+ * tmva: A C++ program which reads a config file (see examples/tmva_standalone_example.yml), uses ROOT::TMVA to separate a signal from brackgrounds, and evaluates the resulting NN or BDT on all the processes defined, to separate them into signal-like or background-like samples. Usage: 
 ```
 $ make tmva
 $ mkdir outdir_specified_in_config_file
-$ ./tmva examples/config_file.conf
+$ ./tmva config_file.yml
 ```
 
- * python/driver.py: Builds a tree of "boxes" separating different processes according to a user-defined strategy. See examples/mischief_example.conf for more details. Usage: 
+ * python/driver.py: Builds a tree of "boxes" separating different processes according to a user-defined strategy. See examples/mischief_example.yml for more details. Usage: 
 ```
-$ python/driver.py config_file.conf relative_path_to_tmva_executable
+$ python/driver.py config_file.yml relative_path_to_tmva_executable
 ```
+
+ * python/replay.py: Evaluates a previously built tree of boxes on an additional process, using a config file (see examples/replay_example.yml). Usage:
+```
+$ python/replay.py config_file.yml
+```
+

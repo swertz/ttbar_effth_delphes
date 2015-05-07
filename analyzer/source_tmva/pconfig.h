@@ -37,6 +37,8 @@ class PConfig{
   double GetLumi(void) const;
   int16_t GetHistBins(void) const;
   int16_t GetPlotBins(void) const;
+  double GetHistLoX(void) const;
+  double GetHistHiX(void) const;
   std::vector<std::string> GetWriteOptions(void) const;
   std::vector<std::string> GetOutputTasks(void) const;
   std::string GetSplitName(void) const;
@@ -60,6 +62,7 @@ class PConfig{
   uint64_t iterations, trainEntries;
   double workingPoint, lumi;
   int16_t histBins, plotBins;
+  double histLoX, histHiX;
   std::string splitName, logName, commonEvtWeight;
   std::vector<std::string> inputVars, writeOptions, outputTasks;
 

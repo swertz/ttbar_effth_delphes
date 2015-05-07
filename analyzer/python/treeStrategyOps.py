@@ -54,7 +54,9 @@ def defineNewCfgs(box, locks):
                     inputVar.append(proc2["weightname"])
 
             thisCfg.mvaCfg["name"] = name + "_vs" + bkgName
-            thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvars"] + inputVar + [proc["weightname"]]
+            #thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvars"] + inputVar + [proc["weightname"]]
+            # To use the Singleton mode (in this special case):
+            thisCfg.mvaCfg["inputvar"] = [ "(atan(" + inputVar[0] + "-abs(" + proc["weightname"] + "))+1.6)/3.2" ]
             thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
             thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"

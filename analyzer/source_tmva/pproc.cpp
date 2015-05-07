@@ -13,9 +13,9 @@ PProc::PProc(PConfig* config, unsigned int num){
   myType = myConfig->GetType(num);
   myColor = myConfig->GetColor(num);
   myXSection = myConfig->GetXSection(num);
-  myHist = (TH1D*) new TH1D((myName + "_output").c_str(), "MVA output", myConfig->GetHistBins(), 0., 1.);
+  myHist = (TH1D*) new TH1D((myName + "_output").c_str(), "Discriminant output", myConfig->GetHistBins(), myConfig->GetHistLoX(), myConfig->GetHistHiX());
   myHist->Sumw2();
-  myAbsHist = (TH1D*) new TH1D((myName + "_output_absweights").c_str(), "MVA output (abs. weights)", myConfig->GetHistBins(), 0., 1.);
+  myAbsHist = (TH1D*) new TH1D((myName + "_output_absweights").c_str(), "Discriminant output (abs. weights)", myConfig->GetHistBins(), myConfig->GetHistLoX(), myConfig->GetHistHiX());
   myAbsHist->Sumw2();
   myPaths = myConfig->GetPaths(num);
   myTreeName = myConfig->GetTreeName(num);
@@ -35,6 +35,11 @@ PProc::PProc(PConfig* config, unsigned int num){
   myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
   myEffEntries = tempHist->Integral();
+  delete tempHist; tempHist = NULL;
+
+  myChain->Draw("Entries$>>tempHist", ("abs(" + myEvtWeightString + ")").c_str(), "goff");
+  tempHist = (TH1F*) gDirectory->Get("tempHist");
+  myEffEntriesAbs = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   delete myChain; myChain = NULL;
@@ -102,6 +107,9 @@ double PProc::GetEffEntries(void) const{
 
 double PProc::GetEffEntries(const std::string& condition){
   // Return effective number of entries, based on the condition
+  
+  if(condition == "")
+    return GetEffEntries();
 
   bool wasOpen = myChain != NULL;
   if(!wasOpen)
@@ -126,6 +134,9 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
   // Return effective number of entries, based on the condition
   // Using the sum of abs(weight)
 
+  if(condition == "")
+    return GetEffEntriesAbs();
+  
   bool wasOpen = myChain != NULL;
   if(!wasOpen)
     Open();
@@ -167,7 +178,7 @@ std::string PProc::GetEvtWeightString(void) const{
 
 double PProc::GetEvtWeight(void) const{
   if(!myChain){
-    cerr << "Error in " << myName << "::GetEvtWeight(): can't return event weight without opening the process first.\n";
+    cerr << "ERROR in " << myName << "::GetEvtWeight(): can't return event weight without opening the process first.\n";
     exit(1);
   }
   return myWeightFormula->EvalInstance();
@@ -175,7 +186,7 @@ double PProc::GetEvtWeight(void) const{
 
 double PProc::GetInputVar(const std::string& varName){
   if(!myChain){
-    cerr << "Error in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
+    cerr << "ERROR in " << myName << "::GetInputVar(): can't return input variable without opening the process first.\n";
     exit(1);
   }
   return myInputVars[varName]->EvalInstance();
@@ -183,7 +194,7 @@ double PProc::GetInputVar(const std::string& varName){
 
 TTree* PProc::GetTree(void) const{
   if(!myChain){
-    cerr << "Error in " << myName << "::GetTree(): can't return TTree without opening the process first.\n";
+    cerr << "ERROR Error in " << myName << "::GetTree(): can't return TTree without opening the process first.\n";
     exit(1);
   }
   return myChain;

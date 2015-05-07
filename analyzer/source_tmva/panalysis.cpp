@@ -30,6 +30,7 @@ PAnalysis::PAnalysis(PConfig *config){
   mySig = -1;
   myCut = 0;
   myEvalOnTrained = false;
+  myDiscriminantIsDef = false;
   myBkgEff = 0;
   mySigEff = 0;
   
@@ -37,6 +38,9 @@ PAnalysis::PAnalysis(PConfig *config){
   myName = myConfig->GetAnaName();
   myOutput = myConfig->GetOutputDir() + "/" + myConfig->GetOutputName();
   myMvaMethod = myConfig->GetMvaMethod();
+    
+  for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+    myInputVars.push_back(0.);
 
   for(unsigned int i=0; i<myConfig->GetNProc(); i++)
     AddProc( (PProc*) new PProc(myConfig, i) );
@@ -49,6 +53,7 @@ PAnalysis::PAnalysis(PConfig *config){
 
   myStack = NULL;
   myFactory = NULL;
+  myReader = NULL;
   myCnvTraining = NULL;
   myCnvPlot = NULL;
   myLegend = NULL;
@@ -70,7 +75,7 @@ void PAnalysis::AddProc(PProc* proc){
       break;
     case 1:
       if(mySig >= 0){
-        cerr << "Only one signal can be assigned to the analysis!" << endl;
+        cerr << "ERROR: Only one signal can be assigned to the analysis!" << endl;
         exit(1);
       }
       mySig = myProc.size()-1;
@@ -90,16 +95,33 @@ void PAnalysis::CloseAllProc(void){
     myProc.at(i)->Close();
 }
 
-void PAnalysis::DefineAndTrainFactory(void){
+void PAnalysis::BuildDiscriminant(void){
   if(mySig < 0 || !myBkgs.size()){
-    cerr << "Cannot compute input weights: at least two processes (one signal and one background) have to be assigned to the analysis!" << endl;
+    cerr << "ERROR: Cannot build discriminant: at least two processes (one signal and one background) have to be assigned to the analysis!" << endl;
     exit(1);
   }
+  
+  if(myMvaMethod == "Singleton"){
+    DefineSingleton();
+  }else{
+    DefineAndTrainFactory();
+  }
 
-  // Computing input weights
-  // Note: not quite clear how TMVA computes the weights (how are they combined with the gen weight?)
-  // HAS TO BE CHECKED
+  myDiscriminantIsDef = true;
+}
 
+void PAnalysis::DefineSingleton(void){
+  // Define single variable on which to cut
+  // For now, do nothing, but one might want to choose
+  // to normalize it, for instance.
+  
+  #ifdef P_LOG
+    cout << "Initialising discriminant variable " << myConfig->GetInputVar(0) << ".\n";
+  #endif
+
+}
+
+void PAnalysis::DefineAndTrainFactory(void){
   // Defining Factory and MVA
 
   #ifdef P_LOG
@@ -170,7 +192,7 @@ void PAnalysis::DefineAndTrainFactory(void){
       +":NTrees="+SSTR(myConfig->GetIterations())
       );
   }else{
-    cerr << "Couldn't recognize MVA method.\n";
+    cerr << "ERROR: Couldn't recognize MVA method.\n";
     exit(1);
   }
 
@@ -181,6 +203,72 @@ void PAnalysis::DefineAndTrainFactory(void){
   myFactory->EvaluateAllMethods();
 
   CloseAllProc();
+
+  delete myFactory; myFactory = NULL;
+}
+
+// Creates a TMVA::Reader, if it hasn't been created yet
+// The Reader will be deleted when PAnalysis is deleted
+void PAnalysis::InitDiscriminant(){
+  if(myMvaMethod != "Singleton"){
+   
+    if(!myReader)
+      myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
+   
+    for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+      myReader->AddVariable(myConfig->GetInputVar(k), &myInputVars.at(k));
+    
+    myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
+    
+  }
+}
+
+double PAnalysis::EvalDiscriminant(PProc *proc){
+  if(!proc){
+    cerr << "ERROR in PAnalysis::EvalDiscriminant: process is not defined!" << endl;
+    exit(1);
+  }
+  if(!myDiscriminantIsDef){
+    cerr << "WARNING in PAnalysis::EvalDiscriminant(): discriminant has not been defined/trained yet. Attempting to call BuildDiscriminant()." << endl;
+    BuildDiscriminant();
+  }
+
+  if(myMvaMethod == "Singleton"){
+  
+    return proc->GetInputVar(myConfig->GetInputVar(0));
+  
+  }else{
+
+    if(!myReader)
+      InitDiscriminant();
+    
+    // While double-type inputs are OK for TMVA training, evaluation requires float
+    // See http://sourceforge.net/p/tmva/mailman/message/33528693/ (no further answer received)
+    for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
+      myInputVars.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
+
+    return Transform((double)myReader->EvaluateMVA(myName));
+
+  }
+}
+
+double PAnalysis::Transform(double input){
+  // BDT output is between -1 and 1 => get it between 0 and 1, just as NN
+  // And be sure all the output is between 0 and 1.
+
+  double output;
+  
+  if(myMvaMethod == "BDT")
+    output = (input + 1.)/2.;
+  else
+    output = input;
+  
+  if(output > 1)
+    return 1;
+  else if(output < 0)
+    return 0;
+  else
+    return output;
 }
 
 void PAnalysis::DoHist(void){
@@ -188,17 +276,11 @@ void PAnalysis::DoHist(void){
     cout << "Filling output histograms.\n";
   #endif
   
-  if(!myFactory){
-    cerr << "Cannot fill MVA output histograms without having defined and trained the factory! Attempting to call DefineAndTrainFactory().\n";
-    DefineAndTrainFactory();
+  if(!myDiscriminantIsDef){
+    cerr << "WARNING in PAnalysis::DoHist(): discriminant has not been defined/trained yet. Attempting to call BuildDiscriminant().\n";
+    BuildDiscriminant();
   }
   
-  vector<float> inputs(myConfig->GetNInputVars());
-  TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-  for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-    myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
-  myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
-
   // Filling histograms
 
   for(unsigned int j=0; j<myProc.size(); j++){
@@ -211,11 +293,8 @@ void PAnalysis::DoHist(void){
       //  continue;
       
       proc->GetTree()->GetEntry(i);
-      
-      for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
      
-      double mvaOut = Transform(myReader->EvaluateMVA(myName));
+      double mvaOut = EvalDiscriminant(proc);
       double weight = proc->GetEvtWeight()*proc->GetGlobWeight();
 
       proc->GetHist()->Fill(mvaOut, weight);
@@ -242,27 +321,6 @@ void PAnalysis::DoHist(void){
 
     proc->Close();
   }
-  
-  delete myReader; myReader = NULL;
-}
-
-float PAnalysis::Transform(float input){
-  // BDT output is between -1 and 1 => get it between 0 and 1, just as NN
-  // And be sure all the output is between 0 and 1.
-
-  float output;
-  
-  if(myMvaMethod == "BDT")
-    output = (input + 1.)/2.;
-  else
-    output = input;
-  
-  if(output > 1)
-    return 1;
-  else if(output < 0)
-    return 0;
-  else
-    return output;
 }
 
 void PAnalysis::DoPlot(void){
@@ -270,14 +328,14 @@ void PAnalysis::DoPlot(void){
     cout << "Plotting output histograms.\n";
   #endif
   if(!myProc.at(0)->GetHist()->GetEntries()){
-    cerr << "Cannot plot MVA output histograms without histograms! Attempting to call DoHist().\n";
+    cerr << "WARNING: Cannot plot MVA output histograms without histograms! Attempting to call DoHist().\n";
     DoHist();
   }
   
-  myCnvPlot = (TCanvas*) new TCanvas(myName+"_MVA output","MVA output");
+  myCnvPlot = (TCanvas*) new TCanvas(myName+"_Discr output","Discriminant output");
   myLegend = new TLegend(0.73,0.7,0.89,0.89);
   myLegend->SetFillColor(0);
-  myStack = (THStack*) new THStack("output_stack","MVA output");
+  myStack = (THStack*) new THStack("output_stack","Discriminant output");
   
   for(unsigned int j=0; j<myProc.size(); j++)
     myLegend->AddEntry(myProc.at(j)->GetHist(), myProc.at(j)->GetName().c_str(), "f");
@@ -323,10 +381,10 @@ void PAnalysis::DoROC(void){
   #endif
   
   if(mySig<0 || !myBkgs.size()){
-    cerr << "Cannot draw ROC curve without signal and background processes!\n";
+    cerr << "ERROR: Cannot draw ROC curve without signal and background processes!\n";
     exit(1);
   }else if(!myProc.at(0)->GetHist()->GetEntries()){
-    cerr << "Cannot draw ROC curve without process histograms! Attempting to call DoHist().\n";
+    cerr << "WARNING: Cannot draw ROC curve without process histograms! Attempting to call DoHist().\n";
     DoHist();
   }
  
@@ -357,13 +415,13 @@ void PAnalysis::DoROC(void){
   bkgEff[nBins+1] = 0.;
   
   myROC = (TGraph*) new TGraph(nBins+2, bkgEff, sigEff);
-  myROC->GetXaxis()->SetTitle("Background sigEff");
-  myROC->GetYaxis()->SetTitle("Signal sigEff");
-  myROC->SetTitle("Signal vs bkg sigEff (cut on NN)");
+  myROC->GetXaxis()->SetTitle("Background eff.");
+  myROC->GetYaxis()->SetTitle("Signal eff.");
+  myROC->SetTitle("Signal vs bkg sigEff (cut on discriminant)");
   myROC->SetMarkerColor(kBlue);
   myROC->SetMarkerStyle(20);
   
-  myCnvEff = (TCanvas*) new TCanvas("ROC","Signal sigEff vs bkg. sigEff");
+  myCnvEff = (TCanvas*) new TCanvas("ROC","Signal efficiency vs bkg. efficiency");
   myCnvEff->SetGrid(20,20);
   myROC->Draw("ALP");
   myLine = (TLine*) new TLine(0,0,1,1);
@@ -371,7 +429,7 @@ void PAnalysis::DoROC(void){
 }
 
 // We will want to sort the (MVA,weight) vectors according to increasing MVA values
-bool mvaOutputSorter(std::vector<float> i, std::vector<float> j){ return i[0] < j[0]; }
+bool mvaOutputSorter(std::vector<double> i, std::vector<double> j){ return i[0] < j[0]; }
 
 void PAnalysis::BkgEffWPPrecise(void){
   double workingPoint = myConfig->GetWorkingPoint();
@@ -380,18 +438,18 @@ void PAnalysis::BkgEffWPPrecise(void){
     cout << "Computing precise cut for signal efficiency = " << workingPoint << "... " << endl;
   #endif
   
-  if(!myFactory){
-    cerr << "Cannot compute precise working point without having defined and trained the factory! Attempting to call DefineAndTrainFactory().\n";
-    DefineAndTrainFactory();
+  if(!myDiscriminantIsDef){
+    cerr << "WARNING in PAnalysis::BkgEffWPPrecise(): discriminant has not been defined/trained yet. Attempting to call BuildDiscriminant().\n";
+    BuildDiscriminant();
   }
   
   if(workingPoint >= 1 || workingPoint <= 0){
-    cerr << "Working point must be a double strictly between 0 and 1!\n";
+    cerr << "ERROR: Working point must be a double strictly between 0 and 1!\n";
     exit(1);
   }
 
   std::string condition = "";
-  if(!myEvalOnTrained)
+  if(!myEvalOnTrained && myMvaMethod != "Singleton")
     condition = "!(Entry$%2==0 && Entry$ < " + std::to_string(2*myConfig->GetTrainEntries()) + ")";
 
   // We will evaluate the MVA on the signal, 
@@ -399,55 +457,47 @@ void PAnalysis::BkgEffWPPrecise(void){
   // sort it according to increasing values of MVA output, 
   // and find the MVA cut value X such that abs(sum(weights|mva>=X))/sum(abs(weights)) = working point
 
-  std::vector<float> inputs(myConfig->GetNInputVars());
-  
-  TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-  for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-    myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
-  myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
-
   // Fetching the signal
   PProc* sig = (PProc*) myProc.at(mySig);
   sig->Open();
   TTree* tree = sig->GetTree();
-  float sigEffEntriesAbs = sig->GetEffEntriesAbs(condition);
-  float sigEffEntries = sig->GetEffEntries(condition);
+  double sigEffEntriesAbs = sig->GetEffEntriesAbs(condition);
+  double sigEffEntries = sig->GetEffEntries(condition);
   
   /*if(workingPoint > abs(sigEffEntries)/sigEffEntriesAbs){
-    cout << "Error in BkgEffWPPrecise(): not possible to achieve requested working point, since the maximum attainable efficiency \
+    cout << "ERROR in BkgEffWPPrecise(): not possible to achieve requested working point, since the maximum attainable efficiency \
 given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << "." << endl;
     exit(1);
   }*/
 
-  std::vector< std::vector<float> > mvaOutput;
+  std::vector< std::vector<double> > mvaOutput;
 
   for(uint64_t i=0; i < static_cast<uint64_t>(tree->GetEntries()); i++){
-    if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
+    if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2 && myMvaMethod != "Singleton")
       continue;
 
     tree->GetEntry(i);
     
-    for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-      inputs.at(k) = (float) sig->GetInputVar(myConfig->GetInputVar(k));
-    float mva = Transform(myReader->EvaluateMVA(myName));
+    std::vector<double> outputAndWeight;
 
-    std::vector<float> outputAndWeight;
+    outputAndWeight.push_back( EvalDiscriminant(sig) );
+    outputAndWeight.push_back( sig->GetEvtWeight() );
 
-    outputAndWeight.push_back(mva);
-    outputAndWeight.push_back((float)sig->GetEvtWeight());
+    //cout << "event " << i << ", output = " << EvalDiscriminant(sig) << ", weight = " << sig->GetEvtWeight() << endl;
 
     mvaOutput.push_back(outputAndWeight);
   }
 
   sort(mvaOutput.begin(), mvaOutput.end(), mvaOutputSorter);
+  //for(uint64_t i=0; i < static_cast<uint64_t>(tree->GetEntries()); i++)
+  //  cout << "event " << i << ", output = " << mvaOutput.at(i).at(0) << ", weight = " << mvaOutput.at(i).at(1) << endl;
   
   // the sort is in ascending MVA values, so we have to cut st. abs(sum(weights|mva>X))/sum(abs(weights)) = abs(sum(weights))/sum(abs(weights)) - working point
   int cutIndex = 0;
-  float integral = 0.;
+  double integral = 0.;
   for(unsigned int i = 0; i < mvaOutput.size(); ++i){
     if( (abs(sigEffEntries) - abs(integral) )/sigEffEntriesAbs <= workingPoint)
       break;
-    
     integral += mvaOutput[i][1];
     cutIndex++;
   }
@@ -456,18 +506,17 @@ given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << 
 
   // just a security in the limiting case of workingPoint = 0.
   if(cutIndex == tree->GetEntries())
-    myCut = (double) (*mvaOutput.end())[0] + 1.;
+    myCut = mvaOutput.end()->at(0) + 1.;
   else
-    myCut = (double) mvaOutput[cutIndex][0];
+    myCut = mvaOutput.at(cutIndex).at(0);
 
   sig->Close();
   
   if(abs(mySigEff - workingPoint)/workingPoint > 0.1){
-    cout << "Error in BkgEffWPPrecise(): computed signal efficiency is more than 10% off from the requested working point." << endl;
+    cout << "ERROR in BkgEffWPPrecise(): computed signal efficiency is more than 10% off from the requested working point." << endl;
     exit(1);
   }
 
-  
   // Draw cut line on plot canvas, if it exists
   if(myCnvPlot){
     myCnvPlot->cd();
@@ -489,15 +538,12 @@ given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << 
     double integral = 0;
 
     for(uint64_t i=0; i < static_cast<uint64_t>(proc->GetTree()->GetEntries()); i++){
-      if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2)
+      if(!myEvalOnTrained && i%2==0 && i<myConfig->GetTrainEntries()*2 && myMvaMethod != "Singleton")
         continue;
       
       proc->GetTree()->GetEntry(i);
       
-      for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
-      
-      if(Transform(myReader->EvaluateMVA(myName)) >= myCut)
+      if(EvalDiscriminant(proc) >= myCut)
         integral += proc->GetEvtWeight();
     }
 
@@ -509,15 +555,13 @@ given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << 
 
   myBkgEff = abs(bkgSelectedYield)/bkgTotYieldAbs;
   
-  delete myReader; myReader = NULL;
-  
   if(mySigEff*myBkgEff == 0.){
-    cout << "Error in BkgEffWPPrecise(): found cut value which rejects all the data!" << endl;
+    cout << "ERROR in BkgEffWPPrecise(): found cut value which rejects all the data!" << endl;
     exit(1);
   }
   
   #ifdef P_LOG
-    cout << "For signal efficiency " << mySigEff << ", MVA cut is (precisely) " << myCut << ", and background efficiency is " << myBkgEff << ".\n";
+    cout << "For signal efficiency " << mySigEff << ", cut on discriminant is " << myCut << ", and background efficiency is " << myBkgEff << ".\n";
   #endif
 }
 
@@ -603,20 +647,12 @@ void PAnalysis::WriteSplitRootFiles(void){
   #endif
   
   if(!myCut){
-    cerr << "Cannot write split root files without knowing the cut value! Attempting to call BkgEffWPPrecise().\n";
+    cerr << "ERROR Cannot write split root files without knowing the cut value! Attempting to call BkgEffWPPrecise().\n";
     BkgEffWPPrecise();
   }
   
   TString outputDir = myConfig->GetOutputDir();
    
-  // While double-type inputs are OK for TMVA training, evaluation requires float
-  // See http://sourceforge.net/p/tmva/mailman/message/33528693/ (no further answer received)
-  vector<float> inputs(myConfig->GetNInputVars());
-  TMVA::Reader* myReader = (TMVA::Reader*) new TMVA::Reader("!V:Color");
-  for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-    myReader->AddVariable(myConfig->GetInputVar(k), &inputs.at(k));
-  myReader->BookMVA(myName, myConfig->GetOutputDir()+"/"+myName+"_"+myMvaMethod+"_"+myName+".weights.xml");
-
   for(unsigned int j=0; j<myProc.size(); j++){
     PProc* proc = (PProc*) myProc.at(j);
 
@@ -634,18 +670,16 @@ void PAnalysis::WriteSplitRootFiles(void){
     }
   
     // Adding this MVA's output to the output trees
-    float mvaOutput;
+    double mvaOutput;
     TString outBranchName = "MVAOUT__" + outputDir + "/" + myName;
     outBranchName.ReplaceAll("//","__");
     outBranchName.ReplaceAll("/","__");
-    treeSig->Branch(outBranchName, &mvaOutput, outBranchName + "/F");
-    treeBkg->Branch(outBranchName, &mvaOutput, outBranchName + "/F");
+    treeSig->Branch(outBranchName, &mvaOutput);
+    treeBkg->Branch(outBranchName, &mvaOutput);
     
     for(long i=0; i<proc->GetTree()->GetEntries(); i++){
       proc->GetTree()->GetEntry(i);
-      for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
-        inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
-      mvaOutput = Transform(myReader->EvaluateMVA(myName));
+      mvaOutput = EvalDiscriminant(proc); 
       if(mvaOutput < myCut)
         treeBkg->Fill();
       else
@@ -662,8 +696,6 @@ void PAnalysis::WriteSplitRootFiles(void){
 
     proc->Close();
   }
-  
-  delete myReader; myReader = NULL;
 }
 
 void PAnalysis::WriteResult(void){
@@ -674,7 +706,7 @@ void PAnalysis::WriteResult(void){
   #endif
   
   if(mySigEff == 0){
-    cerr << "The cut efficiencies have to be computed first. Attempting to call BkgEffWPPrecise().\n";
+    cerr << "ERROR in PAnalysis::WriteResult(): The cut efficiencies have to be computed first. Attempting to call BkgEffWPPrecise().\n";
     BkgEffWPPrecise();
   }
   
@@ -701,5 +733,6 @@ PAnalysis::~PAnalysis(){
   delete myCutLine; myCutLine = NULL;
   delete myOutputFile; myOutputFile = NULL;
   delete myFactory; myFactory = NULL;
+  delete myReader; myReader = NULL;
 }
 

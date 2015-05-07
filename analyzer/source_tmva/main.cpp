@@ -19,7 +19,7 @@ int main(int argc, char **argv){
 
   PAnalysis* myAna = new PAnalysis(myConfig);
 
-  myAna->DefineAndTrainFactory();
+  myAna->BuildDiscriminant();
   
   if( contains(myConfig->GetWriteOptions(), "plot") || contains(myConfig->GetWriteOptions(), "hist") )
     myAna->DoHist();

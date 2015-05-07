@@ -68,7 +68,8 @@ analysis:
     inputvar: [Weight_TT, Weight_OC8ut]
     # Weights common to all the processes, which will be passed to TMVA during training (any TFormula)
     commonweights: GenWeight
-    # MLP or BDT
+    # MLP, BDT or Singleton
+    # "Singleton" means no MVA training, only cutting on a single variable
     mvamethod: MLP
     # Used only if MLP
     topology: "3,3"
@@ -84,6 +85,10 @@ analysis:
     histbins: 200
     # Plotbins better be an exact divider of histbins (to be used in the "fancy plot")
     plotbins: 40
+    # Low and high edge for all histograms used (will not affect the cut value!)
+    # They are set by default to 0 and 1 if MLP or BDT is used
+    histLoX: 0
+    histHiX: 1
     # Options to control what is to be done and included in the output root file
     # hist: fill TH1's using each process' TMVA output
     # plot: do "fancy" plot with all the histograms

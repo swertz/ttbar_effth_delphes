@@ -71,7 +71,8 @@ analysis:
     # Apply a skimming on the input rootfiles before to start the whole chain
     applySkimming: false
     skimmingFormula: 
-    # MLP or BDT
+    # MLP, BDT or Singleton
+    # "Singleton" means no MVA training, only cutting on a single variable
     mvamethod: MLP
     # Topology used only if MLP (format: "N,N,...")
     topology: "3,3"
@@ -91,6 +92,10 @@ analysis:
     plotbins: 40
     # To be used for the template fit (better be an exact divider of histbins)
     fitbins: 20
+    # Low and high edge for all histograms used (will not affect the cut value!)
+    # They are set by default to 0 and 1 if MLP or BDT is used
+    histLoX: 0
+    histHiX: 1
     # Min. number of expected events in a bin of any MVA template
     minbincontent: 1
     # Remove analysis results that were found to be non-optimal (true / false)

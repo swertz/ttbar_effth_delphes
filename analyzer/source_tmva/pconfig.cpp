@@ -41,9 +41,19 @@ PConfig::PConfig(const std::string& configFile){
   if(mvaMethod.find("MLP") != std::string::npos)
     topology = analysis["topology"].as<std::string>();
 
-  iterations = analysis["iterations"].as<uint64_t>();
-  commonEvtWeight = analysis["commonweights"].as<std::string>();
-  trainEntries = analysis["trainentries"].as<uint64_t>();
+  iterations = 0;
+  commonEvtWeight = ""; 
+  trainEntries = 0;
+  histLoX = 0.;
+  histHiX = 1.;
+  if(mvaMethod.find("Singleton") == std::string::npos){
+    iterations = analysis["iterations"].as<uint64_t>();
+    commonEvtWeight = analysis["commonweights"].as<std::string>();
+    trainEntries = analysis["trainentries"].as<uint64_t>();
+  }else{
+    histLoX = analysis["histLoX"].as<double>();
+    histHiX = analysis["histHiX"].as<double>();
+  }
   workingPoint = analysis["workingpoint"].as<double>();
   lumi = analysis["lumi"].as<double>();
   histBins = analysis["histbins"].as<int16_t>();
@@ -55,6 +65,11 @@ PConfig::PConfig(const std::string& configFile){
 
   inputVars = analysis["inputvar"].as<std::vector<std::string>>();
   nInputVars = inputVars.size();
+
+  if(nInputVars != 1 && mvaMethod.find("Singleton") != std::string::npos){
+    std::cerr << "ERROR: when in \"Singleton\" mode, only one input variable can be specified!\n";
+    exit(1);
+  }
 
   const YAML::Node& datasets = root["datasets"];
   nProc = 0;
@@ -164,6 +179,14 @@ int16_t PConfig::GetPlotBins(void) const{
   return plotBins;
 }
 
+double PConfig::GetHistLoX(void) const{
+  return histLoX;
+}
+
+double PConfig::GetHistHiX(void) const{
+  return histHiX;
+}
+
 std::vector<std::string> PConfig::GetWriteOptions(void) const{
   return writeOptions;
 }
@@ -191,7 +214,7 @@ int16_t PConfig::TranslateColor(const std::string& color) const{
   boost::split(tempColor, color, boost::is_any_of("+"));
 
   if (tempColor.size() > 2) {
-    std::cerr << "[WARN] Invalid color specified: " << color << std::endl;
+    std::cerr << "WARNING: Invalid color specified: " << color << std::endl;
     return 0;
   }
 

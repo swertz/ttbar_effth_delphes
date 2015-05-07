@@ -8,6 +8,7 @@
 #include "THStack.h"
 #include "TLegend.h"
 #include "TMVA/Factory.h"
+#include "TMVA/Reader.h"
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TLine.h"
@@ -24,7 +25,8 @@ class PAnalysis{
   PAnalysis(PConfig *config);
   ~PAnalysis();
 
-  void DefineAndTrainFactory(void);
+  void BuildDiscriminant(void);
+  double EvalDiscriminant(PProc* proc = NULL);
   void DoHist(void);
   void DoPlot(void);
   void DoROC(void);
@@ -42,7 +44,10 @@ class PAnalysis{
   void OpenAllProc(void);
   void CloseAllProc(void);
   void FillStack(double integralSig);
-  float Transform(float output);
+  double Transform(double output);
+  void DefineAndTrainFactory(void);
+  void DefineSingleton(void);
+  void InitDiscriminant(void);
   
   TFile* myOutputFile;
   THStack* myStack;
@@ -51,9 +56,12 @@ class PAnalysis{
   std::vector<unsigned int> myBkgs; // we may train against several backgrounds
   //double sRootB, sRootSB, sB;
   bool myEvalOnTrained;
+  bool myDiscriminantIsDef;
   double myCut, myBkgEff, mySigEff;
+  std::vector<float> myInputVars;
 
   TMVA::Factory* myFactory;
+  TMVA::Reader* myReader;
 
   TString myName;
   TString myOutput;
@@ -70,6 +78,6 @@ class PAnalysis{
   TLine* myCutLine;
 };
 
-bool mvaOutputSorter(std::vector<float> i, std::vector<float> j);
+bool mvaOutputSorter(std::vector<double> i, std::vector<double> j);
 
 #endif

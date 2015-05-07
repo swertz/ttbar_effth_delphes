@@ -63,7 +63,16 @@ class TMVAReplayer:
 
         def evaluate(self):
             self.mvaValue[0] = self.reader.EvaluateMVA("MVA")
-            return self.mvaValue[0]
+            return self.transformOutput(self.mvaValue[0])
+
+        def transformOutput(self, value):
+            if self.mva.cfg.mvaCfg["mvamethod"] == "BDT":
+                value = (value + 1.)/2.
+            if value > 1.:
+                value = 1.
+            if value < 0.:
+                value = 0.
+            return value
 
     class EndNodeData:
         """

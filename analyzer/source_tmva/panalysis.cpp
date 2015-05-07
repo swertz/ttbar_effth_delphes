@@ -413,11 +413,11 @@ void PAnalysis::BkgEffWPPrecise(void){
   float sigEffEntriesAbs = sig->GetEffEntriesAbs(condition);
   float sigEffEntries = sig->GetEffEntries(condition);
   
-  if(workingPoint > abs(sigEffEntries)/sigEffEntriesAbs){
+  /*if(workingPoint > abs(sigEffEntries)/sigEffEntriesAbs){
     cout << "Error in BkgEffWPPrecise(): not possible to achieve requested working point, since the maximum attainable efficiency \
 given the negative event weights is " << abs(sigEffEntries)/sigEffEntriesAbs << "." << endl;
     exit(1);
-  }
+  }*/
 
   std::vector< std::vector<float> > mvaOutput;
 

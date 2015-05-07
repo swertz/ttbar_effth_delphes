@@ -214,9 +214,12 @@ void PAnalysis::DoHist(void){
       
       for(unsigned int k=0; k<myConfig->GetNInputVars(); k++)
         inputs.at(k) = (float) proc->GetInputVar(myConfig->GetInputVar(k));
-      
-      proc->GetHist()->Fill(Transform(myReader->EvaluateMVA(myName)), proc->GetEvtWeight()*proc->GetGlobWeight());
-      proc->GetAbsHist()->Fill(Transform(myReader->EvaluateMVA(myName)), abs( proc->GetEvtWeight()*proc->GetGlobWeight() ) );
+     
+      double mvaOut = Transform(myReader->EvaluateMVA(myName));
+      double weight = proc->GetEvtWeight()*proc->GetGlobWeight();
+
+      proc->GetHist()->Fill(mvaOut, weight);
+      proc->GetAbsHist()->Fill(mvaOut, abs(weight));
     }
 
     proc->GetHist()->SetLineWidth(3);

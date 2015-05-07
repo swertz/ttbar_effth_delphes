@@ -39,6 +39,7 @@ class PProc{
   double GetGlobWeight(void) const;
   double GetInputVar(const std::string& varName);
   TH1D* GetHist(void) const;
+  TH1D* GetAbsHist(void) const;
   TTree* GetTree(void) const;
   TFile* GetFile(void) const;
   Color_t GetColor(void) const;
@@ -47,7 +48,7 @@ class PProc{
 
   PConfig *myConfig;
 
-  TH1D* myHist;
+  TH1D *myHist, *myAbsHist;
   TChain* myChain;
   TTreeFormula* myWeightFormula;
 

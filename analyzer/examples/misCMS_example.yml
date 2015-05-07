@@ -1,0 +1,101 @@
+# List of input datasets
+datasets:
+#    TT:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/TTFullLept_Summer12_final_skimed_llbbX_withWeights.root"]
+#        # Signal codes:
+#        # -1 ... Can be used as a signal to train a MVA
+#        # -2 ... Can be used as a background to train a MVA
+#        # -3 ... Will not be used for MVA training, but will be evaluated and passed along
+#        # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
+#        # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
+#        # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
+#        signal: -1
+#        # Any Root color, with composition (eg. kRed+1):
+#        color: kRed
+#        xsection: 27.31 # in pb
+#        genevents: 12011428
+#        # Name of the TTree containing the events
+#        treename: rds_zbb
+#        # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
+#        weightname: MinusLogW_TT
+#        # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+    DY:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_with_MllWeight.root"]
+        signal: -1
+        color: kMagenta
+        xsection: 3503.71
+        genevents: 46515036
+        treename: rds_zbb
+        weightname: MinusLogW_gg_Zbb
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*MllWeight*rc_stage_6_idx
+    ZZ:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights.root"]
+        signal: -1
+        color: kBlue
+        xsection: 8.2
+        genevents: 9799908
+        treename: rds_zbb
+        weightname: MinusLogW_ZZ_cor0
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+    ZH:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights.root"]
+        signal: -1
+        color: kBlack
+        xsection: 0.0249
+        genevents: 999462
+        treename: rds_zbb
+        weightname: MinusLogW_ZH_cor0
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+
+
+# Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
+analysis:
+    name: firsttry
+    outputdir: results/firstTry_mlp
+    # Use these variables for training, in addition to the MEM-weights (if given)
+    otherinputvars: []
+    # Mode: operators or MIS
+    mode: MIS
+    # Weights common to all the processes, which will be passed to TMVA during training
+    commonweights: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+    # Apply a skimming on the input rootfiles before to start the whole chain
+    applySkimming: true
+    skimmingFormula: rc_stage_6_idx && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 && MinusLogW_ZH_cor0<60 && MinusLogW_ZH_cor0>0 && MinusLogW_TT<60 && MinusLogW_gg_Zbb<60 && MinusLogW_ZZ_cor0<60
+    # MLP, TMLP or BDT (TMLP buggy, don't use it)
+    mvamethod: MLP
+    # Used only if MLP or TMLP.
+    topology: "3,3"
+    # Used by both MLP and BDT. Caution: too many decision trees and too few input variables will cause problems
+    iterations: 500
+    # Number of events used for training (= number of events used for testing!)
+    trainentries: 500
+    # Will split events so as to keep (approximately... to improve precision, raise histbins) this fraction of the signal:
+    workingpoint: 0.5
+    # Consider analysis valid if background fraction < this value (set to 0 if no check needed):
+    maxbkgeff: 0.2
+    # pb-1
+    lumi: 19700
+    # Bins in the histos used to draw the ROC curve and find cut value
+    histbins: 200
+    # Plotbins better be an exact divider of histbins (to be used in the "fancy plot")
+    plotbins: 40
+    # To be used for the template fit (better be an exact divider of histbins)
+    fitbins: 20
+    # Min. number of expected events in a bin of any MVA template
+    minbincontent: 1
+    # Remove analysis results that were found to be non-optimal (true / false)
+    removebadana: true
+    # Remove from list of signals those that have already been trained against (true / false). NOTE: not yet implemented
+    removefrompool: false
+    # Stop branching when at least one sample has less MC events than this
+    # MUST BE AT LEAST TWICE AS LARGE AS TRAINENTRIES
+    minmcevents: 1000
+    # If not enough MC events to train a new NN, still keep the previous results if there
+    # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
+    minkeepevents: 500
+    # Stop branching when reached level (1=two subsets; 2=four subsets, ...):
+    maxlevel: 10
+    writeoptions: [plot, hist, ROC]
+    outputtasks: [output, result, split]
+

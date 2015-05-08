@@ -658,10 +658,10 @@ void PAnalysis::WriteSplitRootFiles(void){
 
     proc->Open();
 
-    TFile* outFileSig = new TFile(outputDir + "/" + myConfig->GetSplitName() + "_siglike_proc_" + proc->GetName() + ".root","RECREATE");
+    TFile* outFileSig = new TFile(outputDir + "/" + myConfig->GetSplitName() + "_SigLike_proc_" + proc->GetName() + ".root","RECREATE");
     TTree* treeSig = proc->GetTree()->CloneTree(0);
     
-    TFile* outFileBkg = new TFile(outputDir + "/" + myConfig->GetSplitName() + "_bkglike_proc_" + proc->GetName() + ".root","RECREATE");
+    TFile* outFileBkg = new TFile(outputDir + "/" + myConfig->GetSplitName() + "_BkgLike_proc_" + proc->GetName() + ".root","RECREATE");
     TTree* treeBkg = proc->GetTree()->CloneTree(0);
     
     if(!outFileSig->IsOpen() || !outFileBkg->IsOpen()){

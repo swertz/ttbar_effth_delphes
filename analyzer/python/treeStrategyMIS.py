@@ -62,27 +62,27 @@ def analyseResults(box, locks):
     box.goodMVA = bestMVA # Keep track of the MVA chosen to define the new sig- and bkg-like subsets. This must be specified before building a daughter box (otherwise the daughter box will not know how she was conceived, poor thing...)
     
     cfgSigLike = copy.deepcopy(bestMVA.cfg)
-    cfgSigLike.mvaCfg["outputdir"]=bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike"
+    cfgSigLike.mvaCfg["outputdir"]=bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike"
     for name, procDict in cfgSigLike.procCfg.items() :
         if procDict["signal"] != -3:
             procDict["signal"]=-1
-        if bestMVA.entries["sig"][name] < int(box.cfg.mvaCfg["minmcevents"]):
+        if bestMVA.entries["Sig"][name] < int(box.cfg.mvaCfg["minmcevents"]):
             procDict["signal"] = -3
-        procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + name + ".root"]
-        procDict["entries"] = str(bestMVA.entries["sig"][name])
-        procDict["yield"] = str(bestMVA.yields["sig"][name])
+        procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike_proc_" + name + ".root"]
+        procDict["entries"] = str(bestMVA.entries["Sig"][name])
+        procDict["yield"] = str(bestMVA.yields["Sig"][name])
         
     cfgBkgLike = copy.deepcopy(bestMVA.cfg)
-    cfgBkgLike.mvaCfg["outputdir"]=bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike"
+    cfgBkgLike.mvaCfg["outputdir"]=bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike"
     for name, procDict in cfgBkgLike.procCfg.items() :
         if procDict["signal"] != -3:
             procDict["signal"]=-1
-        procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"]
-        procDict["entries"] = str(bestMVA.entries["bkg"][name])
-        procDict["yield"] = str(bestMVA.yields["bkg"][name])
+        procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike_proc_" + name + ".root"]
+        procDict["entries"] = str(bestMVA.entries["Bkg"][name])
+        procDict["yield"] = str(bestMVA.yields["Bkg"][name])
 
-    sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig") # "sigBox" will be a daughter of "box", and "box" the parent of "sigBox"
-    bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
+    sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "Sig") # "sigBox" will be a daughter of "box", and "box" the parent of "sigBox"
+    bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "Bkg")
     box.goodMVA.sigLike = sigBox # Keep track that the sig-like subset of this MVA is the box we have just defined
     box.goodMVA.bkgLike = bkgBox # Keep track that the sig-like subset of this MVA is the box we have just defined
     # Define "config" for next step (e.g. sig-like branch of current box), then:

@@ -51,15 +51,15 @@ class MISAnalysis:
             self.result = (sigEff, bkgEff)
             self.cutValue = cut
 
-            for split in ["sig", "bkg"]:
-                self.log("Results for " + split + "-like part.")
+            for split in ["Sig", "Bkg"]:
+                self.log("Results for " + split + "-Like part.")
                 self.entries[split] = {}
                 self.effEntries[split] = {}
                 self.yields[split] = {}
 
                 for name, proc in self.cfg.procCfg.items():
 
-                    fileName = self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "like_proc_" + name + ".root"
+                    fileName = self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "Like_proc_" + name + ".root"
                     file = ROOT.TFile(fileName, "READ")
                     if file.IsZombie():
                         print "== Error opening " + fileName + "."
@@ -69,7 +69,7 @@ class MISAnalysis:
                     myTree = file.Get(proc["treename"])
                     self.entries[split][name] = myTree.GetEntries()
 
-                    histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "like_proc_" + name
+                    histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "Like_proc_" + name
                     myTree.Draw("Entries$>>" + histName, proc["evtweight"], "goff")
                     tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
                     effEntries = 0
@@ -106,7 +106,7 @@ class MISBox:
         """ Build new box.
         A PConfig object cfg MUST be given as argument.
         If no parent is specified, the box is taken to be the first one. 
-        If a parent is specified, the relation of this box the parent ("sig" or "bkg") must be specified. """
+        If a parent is specified, the relation of this box the parent ("Sig" or "Bkg") must be specified. """
 
         if cfg is None:
             print "== Error: A PConfig object must be specified to build the box!"
@@ -130,12 +130,12 @@ class MISBox:
                 print "== Error: A parent box must have a goodMVA."
                 sys.exit(1)
             self.name = self.parent.name + "/" + self.parent.goodMVA.cfg.mvaCfg["name"]
-            if type == "sig":
+            if type == "Sig":
                 self.name += "_SigLike"
-            elif type == "bkg":
+            elif type == "Bkg":
                 self.name += "_BkgLike"
             else:
-                print "== Error: If a parent box is specified, the relation (sig/bkg) must also be specified."
+                print "== Error: If a parent box is specified, the relation (Sig/Bkg) must also be specified."
                 sys.exit(1)
             self.type = type
             self.effEntries = self.parent.goodMVA.effEntries[type]

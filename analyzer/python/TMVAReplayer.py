@@ -133,7 +133,7 @@ class TMVAReplayer:
                 self.treeRoot = Node(mvaNode)
                 parentNode = self.treeRoot
             else:
-                if node.type == "sig":
+                if node.type == "Sig":
                     parentNode = parentNode.setSignal(mvaNode)
                 else:
                     parentNode = parentNode.setBackground(mvaNode)
@@ -153,7 +153,7 @@ class TMVAReplayer:
             self.numberOfEndNodes = self.numberOfEndNodes + 1
 
             treeNode = None
-            if node.type == "sig":
+            if node.type == "Sig":
                 treeNode = parentNode.setSignal(endNode)
             else:
                 treeNode = parentNode.setBackground(endNode)

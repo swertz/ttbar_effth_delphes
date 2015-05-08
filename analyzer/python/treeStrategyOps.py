@@ -118,11 +118,11 @@ def analyseResults(box, locks):
         for name, proc in cfgSigLike.procCfg.items():
             if proc["signal"] == -1:
                 proc["signal"] = 1
-            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_siglike_proc_" + name + ".root"]
-            proc["entries"] = str(bestMVA.entries["sig"][name])
-            proc["yield"] = str(bestMVA.yields["sig"][name])
+            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike_proc_" + name + ".root"]
+            proc["entries"] = str(bestMVA.entries["Sig"][name])
+            proc["yield"] = str(bestMVA.yields["Sig"][name])
         
-        sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
+        sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "Sig")
         sigBox.isEnd = True
         box.goodMVA.sigLike = sigBox
 
@@ -132,11 +132,11 @@ def analyseResults(box, locks):
         for name, proc in cfgBkgLike.procCfg.items():
             if proc["signal"] == -1:
                 proc["signal"] = 1
-            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"]
-            proc["entries"] = str(bestMVA.entries["bkg"][name])
-            proc["yield"] = str(bestMVA.yields["bkg"][name])
+            proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike_proc_" + name + ".root"]
+            proc["entries"] = str(bestMVA.entries["Bkg"][name])
+            proc["yield"] = str(bestMVA.yields["Bkg"][name])
         
-        bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
+        bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "Bkg")
         bkgBox.isEnd = True
         box.goodMVA.bkgLike = bkgBox
     
@@ -158,9 +158,9 @@ def analyseResults(box, locks):
         bestMVA = mva
         cfgSigLike = copy.deepcopy(mva.cfg)
         cfgBkgLike = copy.deepcopy(mva.cfg)
-        myCfgs = {"sig": cfgSigLike, "bkg": cfgBkgLike}
+        myCfgs = {"Sig": cfgSigLike, "Bkg": cfgBkgLike}
 
-        for split in ["sig", "bkg"]:
+        for split in ["Sig", "Bkg"]:
             for name, proc in myCfgs[split].procCfg.items():
                 if mva.entries[split][name] < int(box.cfg.mvaCfg["minmcevents"]):
                     proc["signal"] = -3
@@ -209,13 +209,13 @@ def analyseResults(box, locks):
     # Sig-like branch
     cfgSigLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike"
     for name, proc in cfgSigLike.procCfg.items():
-        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_siglike_proc_" + name + ".root"]
-        proc["entries"] = str(bestMVA.entries["sig"][name])
-        proc["yield"] = str(bestMVA.yields["sig"][name])
+        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_SigLike_proc_" + name + ".root"]
+        proc["entries"] = str(bestMVA.entries["Sig"][name])
+        proc["yield"] = str(bestMVA.yields["Sig"][name])
         if proc["signal"] == -1:
             proc["signal"] = 1
 
-    sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "sig")
+    sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "Sig")
     bestMVA.sigLike = sigBox 
     
     if stopSigLike:
@@ -229,13 +229,13 @@ def analyseResults(box, locks):
     cfgBkgLike.mvaCfg["outputdir"] = bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike"
 
     for name, proc in cfgBkgLike.procCfg.items():
-        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_bkglike_proc_" + name + ".root"]
-        proc["entries"] = str(bestMVA.entries["bkg"][name])
-        proc["yield"] = str(bestMVA.yields["bkg"][name])
+        proc["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + cfgSigLike.mvaCfg["name"] + "_BkgLike_proc_" + name + ".root"]
+        proc["entries"] = str(bestMVA.entries["Bkg"][name])
+        proc["yield"] = str(bestMVA.yields["Bkg"][name])
         if proc["signal"] == -1:
             proc["signal"] = 1
     
-    bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "bkg")
+    bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "Bkg")
     bestMVA.bkgLike = bkgBox 
 
     if stopBkgLike:

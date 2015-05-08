@@ -13,8 +13,6 @@ parser.add_argument('config')
 
 args = parser.parse_args()
 
-pprint.pprint(args)
-
 configuration = {}
 # Parse configuration
 with open(args.config) as f:

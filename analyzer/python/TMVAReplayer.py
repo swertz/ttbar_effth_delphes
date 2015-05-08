@@ -243,8 +243,9 @@ class TMVAReplayer:
 
         # Create cut formula
         cut = None
-        if "cut" in self.root.cfg.mvaCfg and len(self.root.cfg.mvaCfg["cut"]) > 0:
-            cut = self.root.cfg.mvaCfg["cut"]
+        if self.root.cfg.mvaCfg["applySkimming"]:
+            if len(self.root.cfg.mvaCfg["skimmingFormula"]) > 0:
+                cut = self.root.cfg.mvaCfg["skimmingFormula"]
 
         cutFormula = None
         if cut is not None:

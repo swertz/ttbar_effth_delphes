@@ -14,5 +14,8 @@ analysis:
     trained_tree: 'mischief_mlp/firsttry_tree.p'
     name: first_replay
     outputdir: replay_output
+    # Apply a skimming on the input rootfiles
+    applySkimming: false 
+    skimmingFormula:
     # pb-1
     lumi: 100000

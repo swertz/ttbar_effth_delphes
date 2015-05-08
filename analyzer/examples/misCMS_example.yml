@@ -62,6 +62,8 @@ analysis:
     # Apply a skimming on the input rootfiles before to start the whole chain
     applySkimming: true
     skimmingFormula: rc_stage_6_idx && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 && MinusLogW_ZH_cor0<60 && MinusLogW_ZH_cor0>0 && MinusLogW_TT<60 && MinusLogW_gg_Zbb<60 && MinusLogW_ZZ_cor0<60
+    # Limit total number of tmva run in parallel:
+    maxTMVA: 8
     # MLP, TMLP or BDT (TMLP buggy, don't use it)
     mvamethod: MLP
     # Used only if MLP or TMLP.

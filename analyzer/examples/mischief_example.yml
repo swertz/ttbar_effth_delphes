@@ -70,7 +70,9 @@ analysis:
     commonweights: GenWeight
     # Apply a skimming on the input rootfiles before to start the whole chain
     applySkimming: false
-    skimmingFormula: 
+    skimmingFormula:
+    # Limit total number of tmva run in parallel:
+    maxTMVA: 8
     # MLP, BDT or Singleton
     # "Singleton" means no MVA training, only cutting on a single variable
     mvamethod: MLP

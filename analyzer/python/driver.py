@@ -11,11 +11,10 @@
 argConf = 1
 argExec = 2
 
-from ROOT import gROOT, kTRUE, TChain, TFile,TTreeFormula
+from ROOT import gROOT, kTRUE, TChain, TFile, TTreeFormula
 import sys
 import os
-from threading import Thread
-from threading import RLock
+from threading import Thread, RLock, Semaphore
 import time
 import copy
 from subprocess import call
@@ -126,25 +125,70 @@ def analyseResults(box, locks):
         print "== Tree building strategy not properly defined."
         sys.exit(1)
 
+######## CLASS LAUNCHMISCHIEF #####################################################
+# Launch a MVA based on a configuration passed by tryMisChief
+
+class launchMisChief(Thread):
+    def __init__(self, MVA, locks):
+        Thread.__init__(self)
+        self.MVA = MVA
+        self.locks = locks
+
+    def run(self):
+        with self.locks["semaph"]:
+            # write the config file that will be used for this analysis
+            configFileName = os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["name"] + ".yml")
+            with open(configFileName, "w") as configFile:
+
+                self.MVA.log("Writing config file.")
+
+                mvaConfig = {}
+                mvaConfig["datasets"] = self.MVA.cfg.procCfg
+                mvaConfig["analysis"] = self.MVA.cfg.mvaCfg
+
+                yaml.dump(mvaConfig, configFile)
+
+            # launch the program on this config file
+            commandString = sys.argv[argExec] + " " + configFileName
+            commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
+
+            # it would be annoying if, say, outputdir was "&& rm -rf *"
+            if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
+                with self.locks["stdout"]:
+                    print "== Looks like a security issue..."
+                sys.exit(1)
+
+            self.MVA.log("Calling " + commandString + ".")
+
+            result = call(commandString, shell=True)
+
+            self.MVA.log("Finished. Output code = " + str(result) + ".")
+            self.MVA.outcode = result
+            if result != 0:
+                with self.locks["stdout"]:
+                    print "== Something went wrong (error code " + str(result) + ") in analysis " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + "."
+            else:
+                self.MVA.fetchResults(self.locks)
+
 # Apply the skimming of the input rootFiles before to launch the whole process. Redefines also the cfg with the skimmedRootFiles as input files
 def applySkimming(config):
 
     stringFormula = config.mvaCfg["skimmingFormula"] 
-    skimmedRootFilesDir = config.mvaCfg["outputdir"]+"/skimmedRootFiles/"
-    if not os.path.isdir(skimmedRootFilesDir): os.system("mkdir "+skimmedRootFilesDir)
+    skimmedRootFilesDir = config.mvaCfg["outputdir"] + "/skimmedRootFiles/"
+    if not os.path.isdir(skimmedRootFilesDir): os.system("mkdir " + skimmedRootFilesDir)
 
     print "== Skimming the input rootFiles (if not already done) with the following formula : \n {0}".format(stringFormula)
     for name,process in config.procCfg.items():
 
         skimFileName = skimmedRootFilesDir + name + "_skimmed_" + str(hash(stringFormula)) + ".root" 
-        if not os.path.isfile(skimFileName) :
+        if not os.path.isfile(skimFileName):
 
             inChain = TChain(process["treename"])
             for rootFile in process["path"]:
                 inChain.Add(rootFile)
             inEntries = inChain.GetEntries()
 
-            print "Start to skim "+name+" having ", inEntries, " entries..."
+            print "Start to skim "+ name + " having ", inEntries, " entries..."
             formulaName = stringFormula.replace(' ', '_')
             formula = TTreeFormula(formulaName, stringFormula, inChain)
             formula.GetNdata()
@@ -164,50 +208,6 @@ def applySkimming(config):
             skimFile.Close()
         process["path"] = [skimFileName]
 
-######## CLASS LAUNCHMISCHIEF #####################################################
-# Launch a MVA based on a configuration passed by tryMisChief
-
-class launchMisChief(Thread):
-    def __init__(self, MVA, locks):
-        Thread.__init__(self)
-        self.MVA = MVA
-        self.locks = locks
-
-    def run(self):
-        # write the config file that will be used for this analysis
-        configFileName = os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["name"] + ".yml")
-        with open(configFileName, "w") as configFile:
-
-            self.MVA.log("Writing config file.")
-
-            mvaConfig = {}
-            mvaConfig["datasets"] = self.MVA.cfg.procCfg
-            mvaConfig["analysis"] = self.MVA.cfg.mvaCfg
-
-            yaml.dump(mvaConfig, configFile)
-
-        # launch the program on this config file
-        commandString = sys.argv[argExec] + " " + configFileName
-        commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
-
-        # it would be annoying if, say, outputdir was "&& rm -rf *"
-        if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
-            with self.locks["stdout"]:
-                print "== Looks like a security issue..."
-            sys.exit(1)
-
-        self.MVA.log("Calling " + commandString + ".")
-
-        result = call(commandString, shell=True)
-
-        self.MVA.log("Finished. Output code = " + str(result) + ".")
-        self.MVA.outcode = result
-        if result != 0:
-            with self.locks["stdout"]:
-                print "== Something went wrong (error code " + str(result) + ") in analysis " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + "."
-        else:
-            self.MVA.fetchResults(self.locks)
-
 ######## MAIN #############################################################
 
 def driverMain(cfgFile):
@@ -226,8 +226,10 @@ def driverMain(cfgFile):
    
     # A locked RLock will force other threads to wait for the lock to be released before going on.
     # This will for instance avoid printing output to be mixed between the threads.
+    # The semaphore will enable limiting the total number of tmva instances
     locks = {}
     locks["stdout"] = RLock()
+    locks["semaph"] = Semaphore(myConfig.mvaCfg["maxTMVA"])
     
     # Define main thread object
     mainThread = tryMisChief(myTree.firstBox, locks)

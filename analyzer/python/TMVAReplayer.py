@@ -38,10 +38,12 @@ class TMVAReplayer:
         Data associated to a MVA node inside the binary tree
         """
 
-        def __init__(self, name, reader, mva):
+        def __init__(self, name, mva):
             self.name = name
-            self.reader = reader
             self.mva = mva
+            self.reader = None
+            if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+                self.reader = ROOT.TMVA.Reader("Silent")
             self.inputVariables = {}
             self.mvaValue = array.array('f', [0])
 
@@ -53,17 +55,24 @@ class TMVAReplayer:
                 if not var in self.inputVariables.keys():
                     a = array.array('f', [0])
                     self.inputVariables[var] = a
-                    self.reader.AddVariable(var, a)
+                    if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+                        self.reader.AddVariable(var, a)
 
                 # variablesCache is TTreeFormula, inputVariables is float
                 self.inputVariables[var][0] = variablesCache[var].EvalInstance()
 
         def book(self):
-            self.reader.BookMVA("MVA", TMVAReplayer.getXMLPath(self.mva))
+            if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+                self.reader.BookMVA("MVA", TMVAReplayer.getXMLPath(self.mva))
 
         def evaluate(self):
-            self.mvaValue[0] = self.reader.EvaluateMVA("MVA")
-            return self.transformOutput(self.mvaValue[0])
+            if self.mva.cfg.mvaCfg["mvamethod"] is "Singleton":
+                # in case of "Singleton" mode we only have one variable
+                var = self.inputVariables.keys()[0]
+                return self.inputVariables[var]
+            else:
+                self.mvaValue[0] = self.reader.EvaluateMVA(self.mva.cfg.mvaCfg["name"])
+                return self.transformOutput(self.mvaValue[0])
 
         def transformOutput(self, value):
             if self.mva.cfg.mvaCfg["mvamethod"] == "BDT":
@@ -116,7 +125,7 @@ class TMVAReplayer:
     def createMVAs(self, node, parentNode = None):
         if not node.isEnd:
             print("Creating MVA reader for node '%s'" % node.name)
-            mvaNode = TMVAReplayer.MVANodeData(node.name, ROOT.TMVA.Reader("Silent"), node.goodMVA)
+            mvaNode = TMVAReplayer.MVANodeData(node.name, node.goodMVA)
             self.linkInputVariables(node.goodMVA, mvaNode)
             mvaNode.book()
 
@@ -250,7 +259,7 @@ class TMVAReplayer:
         cutFormula = None
         if cut is not None:
             print("\nUsing global cut: '%s'" % cut)
-            cutFormula = ROOT.TTreeFormula("cut", cut, self.chain)
+            cutFormula = ROOT.TTreeFormula("skimmingFormula", cut, self.chain)
             cutFormula.GetNdata()
             self.chain.SetNotify(cutFormula)
 

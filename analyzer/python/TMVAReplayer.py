@@ -71,7 +71,7 @@ class TMVAReplayer:
                 var = self.inputVariables.keys()[0]
                 return self.inputVariables[var]
             else:
-                self.mvaValue[0] = self.reader.EvaluateMVA(self.mva.cfg.mvaCfg["name"])
+                self.mvaValue[0] = self.reader.EvaluateMVA("MVA")
                 return self.transformOutput(self.mvaValue[0])
 
         def transformOutput(self, value):
@@ -142,7 +142,9 @@ class TMVAReplayer:
                 self.createMVAs(child, parentNode)
         else:
             print("End of chain with node '%s'" % node.name)
-            path = os.path.join(self.outputDirectory, node.name, self.name + ".root")
+            # Strip first part of the node name
+            endPath = node.name.split('/', 1)[1] + "_proc_" + self.name + ".root"
+            path = os.path.join(self.outputDirectory, endPath)
             print("\tOutput file: '%s'" % path)
             ensure_dir(path)
 
@@ -252,8 +254,8 @@ class TMVAReplayer:
 
         # Create cut formula
         cut = None
-        if self.root.cfg.mvaCfg["applySkimming"]:
-            if len(self.root.cfg.mvaCfg["skimmingFormula"]) > 0:
+        if "applySkimming" in self.root.cfg.mvaCfg and self.root.cfg.mvaCfg["applySkimming"]:
+            if "skimmingFormula" in self.root.cfg.mvaCfg and len(self.root.cfg.mvaCfg["skimmingFormula"]) > 0:
                 cut = self.root.cfg.mvaCfg["skimmingFormula"]
 
         cutFormula = None

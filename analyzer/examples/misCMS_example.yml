@@ -27,7 +27,7 @@ datasets:
         xsection: 3503.71
         genevents: 46515036
         treename: rds_zbb
-        weightname: MinusLogW_gg_Zbb
+        weightname: [MinusLogW_gg_Zbb]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*MllWeight*rc_stage_6_idx
     ZZ:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights.root"]
@@ -36,7 +36,7 @@ datasets:
         xsection: 8.2
         genevents: 9799908
         treename: rds_zbb
-        weightname: MinusLogW_ZZ_cor0
+        weightname: [MinusLogW_ZZ_cor0]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
     ZH:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights.root"]
@@ -45,7 +45,7 @@ datasets:
         xsection: 0.0249
         genevents: 999462
         treename: rds_zbb
-        weightname: MinusLogW_ZH_cor0
+        weightname: [MinusLogW_ZH_cor0]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
 
 

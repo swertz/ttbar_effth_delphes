@@ -13,8 +13,6 @@ datasets:
         genevents: 1000000
         # Name of the TTree containing the events
         treename: Event
-        # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
-        weightname: Weight_TT
         # Formula used to get the event weights from branches in the TTree (can be any TFormula)
         evtweight: GenWeight
     OtG:
@@ -24,7 +22,6 @@ datasets:
         xsection: 11.02
         genevents: 500000
         treename: Event
-        weightname: Weight_OtG
         evtweight: GenWeight
     OG:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OG1_0/L1_OG1_0_V0_chan_all_weighted.root"]
@@ -33,7 +30,6 @@ datasets:
         xsection: 1.384
         genevents: 500000
         treename: Event
-        weightname: Weight_OG
         evtweight: GenWeight
     OC81qq:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OC81qq1_0/L1_OC81qq1_0_V0_chan_all_weighted.root"]
@@ -42,7 +38,6 @@ datasets:
         xsection: 0.2328
         genevents: 500000
         treename: Event
-        weightname: Weight_OC81qq
         evtweight: GenWeight
     OC8ut:
         path: ["/home/fynu/swertz/storage/selectedSamples/EFT/L1_OC8ut1_0/L1_OC8ut1_0_V0_chan_all_weighted.root"]
@@ -51,7 +46,6 @@ datasets:
         xsection: 0.1377
         genevents: 500000
         treename: Event
-        weightname: Weight_OC8ut
         evtweight: GenWeight
 
 # Analysis: define options relative to the training and the output files

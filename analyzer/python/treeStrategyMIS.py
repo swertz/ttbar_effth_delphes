@@ -28,9 +28,9 @@ def defineNewCfgs(box, locks):
                     bkgName =  name2
                     if bkgName+"_vs_"+name not in listOfCfg:
                         listOfCfg.append(name + "_vs_" + bkgName)
-                        inputVar.append(proc2["weightname"])
+                        inputVar += proc2["weightname"]
                         thisCfg.mvaCfg["name"] = name + "_vs_" + bkgName
-                        thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvars"] + inputVar + [proc["weightname"]]
+                        thisCfg.mvaCfg["inputvar"] = thisCfg.mvaCfg["otherinputvars"] + inputVar + proc["weightname"]
                         thisCfg.mvaCfg["splitname"] = thisCfg.mvaCfg["name"]
                         thisCfg.mvaCfg["outputname"] = thisCfg.mvaCfg["name"]
                         thisCfg.mvaCfg["log"] = thisCfg.mvaCfg["name"] + ".results"

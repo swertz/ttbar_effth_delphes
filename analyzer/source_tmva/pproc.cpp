@@ -34,13 +34,24 @@ PProc::PProc(PConfig* config, unsigned int num){
 
   myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
-  myEffEntries = tempHist->Integral();
+  // FIXME: see https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19678&p=84375
+  //myEffEntries = tempHist->Integral();
+  myEffEntries = 0.;
+  for(int i = 1; i <= tempHist->GetNbinsX(); ++i)
+    myEffEntries += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
 
   myChain->Draw("Entries$>>tempHist", ("abs(" + myEvtWeightString + ")").c_str(), "goff");
   tempHist = (TH1F*) gDirectory->Get("tempHist");
-  myEffEntriesAbs = tempHist->Integral();
+  //myEffEntriesAbs = tempHist->Integral();
+  myEffEntriesAbs = 0.;
+  for(int i = 1; i <= tempHist->GetNbinsX(); ++i)
+    myEffEntriesAbs += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
+
+  #ifdef P_LOG
+    cout << "PProc " << config->GetName(num) << " has effective entries = " << myEffEntries << ", effective absolute entries = " << myEffEntriesAbs << ".\n";
+  #endif
 
   delete myChain; myChain = NULL;
 

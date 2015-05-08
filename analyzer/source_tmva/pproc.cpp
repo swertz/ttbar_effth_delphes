@@ -37,7 +37,7 @@ PProc::PProc(PConfig* config, unsigned int num){
   // FIXME: see https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19678&p=84375
   //myEffEntries = tempHist->Integral();
   myEffEntries = 0.;
-  for(int i = 1; i <= tempHist->GetNbinsX(); ++i)
+  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
     myEffEntries += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
 
@@ -45,7 +45,7 @@ PProc::PProc(PConfig* config, unsigned int num){
   tempHist = (TH1F*) gDirectory->Get("tempHist");
   //myEffEntriesAbs = tempHist->Integral();
   myEffEntriesAbs = 0.;
-  for(int i = 1; i <= tempHist->GetNbinsX(); ++i)
+  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
     myEffEntriesAbs += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
 
@@ -128,7 +128,10 @@ double PProc::GetEffEntries(const std::string& condition){
 
   myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  double effEntries = tempHist->Integral();
+  //double effEntries = tempHist->Integral();
+  double effEntries = 0.;
+  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
+    effEntries += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
 
   if(!wasOpen)
@@ -154,7 +157,10 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
 
   myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  double effEntries = tempHist->Integral();
+  //double effEntries = tempHist->Integral();
+  double effEntries = 0.;
+  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
+    effEntries += tempHist->GetBinContent(i);
   delete tempHist; tempHist = NULL;
 
   if(!wasOpen)

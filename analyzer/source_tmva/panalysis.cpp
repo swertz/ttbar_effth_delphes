@@ -417,7 +417,7 @@ void PAnalysis::DoROC(void){
   myROC = (TGraph*) new TGraph(nBins+2, bkgEff, sigEff);
   myROC->GetXaxis()->SetTitle("Background eff.");
   myROC->GetYaxis()->SetTitle("Signal eff.");
-  myROC->SetTitle("Signal vs bkg sigEff (cut on discriminant)");
+  myROC->SetTitle("Signal eff. vs. background eff. (cut on discriminant)");
   myROC->SetMarkerColor(kBlue);
   myROC->SetMarkerStyle(20);
   

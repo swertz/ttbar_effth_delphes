@@ -46,6 +46,11 @@ class tryMisChief(Thread):
 
         # Define new configurations based on the one passed to this "try":
         defineNewCfgs(self.box, self.locks)
+
+        if len(self.box.MVA) == 0:
+            self.box.log("Something went wrong in defining the tmva's.")
+            with self.locks["stdout"]:
+                print "== Level {0}, box {1}: Something went wrong when defining the tmva's.".fomat(self.box.level, self.box.name)
         
         # Define threads with the new configurations
         threads = []
@@ -53,9 +58,9 @@ class tryMisChief(Thread):
             myThread = launchMisChief(thisMVA, self.locks)
             threads.append(myThread)
         
+        self.box.log("Will start " + str(len(threads)) + " threads.")
         with self.locks["stdout"]:
-            self.box.log("Will start " + str(len(threads)) + " threads.")
-            print "== Level {0}: Starting {1} mva threads.".format(self.box.level, len(threads))
+            print "== Level {0}, box {1}: Starting {2} mva threads.".format(self.box.level, self.box.name, len(threads))
 
         # Launching the analyses and waiting for them to finish
         for thread in threads:
@@ -71,7 +76,7 @@ class tryMisChief(Thread):
             self.box.log("All analysis failed. Stopping branch.")
             self.box.isEnd = True
             with self.locks["stdout"]:
-                print "== Level {0}: All analyses seem to have failed. Stopping branch.".format(self.box.level)
+                print "== Level {0}, box {1}: All analyses seem to have failed. Stopping branch.".format(self.box.level, self.box.name)
             return 0
 
         # Decide what to do next and define next boxes. Boxes which are not "isEnd" will define new tries.
@@ -135,40 +140,43 @@ class launchMisChief(Thread):
         self.locks = locks
 
     def run(self):
-        with self.locks["semaph"]:
-            # write the config file that will be used for this analysis
-            configFileName = os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["name"] + ".yml")
-            with open(configFileName, "w") as configFile:
+        self.locks["semaph"].acquire()
+        
+        # write the config file that will be used for this analysis
+        configFileName = os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["name"] + ".yml")
+        with open(configFileName, "w") as configFile:
 
-                self.MVA.log("Writing config file.")
+            self.MVA.log("Writing config file.")
 
-                mvaConfig = {}
-                mvaConfig["datasets"] = self.MVA.cfg.procCfg
-                mvaConfig["analysis"] = self.MVA.cfg.mvaCfg
+            mvaConfig = {}
+            mvaConfig["datasets"] = self.MVA.cfg.procCfg
+            mvaConfig["analysis"] = self.MVA.cfg.mvaCfg
 
-                yaml.dump(mvaConfig, configFile)
+            yaml.dump(mvaConfig, configFile)
 
-            # launch the program on this config file
-            commandString = sys.argv[argExec] + " " + configFileName
-            commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
+        # launch the program on this config file
+        commandString = sys.argv[argExec] + " " + configFileName
+        commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
 
-            # it would be annoying if, say, outputdir was "&& rm -rf *"
-            if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
-                with self.locks["stdout"]:
-                    print "== Looks like a security issue..."
-                sys.exit(1)
+        # it would be annoying if, say, outputdir was "&& rm -rf *"
+        if commandString.find("&&") >= 0 or commandString.find("|") >= 0:
+            with self.locks["stdout"]:
+                print "== Looks like a security issue..."
+            sys.exit(1)
 
-            self.MVA.log("Calling " + commandString + ".")
+        self.MVA.log("Calling " + commandString + ".")
 
-            result = call(commandString, shell=True)
+        result = call(commandString, shell=True)
 
-            self.MVA.log("Finished. Output code = " + str(result) + ".")
-            self.MVA.outcode = result
-            if result != 0:
-                with self.locks["stdout"]:
-                    print "== Something went wrong (error code " + str(result) + ") in analysis " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + "."
-            else:
-                self.MVA.fetchResults(self.locks)
+        self.MVA.log("Finished. Output code = " + str(result) + ".")
+        self.MVA.outcode = result
+        if result != 0:
+            with self.locks["stdout"]:
+                print "== Something went wrong (error code " + str(result) + ") in analysis " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + "."
+        else:
+            self.MVA.fetchResults(self.locks)
+        
+        self.locks["semaph"].release()
 
 # Apply the skimming of the input rootFiles before to launch the whole process. Redefines also the cfg with the skimmedRootFiles as input files
 def applySkimming(config):
@@ -188,7 +196,7 @@ def applySkimming(config):
                 inChain.Add(rootFile)
             inEntries = inChain.GetEntries()
 
-            print "Start to skim "+ name + " having ", inEntries, " entries..."
+            print "== Start skimming "+ name + " having ", inEntries, " entries..."
             formulaName = stringFormula.replace(' ', '_')
             formula = TTreeFormula(formulaName, stringFormula, inChain)
             formula.GetNdata()
@@ -204,7 +212,7 @@ def applySkimming(config):
 
             skimChain.Write()
             skimmedEntries = skimChain.GetEntries()
-            print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
+            print "== Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
             skimFile.Close()
         process["path"] = [skimFileName]
 

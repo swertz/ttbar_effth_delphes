@@ -69,8 +69,8 @@ def analyseResults(box, locks):
         if bestMVA.entries["Sig"][name] < int(box.cfg.mvaCfg["minmcevents"]):
             procDict["signal"] = -3
         procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_SigLike_proc_" + name + ".root"]
-        procDict["entries"] = str(bestMVA.entries["Sig"][name])
-        procDict["yield"] = str(bestMVA.yields["Sig"][name])
+        procDict["entries"] = bestMVA.entries["Sig"][name]
+        procDict["yield"] = bestMVA.yields["Sig"][name]
         
     cfgBkgLike = copy.deepcopy(bestMVA.cfg)
     cfgBkgLike.mvaCfg["outputdir"]=bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike"
@@ -78,8 +78,8 @@ def analyseResults(box, locks):
         if procDict["signal"] != -3:
             procDict["signal"]=-1
         procDict["path"] = [bestMVA.cfg.mvaCfg["outputdir"] + "/" + bestMVA.cfg.mvaCfg["name"] + "_BkgLike_proc_" + name + ".root"]
-        procDict["entries"] = str(bestMVA.entries["Bkg"][name])
-        procDict["yield"] = str(bestMVA.yields["Bkg"][name])
+        procDict["entries"] = bestMVA.entries["Bkg"][name]
+        procDict["yield"] = bestMVA.yields["Bkg"][name]
 
     sigBox = MISBox(parent = box, cfg = cfgSigLike, type = "Sig") # "sigBox" will be a daughter of "box", and "box" the parent of "sigBox"
     bkgBox = MISBox(parent = box, cfg = cfgBkgLike, type = "Bkg")

@@ -11,6 +11,7 @@
 import ROOT
 import pickle
 import sys
+import os
 import copy
 
 from utils import weightsToString
@@ -67,11 +68,16 @@ class MISAnalysis:
                         sys.exit(1)
 
                     myTree = file.Get(proc["treename"])
-                    self.entries[split][name] = myTree.GetEntries()
+                    self.entries[split][name] = int(myTree.GetEntries())
 
                     histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "Like_proc_" + name
                     myTree.Draw("Entries$>>" + histName, proc["evtweight"], "goff")
-                    tempHist = ROOT.TH1F(ROOT.gDirectory.Get(histName))
+                    gotHist = ROOT.gDirectory.Get(histName)
+                    if gotHist is None:
+                        print "== Couldnt retrieve yield histogram from file " + proc["path"] + "."
+                        self.log("Couldnt retrieve yield histogram from file " + proc["path"] + ".")
+                        sys.exit(1)
+                    tempHist = ROOT.TH1F(gotHist)
                     effEntries = 0
                     # This has to be done because TH1F::Integral() sometimes mysteriously returns 0.0
                     for i in range(1, tempHist.GetNbinsX()):
@@ -158,7 +164,7 @@ class MISBox:
                 _str += "==="
                 for i in range(self.level):
                     _str += "="
-                _str += " Process " + name + ": " + proc["entries"] + " MC events, " + proc["yield"] + " expected events.\n"
+                _str += " Process " + name + ": " + str(proc["entries"]) + " MC events, " + str(proc["yield"]) + " expected events.\n"
             _str += "\n\n"
         else:
             for box in self.daughters:
@@ -176,7 +182,7 @@ class MISBox:
         if self.isEnd:
             outFile.write(":" + self.name + ":")
             for name, proc in self.cfg.procCfg.items():
-                outFile.write(name + "=" + proc["yield"] + ",")
+                outFile.write(name + "=" + str(proc["yield"]) + ",")
             outFile.write("\n")
         else:
             for box in self.daughters:
@@ -329,8 +335,12 @@ class MISTree:
         pad.Draw()
         pad.cd()
         branchEffs.SetStats(ROOT.kFALSE)
-        branchEffs.Draw("COL,TEXT,Z")
+        if nBr <= 20:
+            branchEffs.Draw("COL,TEXT,Z")
+        else:
+            branchEffs.Draw("COL,Z")
         cnv.Write()
+        cnv.Print(os.path.join(self.cfg.mvaCfg["outputdir"], self.cfg.mvaCfg["name"] + "_" + cnv.GetName() + ".png"), "png")
         del pad
         del cnv
     
@@ -341,8 +351,12 @@ class MISTree:
         pad.cd()
         branchYields.SetStats(ROOT.kFALSE)
         pad.SetLogz()
-        branchYields.Draw("COL,TEXT,Z")
+        if nBr <= 20:
+            branchYields.Draw("COL,TEXT,Z")
+        else:
+            branchYields.Draw("COL,Z")
         cnv.Write()
+        cnv.Print(os.path.join(self.cfg.mvaCfg["outputdir"], self.cfg.mvaCfg["name"] + "_" + cnv.GetName() + ".png"), "png")
         del pad
         del cnv
     
@@ -353,8 +367,12 @@ class MISTree:
         pad.cd()
         branchComps.SetStats(ROOT.kFALSE)
         pad.SetLogz()
-        branchComps.Draw("COL,TEXT,Z")
+        if nBr <= 20:
+            branchComps.Draw("COL,TEXT,Z")
+        else:
+            branchComps.Draw("COL,Z")
         cnv.Write()
+        cnv.Print(os.path.join(self.cfg.mvaCfg["outputdir"], self.cfg.mvaCfg["name"] + "_" + cnv.GetName() + ".png"), "png")
         del pad
         del cnv
 

@@ -78,10 +78,9 @@ class MISAnalysis:
                         self.log("Couldnt retrieve yield histogram from file " + proc["path"] + ".")
                         sys.exit(1)
                     tempHist = ROOT.TH1F(gotHist)
-                    effEntries = 0
-                    # This has to be done because TH1F::Integral() sometimes mysteriously returns 0.0
-                    for i in range(1, tempHist.GetNbinsX()):
-                        effEntries += tempHist.GetBinContent(i)
+                    # This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
+                    tempHist.BufferEmpty()
+                    effEntries = tempHist.Integral()
                     del tempHist
                     self.effEntries[split][name] = effEntries
                     self.yields[split][name] = self.cfg.mvaCfg["lumi"]*proc["xsection"]*effEntries/proc["genevents"]

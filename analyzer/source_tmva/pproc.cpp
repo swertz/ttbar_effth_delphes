@@ -22,6 +22,8 @@ PProc::PProc(PConfig* config, unsigned int num){
   myGenMCEvents = (double)myConfig->GetTotEvents(num);
   
   myEvtWeightString = myConfig->GetEvtWeight(num);
+  if(myEvtWeightString == "")
+    myEvtWeightString = "1.0";
 
   for(unsigned int i=0; i<myConfig->GetNInputVars(); i++)
     myInputVars[ myConfig->GetInputVar(i) ] = NULL;
@@ -34,19 +36,15 @@ PProc::PProc(PConfig* config, unsigned int num){
 
   myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
   TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
-  // FIXME: see https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=19678&p=84375
-  //myEffEntries = tempHist->Integral();
-  myEffEntries = 0.;
-  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
-    myEffEntries += tempHist->GetBinContent(i);
+  // This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
+  tempHist->BufferEmpty();
+  myEffEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   myChain->Draw("Entries$>>tempHist", ("abs(" + myEvtWeightString + ")").c_str(), "goff");
   tempHist = (TH1F*) gDirectory->Get("tempHist");
-  //myEffEntriesAbs = tempHist->Integral();
-  myEffEntriesAbs = 0.;
-  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
-    myEffEntriesAbs += tempHist->GetBinContent(i);
+  tempHist->BufferEmpty();
+  myEffEntriesAbs = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   #ifdef P_LOG
@@ -128,10 +126,8 @@ double PProc::GetEffEntries(const std::string& condition){
 
   myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  //double effEntries = tempHist->Integral();
-  double effEntries = 0.;
-  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
-    effEntries += tempHist->GetBinContent(i);
+  tempHist->BufferEmpty();
+  double effEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   if(!wasOpen)
@@ -157,10 +153,8 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
 
   myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
   TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  //double effEntries = tempHist->Integral();
-  double effEntries = 0.;
-  for(int i = 0; i <= tempHist->GetNbinsX(); ++i)
-    effEntries += tempHist->GetBinContent(i);
+  tempHist->BufferEmpty();
+  double effEntries = tempHist->Integral();
   delete tempHist; tempHist = NULL;
 
   if(!wasOpen)

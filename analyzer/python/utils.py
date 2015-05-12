@@ -235,3 +235,43 @@ def weightsToString(weights):
     """Convert a list of weights to a string representation"""
 
     return " * ".join(weights)
+
+def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
+
+    entriesEffEntriesYield = []
+    myChain = ROOT.TChain(procDict["treename"])
+    if type(fileName) is list :
+        for file in fileName:
+            myChain.Add(file)
+    else :
+        myChain.Add(fileName) 
+    entriesEffEntriesYield.append(int(myChain.GetEntries()))
+    effEntries = 0
+    formulaName = str(hash(procDict["evtweight"]))
+    formula = ROOT.TTreeFormula(formulaName, procDict["evtweight"], myChain)
+    formula.GetNdata()
+    myChain.SetNotify(formula)
+    for entry in xrange(entriesEffEntriesYield[0]):
+        myChain.GetEntry(entry)
+        effEntries += formula.EvalInstance()
+    #histName = str(hash(fileName[0]))
+    #myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
+    #gotHist = ROOT.gDirectory.Get(histName)
+    #if gotHist is None:
+    #    return None
+    #tempHist = ROOT.TH1F(gotHist)
+    ## This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
+    #tempHist.BufferEmpty()
+    #effEntries = tempHist.Integral()
+    print procDict
+    print myChain.GetEntries()
+    print effEntries
+    entriesEffEntriesYield.append(effEntries)
+    entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
+    #del tempHist
+    del myChain
+    return entriesEffEntriesYield
+ 
+
+
+

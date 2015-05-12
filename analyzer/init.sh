@@ -1,6 +1,6 @@
 # No shebang here as this script must be sourced and not executed
 
-if [[ $HOST == lxplus* ]]; then
+if [[ $HOSTNAME == lxplus* ]]; then
 
     source /cvmfs/cms.cern.ch/slc6_amd64_gcc491/external/gcc/4.9.1-cms/etc/profile.d/init.sh
     source /cvmfs/cms.cern.ch/slc6_amd64_gcc491/external/boost/1.57.0-cms/etc/profile.d/init.sh

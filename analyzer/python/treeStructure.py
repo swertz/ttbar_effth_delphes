@@ -14,7 +14,7 @@ import sys
 import os
 import copy
 
-from utils import weightsToString
+from utils import weightsToString, getEntriesEffentriesYieldTuple
 
 ######## CLASS ANALYSIS #####################################################
 
@@ -61,31 +61,16 @@ class MISAnalysis:
                 for name, proc in self.cfg.procCfg.items():
 
                     fileName = self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["outputname"] + "_" + split + "Like_proc_" + name + ".root"
-                    file = ROOT.TFile(fileName, "READ")
-                    if file.IsZombie():
-                        print "== Error opening " + fileName + "."
-                        self.log("Error opening " + fileName + ".")
-                        sys.exit(1)
+                    yieldTuple = getEntriesEffentriesYieldTuple(fileName, proc, self.cfg.mvaCfg["lumi"])
 
-                    myTree = file.Get(proc["treename"])
-                    self.entries[split][name] = int(myTree.GetEntries())
-
-                    histName = self.box.name.replace("/","_") + "_" + self.cfg.mvaCfg["name"] + "_" + split + "Like_proc_" + name
-                    myTree.Draw("Entries$>>" + histName, proc["evtweight"], "goff")
-                    gotHist = ROOT.gDirectory.Get(histName)
-                    if gotHist is None:
-                        print "== Couldnt retrieve yield histogram from file " + proc["path"] + "."
-                        self.log("Couldnt retrieve yield histogram from file " + proc["path"] + ".")
+                    if yieldTuple is None:
+                        print "== Couldnt retrieve yield histogram from file " + fileName + "."
+                        self.log("Couldnt retrieve yield histogram from file " + fileName + ".")
                         sys.exit(1)
-                    tempHist = ROOT.TH1F(gotHist)
-                    # This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
-                    tempHist.BufferEmpty()
-                    effEntries = tempHist.Integral()
-                    del tempHist
-                    self.effEntries[split][name] = effEntries
-                    self.yields[split][name] = self.cfg.mvaCfg["lumi"]*proc["xsection"]*effEntries/proc["genevents"]
-                    
-                    file.Close()
+                        
+                    self.entries[split][name] = yieldTuple[0]
+                    self.effEntries[split][name] = yieldTuple[1]
+                    self.yields[split][name] = yieldTuple[2]
 
                     self.log("Process " + name + ": " + str(self.entries[split][name]) + " MC events, " + "{0:.1f}".format(self.yields[split][name]) + " expected events.")
                 
@@ -210,6 +195,11 @@ class MISTree:
         if cfg is not None:
             self.cfg = cfg # PConfig object
             self.firstBox = MISBox(cfg = copy.deepcopy(self.cfg)) # MISBox object
+            for name, proc in cfg.procCfg.items():
+                yieldTuple = getEntriesEffentriesYieldTuple(proc["path"], proc, cfg.mvaCfg["lumi"])
+                self.firstBox.entries[name] = yieldTuple[0]
+                self.firstBox.effEntries[name] = yieldTuple[1]
+                self.firstBox.yields[name] = yieldTuple[2]
             self._log = ""
         elif fileName != "":
             with open(fileName, "rb") as outFile:

@@ -1,71 +1,138 @@
 # List of input datasets
 datasets:
-#    TT:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/TTFullLept_Summer12_final_skimed_llbbX_withWeights.root"]
-#        # Signal codes:
-#        # -1 ... Can be used as a signal to train a MVA
-#        # -2 ... Can be used as a background to train a MVA
-#        # -3 ... Will not be used for MVA training, but will be evaluated and passed along
-#        # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
-#        # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
-#        # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
-#        signal: -1
-#        # Any Root color, with composition (eg. kRed+1):
-#        color: kRed
-#        xsection: 27.31 # in pb
-#        genevents: 12011428
-#        # Name of the TTree containing the events
-#        treename: rds_zbb
-#        # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
-#        weightname: MinusLogW_TT
-#        # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+    TT:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/TTFullLept_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        # Signal codes:
+        # -1 ... Can be used as a signal or background to train a MVA
+        # -2 ... For data, will not participate in the tree decision but will be evaluated and used for kolmogorov tests (as soon as this part will be developped) 
+        # -3 ... Will not be used for MVA training, but will be evaluated and passed along  
+        # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
+        # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
+        # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
+        signal: -1
+        # Any Root color, with composition (eg. kRed+1):
+        color: 400-7
+        xsection: 27.31 # in pb
+        genevents: 12011428
+        # Name of the TTree containing the events
+        treename: rds_zbb
+        # Weight under the corresponding hypothesis. If left blank, "otherinputvar" is used as training variables.
+        weightname: [MinusLogW_TT]
+        # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.006
     DY:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_with_MllWeight.root"]
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_V0.root"]
         signal: -1
         color: kMagenta
         xsection: 3503.71
         genevents: 46515036
         treename: rds_zbb
         weightname: [MinusLogW_gg_Zbb]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*MllWeight*rc_stage_6_idx
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+#    DYbb_xx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+#        signal: -1
+#        color: 632-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*bkgFit_SF
+#    DYbb:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+#        signal: -1
+#        color: 416-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.148
+#    DYbx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbx_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+#        signal: -1
+#        color: 416-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.348
+#    DYxx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zxx_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+#        signal: -1
+#        color: 600-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
     ZZ:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights.root"]
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        signal: -1
+        color: 616-7
+        xsection: 8.2
+        genevents: 9799908
+        treename: rds_zbb
+        weightname: [MinusLogW_ZZ_cor0]
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+    WW:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WW_Summer12_final_skimed_llbbX_withWeights_V0.root"]
         signal: -1
         color: kBlue
         xsection: 8.2
         genevents: 9799908
         treename: rds_zbb
-        weightname: [MinusLogW_ZZ_cor0]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+        weightname: [MinusLogW_WWbb]
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+    WZ:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WZ_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        signal: -3
+        color: kBlue
+        xsection: 33.6
+        genevents: 10000283
+        treename: rds_zbb
+        weightname: []
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+
     ZH:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights.root"]
-        signal: -1
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        signal: -3
         color: kBlack
-        xsection: 0.0249
+        #reel value 0.0249
+        xsection: 0.0249      
         genevents: 999462
         treename: rds_zbb
         weightname: [MinusLogW_ZH_cor0]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+    Data:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        signal: -4
+        color: kWhite
+        xsection: 1      
+        genevents: 1
+        treename: rds_zbb
+        weightname: []
+        evtweight: "1"  
 
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: firsttry
-    outputdir: results/firstTry_mlp
+    name: dummy   #keepBigYield
+    outputdir:  dummy  # results/zh_LogDiff_with60weight
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Mode: operators or MIS
     mode: MIS
     # Weights common to all the processes, which will be passed to TMVA during training
-    commonweights: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*rc_stage_6_idx
+    commonweights: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
     # Apply a skimming on the input rootfiles before to start the whole chain
     applySkimming: true
-    skimmingFormula: rc_stage_6_idx && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 && MinusLogW_ZH_cor0<60 && MinusLogW_ZH_cor0>0 && MinusLogW_TT<60 && MinusLogW_gg_Zbb<60 && MinusLogW_ZZ_cor0<60
+    skimmingFormula: (rc_stage_6_idx || rc_stage_16_idx) && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 &&  MinusLogW_ZH_cor0>0 && jetmetMETsignificance < 10 && IncLepslep1pt > 20 && IncLepslep2pt > 20 &&  eventSelectiondilepM_inc > 60 &&  eventSelectiondilepM_inc < 120  && jetmetbjet1pt > 30 && jetmetbjet2pt > 30 
+    #&& MinusLogW_ZH_cor0<60 && MinusLogW_TT<60 && MinusLogW_gg_Zbb<60 && MinusLogW_ZZ_cor0<60 && MinusLogW_WWbb < 60
     # Limit total number of tmva run in parallel:
     maxTMVA: 8
-    # MLP, TMLP or BDT (TMLP buggy, don't use it)
-    mvamethod: MLP
+    # MLP, BDT or Singleton
+    # "Singleton" means no MVA training, only cutting on a single variable
+    mvamethod: Singleton
     # Used only if MLP or TMLP.
     topology: "3,3"
     # Used by both MLP and BDT. Caution: too many decision trees and too few input variables will cause problems
@@ -74,14 +141,20 @@ analysis:
     trainentries: 500
     # Will split events so as to keep (approximately... to improve precision, raise histbins) this fraction of the signal:
     workingpoint: 0.5
-    # Consider analysis valid if background fraction < this value (set to 0 if no check needed):
-    maxbkgeff: 0.2
+    # Do we choose the analysis based on Yield or discrimination :  "DiscriBased" or "YieldsBased" 
+    analysisChoiceMode: "YieldsBased"  
+    # Consider analysis valid if the purity significance is imporved byt at least puritySigImprovementCriteria units
+    puritySigImprovementCriteria: 1
     # pb-1
     lumi: 19700
     # Bins in the histos used to draw the ROC curve and find cut value
-    histbins: 200
+    histbins: 400
     # Plotbins better be an exact divider of histbins (to be used in the "fancy plot")
     plotbins: 40
+    # Low and high edge for all histograms used (will not affect the cut value!)
+    # They are set by default to 0 and 1 if MLP or BDT is used
+    histLoX: 0
+    histHiX: 1
     # To be used for the template fit (better be an exact divider of histbins)
     fitbins: 20
     # Min. number of expected events in a bin of any MVA template
@@ -92,7 +165,7 @@ analysis:
     removefrompool: false
     # Stop branching when at least one sample has less MC events than this
     # MUST BE AT LEAST TWICE AS LARGE AS TRAINENTRIES
-    minmcevents: 1000
+    minmcevents: 100
     # If not enough MC events to train a new NN, still keep the previous results if there
     # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
     minkeepevents: 500

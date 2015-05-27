@@ -1,5 +1,30 @@
 ##### Code for a model-independent analysis ####
 
+How to install:
+ * Fork this repo and/or clone it: 
+```
+$ git clone https://github.com/(username)/ttbar_effth_delphes
+```
+ 
+ * Setup environment (works on both ingrid-ui1 and lxplus):
+```
+$ cd ttbar_effth_delphes/analyzer/
+$ source init.sh
+```
+
+ * Build yaml-cpp: 
+```
+$ cd external 
+$ source build_external.sh
+$ cd ..
+```
+
+ * Build tmva:
+```
+$ make tvma -j8 
+```
+
+
 The code consists of:
 
 1) plots: 
@@ -13,7 +38,6 @@ A collection of patches to
 3) analyzer:
  * tmva: A C++ program which reads a config file (see examples/tmva_standalone_example.yml), uses ROOT::TMVA to separate a signal from brackgrounds, and evaluates the resulting NN or BDT on all the processes defined, to separate them into signal-like or background-like samples. Usage: 
 ```
-$ make tmva
 $ mkdir outdir_specified_in_config_file
 $ ./tmva config_file.yml
 ```

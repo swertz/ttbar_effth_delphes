@@ -35,7 +35,7 @@ def defineNewCfgs(box, locks):
         allowedProcNames = [name for name in box.cfg.procCfg.keys() if name != proc1Name and box.cfg.procCfg[name]["signal"] != -3 and box.entries[name] > box.cfg.mvaCfg["minmcevents"]  ]
         for proc2Name in allowedProcNames :
             proc2Yield = box.yields[proc2Name]
-            if proc1Yield >  proc2Yield :          # the second one will always be the one with the smallest yield (the bkg), avoid also to have DY_vs_TT and TT_vs_DY to be try 
+            if proc1Yield >  proc2Yield and not ("DY" in proc1Name and "DY" in proc2Name) :          # the second one will always be the one with the smallest yield (the bkg), avoid also to have DY_vs_TT and TT_vs_DY to be try 
                 thisCfg = copy.deepcopy(box.cfg)
                 proc2Dict = box.cfg.procCfg[proc2Name]
                 inputVar = []

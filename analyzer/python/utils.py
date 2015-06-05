@@ -263,9 +263,6 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     ## This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
     #tempHist.BufferEmpty()
     #effEntries = tempHist.Integral()
-    print procDict
-    print myChain.GetEntries()
-    print effEntries
     entriesEffEntriesYield.append(effEntries)
     entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
     #del tempHist

@@ -396,3 +396,51 @@ class MISTree:
 
     def log(self, line = ""):
         self._log += line + "\n"
+
+    def drawTreeStructure(self, node = None):
+        start = False
+        if node is None:
+            start = True
+            node = self.firstBox
+            self._graphviz_header = 'digraph tree {\n'
+            self._graphviz_header += '\tgraph [fontname = "helvetica"];'
+            self._graphviz_header += '\tedge [fontname = "helvetica"];'
+            self._graphviz_header += '\tnode [fontname = "helvetica", style=filled];'
+            self._graphviz_content = ''
+
+        if start:
+            color = '#ECE5CE'
+        elif node.type == "Sig":
+            color = '#C5E0DC'
+        else:
+            color = '#E08E79'
+
+        if node.isEnd:
+            self._graphviz_header += '\t"%s" [color="%s", fontcolor="#000000", label="End node"];\n' % (node.name, color)
+            return
+        
+        for child in node.daughters:
+            label = child.name.split('/')[-1].replace('_', ' ').replace('SigLike', '').replace('BkgLike', '')
+            self._graphviz_content += '\t"%s" -> "%s";\n' % (node.name, child.name)
+
+        self._graphviz_header += '\t"%s" [color="%s", fontcolor="#000000", label="%s"];\n' % (node.name, color, label)
+
+        for child in node.daughters:
+            self.drawTreeStructure(child)
+
+        if start:
+            fileName = self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "_tree.dot"
+
+            print "== Saving tree structure to " + fileName + "."
+            print "== Run 'dot -Tpdf %s -o %s' to produce a PDF file of the tree structure" % (fileName, fileName.replace('.dot', '.pdf'))
+            self.log("Saving tree structure to " + fileName + ".")
+            
+            with open(fileName, "wb") as outFile:
+                outFile.write(self._graphviz_header)
+                outFile.write('\n')
+                outFile.write(self._graphviz_content)
+                outFile.write('}')
+
+            del self._graphviz_header
+            del self._graphviz_content
+

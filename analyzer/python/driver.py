@@ -254,6 +254,7 @@ def driverMain(cfgFile):
     myTree.write()
     myTree.plotResults()
     myTree.save()
+    myTree.drawTreeStructure()
     
     print "============================================="
 

@@ -50,7 +50,7 @@ class tryMisChief(Thread):
         if len(self.box.MVA) == 0:
             self.box.log("Something went wrong in defining the tmva's.")
             with self.locks["stdout"]:
-                print "== Level {0}, box {1}: Something went wrong when defining the tmva's.".fomat(self.box.level, self.box.name)
+                print "== Level {0}, box {1}: Something went wrong when defining the tmva's.".format(self.box.level, self.box.name)
         
         # Define threads with the new configurations
         threads = []

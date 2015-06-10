@@ -24,8 +24,8 @@ import warnings
 # ROOT import
 
 import ROOT
-ROOT.gROOT.SetBatch(ROOT.kTRUE) # Tell ROOT to shut the hell up
 ROOT.PyConfig.IgnoreCommandLineOptions = True # Necessary to avoid clash between ROOT's and this program's command-line options
+ROOT.gROOT.SetBatch(ROOT.kTRUE) # Tell ROOT to shut the hell up
 
 # Project imports
 

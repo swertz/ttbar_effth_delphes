@@ -64,8 +64,6 @@ analysis:
     # Use these variables for training, in addition to the MEM-weights (if given)
     # Each variable can be a TFormula of leaves present in the input files
     otherinputvars: ["var1","-log(var2)"]
-    # Mode: operators or MIS
-    mode: operators
     # Weights common to all the processes, which will be passed to TMVA during training (any TFormula)
     commonweights: GenWeight
     # Apply a skimming on the input rootfiles before to start the whole chain

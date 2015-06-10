@@ -8,10 +8,8 @@
 
 #### Preamble
 
-argConf = 1
-argExec = 2
+# System imports
 
-from ROOT import gROOT, kTRUE, TChain, TFile, TTreeFormula
 import sys
 import os
 from threading import Thread, RLock, Semaphore
@@ -19,15 +17,59 @@ import time
 import copy
 from subprocess import call
 import yaml
+import argparse
+import importlib
+import warnings
+
+# ROOT import
+
+import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True # Necessary to avoid clash between ROOT's and this program's command-line options
+ROOT.gROOT.SetBatch(ROOT.kTRUE) # Tell ROOT to shut the hell up
+
+# Project imports
 
 from utils import PConfig
 from utils import valueToString
-import treeStrategyOps
-import treeStrategyMIS
 
 from treeStructure import MISTree
 from treeStructure import MISBox
 from treeStructure import MISAnalysis
+
+# This is needed because using TTreeFormula::EvalInstance() produces a Python warning,
+# while everything runs absolutely fine.
+# See https://root.cern.ch/phpBB3/viewtopic.php?f=14&t=14213
+warnings.filterwarnings(action='ignore', category=RuntimeWarning, message='creating converter.*' )
+
+######## ARGUMENTS ##############################################################
+
+usage = """%(prog)s -c config -t tmva -s strategyModule"""
+description = """Build tree of boxes separating processes from each other."""
+
+myParser = argparse.ArgumentParser(usage=usage, description=description, add_help=True)
+myParser.add_argument("-c", "--config",
+        required = True,
+        help = "Driver configuration file in YML format."
+        )
+myParser.add_argument("-t", "--tmva",
+        required = True,
+        help = "Relative path to tmva executable."
+        )
+myParser.add_argument("-s", "--strategy",
+        required = True,
+        help = "Name of the trategy module."
+        )
+myArgs = myParser.parse_args()
+
+cfgFile = myArgs.config
+tmvaExec = myArgs.tmva
+strategyPath = myArgs.strategy
+
+if not os.path.isfile(cfgFile):
+    raise RunTimeError("Invalid config file.")
+if not os.path.isfile(tmvaExec):
+    raise RunTimeError("Invalid tmva executable.")
+strategyModule = importlib.import_module(strategyPath)
 
 ######## CLASS TRYMISCHIEF #####################################################
 
@@ -45,7 +87,7 @@ class tryMisChief(Thread):
             os.makedirs(self.box.cfg.mvaCfg["outputdir"])
 
         # Define new configurations based on the one passed to this "try":
-        defineNewCfgs(self.box, self.locks)
+        strategyModule.defineNewCfgs(self.box, self.locks)
 
         if len(self.box.MVA) == 0:
             self.box.log("Something went wrong in defining the tmva's.")
@@ -80,7 +122,7 @@ class tryMisChief(Thread):
             return 0
 
         # Decide what to do next and define next boxes. Boxes which are not "isEnd" will define new tries.
-        analyseResults(self.box, self.locks)
+        strategyModule.analyseResults(self.box, self.locks)
         nextBoxes = [ box for box in self.box.daughters if not box.isEnd ]
 
         # Launch and define next threads, if any
@@ -100,35 +142,6 @@ class tryMisChief(Thread):
                 thread.join()
 
         self.box.log("Try finished successfully.")
-
-######## MODULAR TREE ############################################################
-# Define new configuration objects based on chosen tree-building strategy 
-
-def defineNewCfgs(box, locks):
-
-    if box.cfg.mvaCfg["mode"] == "operators":
-        return treeStrategyOps.defineNewCfgs(box, locks)
-
-    elif box.cfg.mvaCfg["mode"] == "MIS":
-        return treeStrategyMIS.defineNewCfgs(box, locks)
-
-    else:
-        print "== Tree building strategy not properly defined."
-        sys.exit(1)
-
-# Decide what to based on the results of the tmvas:
-
-def analyseResults(box, locks):
-
-    if box.cfg.mvaCfg["mode"] == "operators":
-        return treeStrategyOps.analyseResults(box, locks)
-
-    elif box.cfg.mvaCfg["mode"] == "MIS":
-        return treeStrategyMIS.analyseResults(box, locks)
-
-    else:
-        print "== Tree building strategy not properly defined."
-        sys.exit(1)
 
 ######## CLASS LAUNCHMISCHIEF #####################################################
 # Launch a MVA based on a configuration passed by tryMisChief
@@ -155,7 +168,7 @@ class launchMisChief(Thread):
             yaml.dump(mvaConfig, configFile)
 
         # launch the program on this config file
-        commandString = sys.argv[argExec] + " " + configFileName
+        commandString = tmvaExec + " " + configFileName
         commandString += " > " + self.MVA.cfg.mvaCfg["outputdir"] + "/" + self.MVA.cfg.mvaCfg["name"] + ".log 2>&1"
 
         # it would be annoying if, say, outputdir was "&& rm -rf *"
@@ -178,7 +191,9 @@ class launchMisChief(Thread):
         
         self.locks["semaph"].release()
 
+######## APPLY SKIMMING #####################################################
 # Apply the skimming of the input rootFiles before to launch the whole process. Redefines also the cfg with the skimmedRootFiles as input files
+
 def applySkimming(config):
 
     stringFormula = config.mvaCfg["skimmingFormula"] 
@@ -191,18 +206,17 @@ def applySkimming(config):
         skimFileName = skimmedRootFilesDir + name + "_skimmed_" + str(hash(stringFormula)) + ".root" 
         if not os.path.isfile(skimFileName):
 
-            inChain = TChain(process["treename"])
+            inChain = ROOT.TChain(process["treename"])
             for rootFile in process["path"]:
                 inChain.Add(rootFile)
             inEntries = inChain.GetEntries()
 
             print "== Start skimming "+ name + " having ", inEntries, " entries..."
             formulaName = stringFormula.replace(' ', '_')
-            formula = TTreeFormula(formulaName, stringFormula, inChain)
-            formula.GetNdata()
+            formula = ROOT.TTreeFormula(formulaName, stringFormula, inChain)
             inChain.SetNotify(formula)
             
-            skimFile = TFile(skimFileName, "recreate")
+            skimFile = ROOT.TFile(skimFileName, "recreate")
             skimChain = inChain.CloneTree(0)
             
             for entry in xrange(inEntries):
@@ -222,7 +236,7 @@ def driverMain(cfgFile):
     print "============================================="
     print "================= MISchief =================="
     print "============================================="
-    
+
     print "== Reading configuration file {0}".format(cfgFile)
 
     myConfig = PConfig(cfgFile)
@@ -242,9 +256,6 @@ def driverMain(cfgFile):
     # Define main thread object
     mainThread = tryMisChief(myTree.firstBox, locks)
     
-    # Tell ROOT to shut the hell up
-    gROOT.SetBatch(kTRUE);
-    
     print "== Starting main thread."
     mainThread.start()
     mainThread.join()
@@ -259,4 +270,4 @@ def driverMain(cfgFile):
     print "============================================="
 
 if __name__ == "__main__":
-    driverMain(sys.argv[argConf])
+    driverMain(cfgFile)

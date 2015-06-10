@@ -79,9 +79,9 @@ def templateFitterMain(templateCfgFileName):
 def templateFit(templateCfg):
     
     inputVar = templateCfg.mvaCfg["inputvar"]
-    nBins = int(templateCfg.mvaCfg["nbins"])
-    varMin = float(templateCfg.mvaCfg["varmin"])
-    varMax = float(templateCfg.mvaCfg["varmax"])
+    nBins = templateCfg.mvaCfg["nbins"]
+    varMin = templateCfg.mvaCfg["varmin"]
+    varMax = templateCfg.mvaCfg["varmax"]
     dataHist = templateCfg.mvaCfg["datahisto"]
 
     # Configure the fit
@@ -92,29 +92,31 @@ def templateFit(templateCfg):
     procPDFs = {}
     sigYields = {}
     
-    for proc in templateCfg.procCfg:
+    for name,proc in templateCfg.procCfg.items():
 
         # For each signal, configure a variable and a PDF from the corresponding
         # histogram.
     
         expect = float( proc["histo"].Integral() )
-        if proc["signal"] == "1":
-            valRange = float( proc["range"] )
-            procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
-                "Variable for process " + proc["name"], \
-                0., -valRange*abs(expect), valRange*abs(expect))
-            sigYields[ proc["name"] ] = expect
+        if proc["signal"] == 1:
+            valRange = proc["range"]
+            procVars[name] = RooRealVar(name + "_var", \
+                "Variable for process " + name, \
+                float(valRange[1]+valRange[0])*abs(expect)/2., \
+                float(valRange[0])*abs(expect), \
+                float(valRange[1])*abs(expect))
+            sigYields[name] = expect
         else:
-            procVars[ proc["name"] ] = RooRealVar(proc["name"] + "_var", \
-                "Variable for process " + proc["name"], expect) 
+            procVars[name] = RooRealVar(name + "_var", \
+                "Variable for process " +name, expect) 
             
-        procRHists[ proc["name"] ] = RooDataHist(proc["name"] + "_hist", \
-            "Histogram for process " + proc["name"], \
+        procRHists[name] = RooDataHist(name + "_hist", \
+            "Histogram for process " + name, \
             RooArgList(histVar), proc["histo"])
         
-        procPDFs[ proc["name"] ] = RooHistPdf(proc["name"] + "_histPdf", \
-            "Histogram PDF for process " + proc["name"], \
-            RooArgSet(histVar), procRHists[ proc["name"] ])
+        procPDFs[name] = RooHistPdf(name + "_histPdf", \
+            "Histogram PDF for process " + name, \
+            RooArgSet(histVar), procRHists[name])
 
     dataRHist = RooDataHist("data_hist","Histogram for data", \
         RooArgList(histVar), dataHist)
@@ -137,7 +139,7 @@ def templateFit(templateCfg):
 
     fitResult = model.fitTo(dataRHist, \
         #RooFit.SumW2Error(kTRUE), \
-        RooFit.NumCPU(int(templateCfg.mvaCfg["numcpu"]), 1), \
+        RooFit.NumCPU(templateCfg.mvaCfg["numcpu"], 1), \
         RooFit.Save(kTRUE), \
         RooFit.PrintLevel(verbosity) \
         )
@@ -173,9 +175,9 @@ def templateFit(templateCfg):
     for i in range(dataHist.GetNbinsX()):
         temp = 0.
         
-        for proc in templateCfg.procCfg:
-            if proc["signal"] == "1":
-                temp += fittedVars[ proc["name"] ] * \
+        for name,proc in templateCfg.procCfg.items():
+            if proc["signal"] == 1:
+                temp += fittedVars[name] * \
                         proc["histo"].GetBinContent(i+1)
             else:
                 temp += proc["histo"].GetBinContent(i+1)
@@ -204,7 +206,7 @@ def templateFit(templateCfg):
 
 ######## WRITE PLOTS FOR FIT RESULTS ####################################################
 
-def    plotTemplateFitResults(cfg, fittedVars, dir=None):
+def plotTemplateFitResults(cfg, fittedVars, dir=None):
     # Plot the fit results and write them
     # The built-in RooFit functions can't be used since some of the "PDFs" may 
     # have negative values (RooFit can't stomach it).
@@ -238,7 +240,7 @@ def    plotTemplateFitResults(cfg, fittedVars, dir=None):
     for proc in cfg.procCfg:
         temp = proc["histo"].Clone("temp_hist")
         
-        if proc["signal"] == "1":
+        if proc["signal"] == 1:
             temp.Scale(fittedVars[ proc["name"] ])
             legend.AddEntry(temp, "Fitted " + proc["name"], "l")
             temp.SetLineStyle(2)
@@ -281,7 +283,7 @@ def    plotTemplateFitResults(cfg, fittedVars, dir=None):
     
     legend.Draw("same")
     
-    if dir is t None:
+    if dir is not None:
         dir.cd()
     cnv.Write()
 
@@ -289,10 +291,10 @@ def    plotTemplateFitResults(cfg, fittedVars, dir=None):
 
 def fillHistos(cfg, dataHist = False):
     inputVar = cfg.mvaCfg["inputvar"]
-    nBins = int(cfg.mvaCfg["nbins"])
-    varMin = float(cfg.mvaCfg["varmin"])
-    varMax = float(cfg.mvaCfg["varmax"])
-    lumi = float(cfg.mvaCfg["lumi"])
+    nBins = cfg.mvaCfg["nbins"]
+    varMin = cfg.mvaCfg["varmin"]
+    varMax = cfg.mvaCfg["varmax"]
+    lumi = cfg.mvaCfg["lumi"]
 
     for proc in cfg.procCfg:
         
@@ -340,7 +342,7 @@ def getHistos(cfg, dataHist = False):
     if "histfile" in cfg.mvaCfg.keys():
         file = TFile(cfg.mvaCfg["histfile"], "READ")
 
-    for proc in cfg.procCfg:
+    for name,proc in cfg.procCfg.items():
         if "histfile" not in cfg.mvaCfg.keys():
             file = TFile(proc["histfile"], "READ")
 
@@ -354,9 +356,9 @@ def getHistos(cfg, dataHist = False):
     if file.IsOpen():
         file.Close()
 
-    cfg.mvaCfg["nbins"] = str(cfg.procCfg[0]["histo"].GetNbinsX())
-    cfg.mvaCfg["varmin"] = str(cfg.procCfg[0]["histo"].GetXaxis().GetXmin())
-    cfg.mvaCfg["varmax"] = str(cfg.procCfg[0]["histo"].GetXaxis().GetXmax())
+    cfg.mvaCfg["nbins"] = cfg.procCfg.values()[0]["histo"].GetNbinsX()
+    cfg.mvaCfg["varmin"] = cfg.procCfg.values()[0]["histo"].GetXaxis().GetXmin()
+    cfg.mvaCfg["varmax"] = cfg.procCfg.values()[0]["histo"].GetXaxis().GetXmax()
 
     if dataHist:
         file = TFile(cfg.mvaCfg["datafile"])

@@ -200,7 +200,7 @@ def applySkimming(config):
     skimmedRootFilesDir = config.mvaCfg["outputdir"] + "/skimmedRootFiles/"
     if not os.path.isdir(skimmedRootFilesDir): os.system("mkdir " + skimmedRootFilesDir)
 
-    print "== Skimming the input rootFiles (if not already done) with the following formula : \n {0}".format(stringFormula)
+    print "== Skimming the input rootFiles with the following formula : \n {0}".format(stringFormula)
     for name,process in config.procCfg.items():
 
         skimFileName = skimmedRootFilesDir + name + "_skimmed_" + str(hash(stringFormula)) + ".root" 
@@ -211,7 +211,7 @@ def applySkimming(config):
                 inChain.Add(rootFile)
             inEntries = inChain.GetEntries()
 
-            print "== Start skimming "+ name + " having ", inEntries, " entries..."
+            print "Start skimming "+ name + " having ", inEntries, " entries..."
             formulaName = stringFormula.replace(' ', '_')
             formula = ROOT.TTreeFormula(formulaName, stringFormula, inChain)
             inChain.SetNotify(formula)
@@ -226,8 +226,12 @@ def applySkimming(config):
 
             skimChain.Write()
             skimmedEntries = skimChain.GetEntries()
-            print "== Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
+            print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
             skimFile.Close()
+            inChain.Reset()
+            del inChain
+        else :
+            print name + " has already been skimmed with this formula."
         process["path"] = [skimFileName]
 
 ######## MAIN #############################################################

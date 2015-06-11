@@ -42,9 +42,9 @@ $ mkdir outdir_specified_in_config_file
 $ ./tmva config_file.yml
 ```
 
- * python/driver.py: Builds a tree of "boxes" separating different processes according to a user-defined strategy. See examples/mischief_example.yml for more details. Usage: 
+ * python/driver.py: Builds a tree of "boxes" separating different processes according to a user-defined strategy. See examples/mischief_example.yml for more details. The strategy is defined by two functions implemented in a module passed to the driver (see python/treeStratgyMIS.py or python/treeStrategyOps.py for two examples). Usage: 
 ```
-$ python/driver.py config_file.yml relative_path_to_tmva_executable
+$ python/driver.py -c config_file.yml -t relative_path_to_tmva_executable -s strategyModule
 ```
 
  * python/replay.py: Evaluates a previously built tree of boxes on an additional process, using a config file (see examples/replay_example.yml). Usage:

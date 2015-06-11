@@ -266,6 +266,7 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     entriesEffEntriesYield.append(effEntries)
     entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
     #del tempHist
+    myChain.Reset()
     del myChain
     return entriesEffEntriesYield
  

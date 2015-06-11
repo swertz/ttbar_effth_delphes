@@ -28,7 +28,7 @@ datasets:
         genevents: 46515036
         treename: rds_zbb
         weightname: [MinusLogW_gg_Zbb]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
 #    DYbb_xx:
 #        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root"]
 #        signal: -1
@@ -116,8 +116,8 @@ datasets:
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: dummy   #keepBigYield
-    outputdir:  dummy  # results/zh_LogDiff_with60weight
+    name: keepBigYield
+    outputdir: results/zh_LogDiff_with60weight_keepBigYield
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Weights common to all the processes, which will be passed to TMVA during training

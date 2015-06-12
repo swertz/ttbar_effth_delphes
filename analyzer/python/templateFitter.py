@@ -96,7 +96,7 @@ def templateFit(templateCfg):
 
         # For each signal, configure a variable and a PDF from the corresponding
         # histogram.
-    
+   
         expect = float( proc["histo"].Integral() )
         if proc["signal"] == 1:
             valRange = proc["range"]
@@ -137,11 +137,12 @@ def templateFit(templateCfg):
 
     # Do the fit
 
-    fitResult = model.fitTo(dataRHist, \
-        #RooFit.SumW2Error(kTRUE), \
-        RooFit.NumCPU(templateCfg.mvaCfg["numcpu"], 1), \
-        RooFit.Save(kTRUE), \
-        RooFit.PrintLevel(verbosity) \
+    fitResult = model.fitTo(dataRHist,
+        #RooFit.SumW2Error(kTRUE),
+        RooFit.Extended(kTRUE),
+        RooFit.NumCPU(templateCfg.mvaCfg["numcpu"], 1),
+        RooFit.Save(kTRUE),
+        RooFit.PrintLevel(verbosity)
         )
     fitResult.SetName("fitResult")
 

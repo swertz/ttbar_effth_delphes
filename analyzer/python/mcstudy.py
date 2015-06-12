@@ -50,12 +50,12 @@ def mcStudyMain(mcStudyFile):
         corrList = {}
 
         weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
-        weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
+        weightedNormHist.SetCanExtend(ROOT.TH1.kXaxis) # in ROOT6, this replaces TH1::SetBit(TH1::kCanRebin)
         weightedNormHist.SetDirectory(subDir)
         histDict["weightedNorm"] = weightedNormHist
         
         resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 10)
-        resHist.SetBit(ROOT.TH1.kCanRebin)
+        resHist.SetCanExtend(ROOT.TH1.kXaxis)
         resHist.SetDirectory(subDir)
         histDict["chisq"] = resHist
 
@@ -64,14 +64,14 @@ def mcStudyMain(mcStudyFile):
             
             if proc["signal"] == 1:
                 
-                myHist = ROOT.TH1D(name+"_hist", name+"/\Lambda^2 (TeV^{-2})", 100, -2, 2)
-                myHist.SetBit(ROOT.TH1.kCanRebin)
+                myHist = ROOT.TH1D(name+"_hist", name+"/\Lambda^2 (TeV^{-2})", 100, -0.1, 0.1)
+                myHist.SetCanExtend(ROOT.TH1.kXaxis)
                 myHist.SetDirectory(subDir)
                 histDict[name] = myHist
 
                 myVarHist = ROOT.TH1D(name+"_StdDev_hist", \
                     name+" Std. Dev. (TeV^{-2})", 100, 0., 1)
-                myVarHist.SetBit(ROOT.TH1.kCanRebin)
+                myVarHist.SetCanExtend(ROOT.TH1.kXaxis)
                 myVarHist.SetDirectory(subDir)
                 histDict[name+"_StdDev"] = myVarHist
                 
@@ -100,7 +100,7 @@ def mcStudyMain(mcStudyFile):
         
         elif myMCStudy.cfg["mode"] == "template":
             myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
-            myHist.SetBit(ROOT.TH1.kCanRebin)
+            myHist.SetCanExtend(ROOT.TH1.kXaxis)
             myHist.SetDirectory(subDir)
             histDict["minNLL"] = myHist
             
@@ -115,7 +115,7 @@ def mcStudyMain(mcStudyFile):
             myMCResult.iniFromFile(resultFile)
             
             myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
-            myHist.SetBit(ROOT.TH1.kCanRebin)
+            myHist.SetCanExtend(ROOT.TH1.kXaxis)
             myHist.SetDirectory(subDir)
             histDict["minNLL"] = myHist
             

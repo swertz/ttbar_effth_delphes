@@ -253,9 +253,10 @@ class MISTree:
         processes = self.cfg.procCfg.items()
         processes.sort(key = lambda item: item[0], reverse = True)
         i = 0
+        indexToIgnore = []
 
         for name, proc in processes:
-            
+    
             treeYields[name] = ROOT.TH1D(name + "_yields", "Branch yields for " + name, nBr, 0, nBr)
             treeYields[name].Sumw2()
             
@@ -305,7 +306,10 @@ class MISTree:
     
             treeYields[name].SetEntries(procTotEntries)
             treeYields[name].Write()
-            lst.Add(treeYields[name])
+            if proc["signal"] == -5 :
+                indexToIgnore.append(i+1)
+            else : 
+                lst.Add(treeYields[name])
             #treeMVAs[ proc["name"] ].Write()
             i += 1
     
@@ -314,7 +318,10 @@ class MISTree:
         branchComps.SetTitle("Branch compositions (%)")
         for j in range(1, nBr+1):
             for i in range(1, nProc+1):
-                branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
+                if i in indexToIgnore :
+                    branchComps.SetBinContent(j, i, 0)
+                else : 
+                    branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
     
         file.cd()
    

@@ -33,8 +33,8 @@ PProc::PProc(PConfig* config, unsigned int num){
     myChain->Add(i.c_str()); 
 
   myEntries = (double) myChain->GetEntries();
-  myEffEntries = GetEffEntries("");
-  myEffEntriesAbs = GetEffEntriesAbs("");
+  myEffEntries = GetEffEntries("1");
+  myEffEntriesAbs = GetEffEntriesAbs("1");
 
   #ifdef P_LOG
     cout << "PProc " << config->GetName(num) << " has effective entries = " << myEffEntries << ", effective absolute entries = " << myEffEntriesAbs << ".\n";
@@ -116,8 +116,8 @@ double PProc::GetEffEntries(const std::string& condition){
     Open();
 
   // If the TChain is empty, the histogram will not be empty but ill-defined
-  if(myChain->GetEntries()){
-    if(condition == "")
+  if(myChain->GetEntries() > 0){
+    if(condition == "1")
       myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
     else
       myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
@@ -152,8 +152,8 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
     Open();
 
   // If the TChain is empty, the histogram will not be empty but ill-defined
-  if(myChain->GetEntries()){
-    if(condition == "")
+  if(myChain->GetEntries() > 0){
+    if(condition == "1")
       myChain->Draw("Entries$>>tempHist", ("abs("+myEvtWeightString+")").c_str(), "goff");
     else
       myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");

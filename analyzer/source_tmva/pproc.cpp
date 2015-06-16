@@ -33,19 +33,8 @@ PProc::PProc(PConfig* config, unsigned int num){
     myChain->Add(i.c_str()); 
 
   myEntries = (double) myChain->GetEntries();
-
-  myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
-  TH1F* tempHist = (TH1F*) gDirectory->Get("tempHist");
-  // This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
-  tempHist->BufferEmpty();
-  myEffEntries = tempHist->Integral();
-  delete tempHist; tempHist = NULL;
-
-  myChain->Draw("Entries$>>tempHist", ("abs(" + myEvtWeightString + ")").c_str(), "goff");
-  tempHist = (TH1F*) gDirectory->Get("tempHist");
-  tempHist->BufferEmpty();
-  myEffEntriesAbs = tempHist->Integral();
-  delete tempHist; tempHist = NULL;
+  myEffEntries = GetEffEntries("1");
+  myEffEntriesAbs = GetEffEntriesAbs("1");
 
   #ifdef P_LOG
     cout << "PProc " << config->GetName(num) << " has effective entries = " << myEffEntries << ", effective absolute entries = " << myEffEntriesAbs << ".\n";
@@ -117,6 +106,8 @@ double PProc::GetEffEntries(void) const{
 double PProc::GetEffEntries(const std::string& condition){
   // Return effective number of entries, based on the condition
   
+  double effEntries = 0.;
+
   if(condition == "")
     return GetEffEntries();
 
@@ -124,11 +115,18 @@ double PProc::GetEffEntries(const std::string& condition){
   if(!wasOpen)
     Open();
 
-  myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
-  TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  tempHist->BufferEmpty();
-  double effEntries = tempHist->Integral();
-  delete tempHist; tempHist = NULL;
+  // If the TChain is empty, the histogram will not be empty but ill-defined
+  if(myChain->GetEntries() > 0){
+    if(condition == "1")
+      myChain->Draw("Entries$>>tempHist", myEvtWeightString.c_str(), "goff");
+    else
+      myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
+    TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
+    // This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
+    tempHist->BufferEmpty();
+    effEntries = tempHist->Integral();
+    delete tempHist; tempHist = NULL;
+  }
 
   if(!wasOpen)
     Close();
@@ -144,6 +142,8 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
   // Return effective number of entries, based on the condition
   // Using the sum of abs(weight)
 
+  double effEntries = 0.;
+
   if(condition == "")
     return GetEffEntriesAbs();
   
@@ -151,11 +151,17 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
   if(!wasOpen)
     Open();
 
-  myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
-  TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-  tempHist->BufferEmpty();
-  double effEntries = tempHist->Integral();
-  delete tempHist; tempHist = NULL;
+  // If the TChain is empty, the histogram will not be empty but ill-defined
+  if(myChain->GetEntries() > 0){
+    if(condition == "1")
+      myChain->Draw("Entries$>>tempHist", ("abs("+myEvtWeightString+")").c_str(), "goff");
+    else
+      myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
+    TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
+    tempHist->BufferEmpty();
+    effEntries = tempHist->Integral();
+    delete tempHist; tempHist = NULL;
+  }
 
   if(!wasOpen)
     Close();

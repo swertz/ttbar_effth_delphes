@@ -51,7 +51,7 @@ datasets:
 
     ZH:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights_V1.root"]
-        signal: -3
+        signal: -1
         color: kWhite
         #reel value 0.0249
         xsection: 0.0249      
@@ -106,10 +106,10 @@ datasets:
 #        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
     Data:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V1.root"]
-        signal: -5
+        signal: -3
         color: kBlack
         xsection: 1      
-        genevents: 1
+        genevents: 19700
         treename: rds_zbb
         weightname: []
         evtweight: "1"  
@@ -169,7 +169,7 @@ analysis:
     # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
     minkeepevents: 500
     # Stop branching when reached level (1=two subsets; 2=four subsets, ...):
-    maxlevel: 100
+    maxlevel: 12
     writeoptions: [plot, hist, ROC]
     outputtasks: [output, result, split]
 

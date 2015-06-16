@@ -7,6 +7,7 @@ datasets:
         # -2 ... Can be used as a background to train a MVA
         # -3 ... Will not be used for MVA training, but will be evaluated and passed along
         # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
+        # -5 ... For data, will not participate in the tree decision nor to the branch composition plot but will be evaluated 
         # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
         # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
         signal: -2

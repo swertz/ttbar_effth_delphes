@@ -238,6 +238,8 @@ class MISTree:
 
         nBr = len(endBoxes)
         nProc = len(self.cfg.procCfg)
+        nDataSample = self.cfg.countProcesses([-5])
+        nProcForBrComp = nProc - nDataSample
         nBins = int(self.cfg.mvaCfg["histbins"])
         nFitBins = int(self.cfg.mvaCfg["fitbins"])
 
@@ -246,6 +248,8 @@ class MISTree:
 
         branchEffs = ROOT.TH2D("branch_effs", "Branch efficiencies (%)", nBr, 0, nBr, nProc, 0, nProc)
         branchYields = ROOT.TH2D("branch_yields", "Branch yields", nBr, 0, nBr, nProc, 0, nProc)
+        branchComps = ROOT.TH2D("branch_comps", "Branch compositions (%)", nBr, 0, nBr, nProcForBrComp, 0, nProcForBrComp)
+        branchYieldsForComp = ROOT.TH2D("branch_yieldsForComp", "Branch yields for comp", nBr, 0, nBr, nProcForBrComp, 0, nProcForBrComp)
         treeYields = {} # Key = process name, entry = histogram of branch yields
         treeMVAs = {} # Key = process name, entry = histogram of juxtaposed MVA outputs
  
@@ -253,7 +257,7 @@ class MISTree:
         processes = self.cfg.procCfg.items()
         processes.sort(key = lambda item: item[0], reverse = True)
         i = 0
-        indexToIgnore = []
+        countForComp = 0
 
         for name, proc in processes:
     
@@ -275,23 +279,24 @@ class MISTree:
             del tempHist
             procTotEntries = procTree.GetEntries()
             procFile.Close()
-            
+
+            branchYields.GetYaxis().SetBinLabel(i+1, name)
+            branchEffs.GetYaxis().SetBinLabel(i+1, name)
+ 
             for j,box in enumerate(endBoxes):
 
                 branchEffEntries = box.effEntries[name]
                 branchYield = box.yields[name]
             
                 branchEffs.SetBinContent(j+1, i+1, 100.*branchEffEntries/procTotEffEntriesAbs)
-                branchEffs.GetYaxis().SetBinLabel(i+1, name)
                 branchEffs.GetXaxis().SetBinLabel(j+1, box.name)
     
                 treeYields[name].SetBinContent(j+1, branchYield)
                 treeYields[name].GetXaxis().SetBinLabel(j+1, box.name)
     
                 branchYields.SetBinContent(j+1, i+1, branchYield)
-                branchYields.GetYaxis().SetBinLabel(i+1, name)
                 branchYields.GetXaxis().SetBinLabel(j+1, box.name)
-    
+
             #for j,branch in enumerate(skimmedTree):
     
             #    branchFile = ROOT.TFile(branch + ".root", "READ")
@@ -306,22 +311,23 @@ class MISTree:
     
             treeYields[name].SetEntries(procTotEntries)
             treeYields[name].Write()
-            if proc["signal"] == -5 :
-                indexToIgnore.append(i+1)
-            else : 
+
+            if proc["signal"] != -5 :
+                branchComps.GetYaxis().SetBinLabel(countForComp+1, name)
+                for j,box in enumerate(endBoxes):
+                    branchYieldsForComp.SetBinContent(j+1, countForComp+1, box.yields[name]) 
+                    branchComps.GetXaxis().SetBinLabel(j+1, box.name)
                 lst.Add(treeYields[name])
+                countForComp += 1
+
             #treeMVAs[ proc["name"] ].Write()
             i += 1
     
         branchTotals.Merge(lst)
-        branchComps = branchYields.Clone("branch_comps")
-        branchComps.SetTitle("Branch compositions (%)")
+        binCount = 0
         for j in range(1, nBr+1):
-            for i in range(1, nProc+1):
-                if i in indexToIgnore :
-                    branchComps.SetBinContent(j, i, 0)
-                else : 
-                    branchComps.SetBinContent(j, i, 100.* branchComps.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
+            for i in range(1, nProcForBrComp+1):
+                    branchComps.SetBinContent(j, i, 100.* branchYieldsForComp.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
     
         file.cd()
    

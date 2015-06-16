@@ -35,10 +35,10 @@ def defineNewCfgs(box, locks):
         if proc1Dict["signal"]==-3 or proc1Dict["signal"] == -5 or box.entries[proc1Name] < box.cfg.mvaCfg["minmcevents"] : 
             continue
         proc1Yield = box.yields[proc1Name]
-        allowedProcNames = [name for name in box.cfg.procCfg.keys() if name != proc1Name and box.cfg.procCfg[name]["signal"] != -3 and box.entries[name] > box.cfg.mvaCfg["minmcevents"]  ]
-        for proc2Name in allowedProcNames :
+        #allowedProcNames = [name for name in box.cfg.procCfg.keys() if name != proc1Name and box.cfg.procCfg[name]["signal"] != -3 and box.entries[name] > box.cfg.mvaCfg["minmcevents"]  ]
+        for proc2Name in box.cfg.procCfg.keys() :
             proc2Yield = box.yields[proc2Name]
-            if proc1Yield >  proc2Yield and not (box.cfg.procCfg[proc2Name]["signal"]==-3 or box.cfg.procCfg[proc2Name]["signal"] == -5) :          # the second one will always be the one with the smallest yield (the bkg), avoid also to have DY_vs_TT and TT_vs_DY 
+            if proc1Yield >  proc2Yield and not (box.cfg.procCfg[proc2Name]["signal"]==-3 or box.cfg.procCfg[proc2Name]["signal"] == -5 or box.entries[proc2Name] < box.cfg.mvaCfg["minmcevents"]) :          # the second one will always be the one with the smallest yield (the bkg), avoid also to have DY_vs_TT and TT_vs_DY 
                 thisCfg = copy.deepcopy(box.cfg)
                 proc2Dict = box.cfg.procCfg[proc2Name]
                 inputVar = []
@@ -81,6 +81,7 @@ def analyseResults(box, locks):
         for mva in succeededMVA :
             dict_yields_mva[str(mva.cfg.mvaCfg["sumYieldsOfSeparatedProc"])] = mva
             mvaConsideredProcYields.append(mva.cfg.mvaCfg["sumYieldsOfSeparatedProc"])
+            box.log("Tried MVA {0}".format(mva.cfg.mvaCfg["name"]))
         mvaConsideredProcYields.sort(reverse = True)
         for yieldsKey in  mvaConsideredProcYields :
             mva = dict_yields_mva[str(yieldsKey)] 
@@ -97,11 +98,12 @@ def analyseResults(box, locks):
                     print mva.cfg.mvaCfg["name"], " was not discriminative enough..."
                     print "Proc 1 - proc 2 entries now : {0} - {1}. Idem after cut : {2} - {3}".format(box.effEntries[mvaCfg["proc1"]], box.effEntries[mvaCfg["proc2"]], mva.effEntries["Sig"][mvaCfg["proc1"]], mva.effEntries["Sig"][mvaCfg["proc2"]])
                     print foreseePuritySig, " ", currentPuritySig, " ", box.cfg.mvaCfg["puritySigImprovementCriteria"] 
-                mva.log("Proc 1 - proc 2 entries now : {0} - {1}. Idem after cut : {2} - {3}".format(box.effEntries[mvaCfg["proc1"]], box.effEntries[mvaCfg["proc2"]], mva.effEntries["Sig"][mvaCfg["proc1"]], mva.effEntries["Sig"][mvaCfg["proc2"]]))
-                mva.log("Was not discriminative enough...")
+                box.log("Proc 1 - proc 2 entries now : {0} - {1}. Idem after cut : {2} - {3}".format(box.effEntries[mvaCfg["proc1"]], box.effEntries[mvaCfg["proc2"]], mva.effEntries["Sig"][mvaCfg["proc1"]], mva.effEntries["Sig"][mvaCfg["proc2"]]))
+                box.log("Was not discriminative enough...")
                 continue
             else : 
                 box.goodMVA = mva
+                box.log("== Level {0}: Found best MVA to be {1}.".format(box.level, box.goodMVA.cfg.mvaCfg["name"]))
                 with locks["stdout"]:
                     print "== Level {0}: Found best MVA to be {1}.".format(box.level, box.goodMVA.cfg.mvaCfg["name"])
                 break

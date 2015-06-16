@@ -59,33 +59,33 @@ datasets:
         treename: rds_zbb
         weightname: [MinusLogW_ZH_cor0]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
-#    DY:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_V1.root"]
-#        signal: -1
-#        color: 600
-#        xsection: 3503.71
-#        genevents: 46515036
-#        treename: rds_zbb
-#        weightname: [MinusLogW_gg_Zbb]
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
-    DYbb_xx:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+    DY:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         signal: -1
         color: 600
         xsection: 3503.71
         genevents: 46515036
         treename: rds_zbb
         weightname: [MinusLogW_gg_Zbb]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348 + ( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
-    DYbx:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
-        signal: -1
-        color: 600-7+3
-        xsection: 3503.71
-        genevents: 46515036
-        treename: rds_zbb
-        weightname: [MinusLogW_bg_Zbj]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.348
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
+#    DYbb_xx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 600
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348 + ( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
+#    DYbx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 600-7+3
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_bg_Zbj]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.348
 #    DYbb:
 #        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root"]
 #        signal: -1
@@ -117,8 +117,8 @@ datasets:
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: DYbbxx_vs_bx_noZh_PurityPM
-    outputdir: results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
+    name: data_zh_LogDiff_with60weight_keepBigYield_withZh   #DYbbxx_vs_bx_noZh_PurityPM
+    outputdir: results/data_zh_LogDiff_with60weight_keepBigYield_withZh_data   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Weights common to all the processes, which will be passed to TMVA during training

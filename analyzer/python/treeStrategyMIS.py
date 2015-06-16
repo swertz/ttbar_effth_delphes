@@ -91,8 +91,8 @@ def analyseResults(box, locks):
             foreseePurity_m = getPurity(mva.effEntries["Sig"][mvaCfg["proc1"]] + sqrt(mva.effEntries["Sig"][mvaCfg["proc1"]]), mva.effEntries["Sig"][mvaCfg["proc2"]] - sqrt(mva.effEntries["Sig"][mvaCfg["proc2"]]))
             currentPuritySig = puritySignifSubLeadProc(box.effEntries[mvaCfg["proc2"]], box.effEntries[mvaCfg["proc1"]])
             foreseePuritySig = puritySignifSubLeadProc(mva.effEntries["Sig"][mvaCfg["proc2"]], mva.effEntries["Sig"][mvaCfg["proc1"]])
-            #if (foreseePuritySig - currentPuritySig) <  box.cfg.mvaCfg["puritySigImprovementCriteria"]:
-            if max(currentPurity_p, currentPurity_m) > min(foreseePurity_p, foreseePurity_m):
+            if (foreseePuritySig - currentPuritySig) <  box.cfg.mvaCfg["puritySigImprovementCriteria"]:
+            #if max(currentPurity_p, currentPurity_m) > min(foreseePurity_p, foreseePurity_m):
                 with locks["stdout"]:
                     print mva.cfg.mvaCfg["name"], " was not discriminative enough..."
                     print "Proc 1 - proc 2 entries now : {0} - {1}. Idem after cut : {2} - {3}".format(box.effEntries[mvaCfg["proc1"]], box.effEntries[mvaCfg["proc2"]], mva.effEntries["Sig"][mvaCfg["proc1"]], mva.effEntries["Sig"][mvaCfg["proc2"]])

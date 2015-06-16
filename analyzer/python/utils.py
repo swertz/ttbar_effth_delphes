@@ -264,7 +264,10 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     #tempHist.BufferEmpty()
     #effEntries = tempHist.Integral()
     entriesEffEntriesYield.append(effEntries)
-    entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
+    if procDict["signal"] != -5 : 
+        entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
+    else :
+        entriesEffEntriesYield.append(effEntries)
     #del tempHist
     myChain.Reset()
     del myChain

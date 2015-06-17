@@ -229,7 +229,6 @@ def applySkimming(config):
             print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
             skimFile.Close()
             inChain.Reset()
-            del inChain
         else :
             print name + " has already been skimmed with this formula."
         process["path"] = [skimFileName]

@@ -245,15 +245,8 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
             myChain.Add(file)
     else :
         myChain.Add(fileName) 
-    entriesEffEntriesYield.append(int(myChain.GetEntries()))
-    effEntries = 0
-    formulaName = str(hash(procDict["evtweight"]))
-    formula = ROOT.TTreeFormula(formulaName, procDict["evtweight"], myChain)
-    formula.GetNdata()
-    myChain.SetNotify(formula)
-    for entry in xrange(entriesEffEntriesYield[0]):
-        myChain.GetEntry(entry)
-        effEntries += formula.EvalInstance()
+    entries = int(myChain.GetEntries())
+    entriesEffEntriesYield.append(entries)
     #histName = str(hash(fileName[0]))
     #myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
     #gotHist = ROOT.gDirectory.Get(histName)
@@ -263,14 +256,20 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     ## This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
     #tempHist.BufferEmpty()
     #effEntries = tempHist.Integral()
-    entriesEffEntriesYield.append(effEntries)
     if procDict["signal"] != -5 : 
+        effEntries = 0
+        formulaName = str(hash(procDict["evtweight"]))
+        formula = ROOT.TTreeFormula(formulaName, procDict["evtweight"], myChain)
+        formula.GetNdata()
+        myChain.SetNotify(formula)
+        for entry in xrange(entries) :
+            myChain.GetEntry(entry)
+            effEntries += formula.EvalInstance()
+        entriesEffEntriesYield.append(effEntries)
         entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
     else :
-        entriesEffEntriesYield.append(effEntries)
-    #del tempHist
+        entriesEffEntriesYield.append(entries)
     myChain.Reset()
-    del myChain
     return entriesEffEntriesYield
  
 

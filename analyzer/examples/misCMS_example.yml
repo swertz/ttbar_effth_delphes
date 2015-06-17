@@ -106,10 +106,10 @@ datasets:
 #        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
     Data:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V1.root"]
-        signal: -3
+        signal: -5
         color: kBlack
         xsection: 1      
-        genevents: 19700
+        genevents: 1
         treename: rds_zbb
         weightname: []
         evtweight: "1"  
@@ -117,8 +117,8 @@ datasets:
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: data_zh_LogDiff_with60weight_keepBigYield_withZh   #DYbbxx_vs_bx_noZh_PurityPM
-    outputdir: results/data_zh_LogDiff_with60weight_keepBigYield_withZh_data   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
+    name: purMinMax_withZh   #DYbbxx_vs_bx_noZh_PurityPM
+    outputdir: results/purMinMax_withZh   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Weights common to all the processes, which will be passed to TMVA during training

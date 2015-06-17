@@ -1,12 +1,13 @@
 # List of input datasets
 datasets:
     TT:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/TTFullLept_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/TTFullLept_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         # Signal codes:
         # -1 ... Can be used as a signal or background to train a MVA
-        # -2 ... For data, will not participate in the tree decision but will be evaluated and used for kolmogorov tests (as soon as this part will be developped) 
+        # -2 ... Can be used as a background to train a MVA
         # -3 ... Will not be used for MVA training, but will be evaluated and passed along  
         # -4 ... Cannot be evaluated (This code will mainly be used to decide whether the branching process has to be stopped. tmva will NOT check by itself whether this code is present.)
+        # -5 ... For data, will not participate in the tree decision nor to the branch composition plot but will be evaluated 
         # 0 ... Will be trained on, considered to be a background (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
         # 1 ... Will be trained on, considered to be THE signal (given here for completeness: this code is used by tmva, and using it here might cause the tree-building strategy function to produce unexpected results).
         signal: -1
@@ -20,53 +21,8 @@ datasets:
         weightname: [MinusLogW_TT]
         # Formula used to get the event weights from branches in the TTree (ex: GenWeight*BTagScale)
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.006
-    DY:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-        signal: -1
-        color: kMagenta
-        xsection: 3503.71
-        genevents: 46515036
-        treename: rds_zbb
-        weightname: [MinusLogW_gg_Zbb]
-        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
-#    DYbb_xx:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-#        signal: -1
-#        color: 632-7
-#        xsection: 3503.71
-#        genevents: 46515036
-#        treename: rds_zbb
-#        weightname: [MinusLogW_gg_Zbb]
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*bkgFit_SF
-#    DYbb:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbb_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-#        signal: -1
-#        color: 416-7
-#        xsection: 3503.71
-#        genevents: 46515036
-#        treename: rds_zbb
-#        weightname: [MinusLogW_gg_Zbb]
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.148
-#    DYbx:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zbx_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-#        signal: -1
-#        color: 632-7
-#        xsection: 3503.71
-#        genevents: 46515036
-#        treename: rds_zbb
-#        weightname: [MinusLogW_gg_Zbb]
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.348
-#    DYxx:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Zxx_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-#        signal: -1
-#        color: 600-7
-#        xsection: 3503.71
-#        genevents: 46515036
-#        treename: rds_zbb
-#        weightname: [MinusLogW_gg_Zbb]
-#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
     ZZ:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZZ_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         signal: -1
         color: 616-7
         xsection: 8.2
@@ -75,8 +31,8 @@ datasets:
         weightname: [MinusLogW_ZZ_cor0]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
     WW:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WW_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-        signal: -1
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WW_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+        signal: -3
         color: kBlue
         xsection: 8.2
         genevents: 9799908
@@ -84,7 +40,7 @@ datasets:
         weightname: [MinusLogW_WWbb]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
     WZ:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WZ_Summer12_final_skimed_llbbX_withWeights_V0.root"]
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/WZ_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         signal: -3
         color: kBlue
         xsection: 33.6
@@ -94,30 +50,75 @@ datasets:
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
 
     ZH:
-        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-        signal: -3
-        color: kBlack
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+        signal: -1
+        color: kWhite
         #reel value 0.0249
         xsection: 0.0249      
         genevents: 999462
         treename: rds_zbb
         weightname: [MinusLogW_ZH_cor0]
         evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
-#    Data:
-#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V0.root"]
-#        signal: -4
-#        color: kWhite
-#        xsection: 1      
-#        genevents: 1
+    DY:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DY_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+        signal: -1
+        color: 600
+        xsection: 3503.71
+        genevents: 46515036
+        treename: rds_zbb
+        weightname: [MinusLogW_gg_Zbb]
+        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
+#    DYbb_xx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root","/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 600
+#        xsection: 3503.71
+#        genevents: 46515036
 #        treename: rds_zbb
-#        weightname: []
-#        evtweight: "1"  
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348 + ( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359)
+#    DYbx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 600-7+3
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_bg_Zbj]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.348
+#    DYbb:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 416-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348)
+#    DYxx:
+#        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYxx_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+#        signal: -1
+#        color: 600-7
+#        xsection: 3503.71
+#        genevents: 46515036
+#        treename: rds_zbb
+#        weightname: [MinusLogW_gg_Zbb]
+#        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
+    Data:
+        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V1.root"]
+        signal: -5
+        color: kBlack
+        xsection: 1      
+        genevents: 1
+        treename: rds_zbb
+        weightname: []
+        evtweight: "1"  
 
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: keepBigYield
-    outputdir: results/zh_LogDiff_with60weight_keepBigYield
+    name: purMinMax_withZh   #DYbbxx_vs_bx_noZh_PurityPM
+    outputdir: results/purMinMax_withZh   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Weights common to all the processes, which will be passed to TMVA during training
@@ -168,7 +169,7 @@ analysis:
     # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
     minkeepevents: 500
     # Stop branching when reached level (1=two subsets; 2=four subsets, ...):
-    maxlevel: 10
+    maxlevel: 12
     writeoptions: [plot, hist, ROC]
     outputtasks: [output, result, split]
 

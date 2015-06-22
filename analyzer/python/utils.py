@@ -240,10 +240,10 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
 
     entriesEffEntriesYield = []
     myChain = ROOT.TChain(procDict["treename"])
-    if type(fileName) is list :
+    if type(fileName) is list:
         for file in fileName:
             myChain.Add(file)
-    else :
+    else:
         myChain.Add(fileName) 
     entries = int(myChain.GetEntries())
     entriesEffEntriesYield.append(entries)
@@ -256,21 +256,21 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     ## This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
     #tempHist.BufferEmpty()
     #effEntries = tempHist.Integral()
-    if procDict["signal"] != -5 : 
+    if procDict["signal"] != -5: 
         effEntries = 0
         formulaName = str(hash(procDict["evtweight"]))
         formula = ROOT.TTreeFormula(formulaName, procDict["evtweight"], myChain)
         formula.GetNdata()
         myChain.SetNotify(formula)
-        for entry in xrange(entries) :
-            myChain.GetEntry(entry)
+        for entry in myChain:
             effEntries += formula.EvalInstance()
         entriesEffEntriesYield.append(effEntries)
         entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
-    else :
+        formula.IsA().Destructor(formula)
+    else:
         entriesEffEntriesYield.append(entries)
         entriesEffEntriesYield.append(entries)
-    myChain.Reset()
+    myChain.IsA().Destructor(myChain)
     return entriesEffEntriesYield
  
 

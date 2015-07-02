@@ -330,6 +330,11 @@ class MISTree:
                     branchComps.SetBinContent(j, i, 100.* branchYieldsForComp.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
     
         file.cd()
+
+        if ROOT.gROOT.GetVersionInt() >= 60400:
+            ROOT.gStyle.SetPalette(57)
+        else
+            ROOT.gStyle.SetPalette(54)
    
         branchEffs.Write()
         cnv = ROOT.TCanvas("cnv_branch_effs", "Branch Efficiencies", 900, 600)
@@ -337,7 +342,7 @@ class MISTree:
         pad.Draw()
         pad.cd()
         branchEffs.SetStats(ROOT.kFALSE)
-        if nBr <= 20:
+        if nBr <= 15:
             branchEffs.Draw("COL,TEXT,Z")
         else:
             branchEffs.Draw("COL,Z")
@@ -353,7 +358,7 @@ class MISTree:
         pad.cd()
         branchYields.SetStats(ROOT.kFALSE)
         pad.SetLogz()
-        if nBr <= 20:
+        if nBr <= 15:
             branchYields.Draw("COL,TEXT,Z")
         else:
             branchYields.Draw("COL,Z")
@@ -369,7 +374,7 @@ class MISTree:
         pad.cd()
         branchComps.SetStats(ROOT.kFALSE)
         pad.SetLogz()
-        if nBr <= 20:
+        if nBr <= 15:
             branchComps.Draw("COL,TEXT,Z")
         else:
             branchComps.Draw("COL,Z")
@@ -446,6 +451,7 @@ class MISTree:
 
             print "== Saving tree structure to " + fileName + "."
             print "== Run 'dot -Tpdf %s -o %s' to produce a PDF file of the tree structure" % (fileName, fileName.replace('.dot', '.pdf'))
+            print "== Run 'dot -Tpng %s -o %s' to produce a PNG file of the tree structure" % (fileName, fileName.replace('.dot', '.png'))
             self.log("Saving tree structure to " + fileName + ".")
             
             with open(fileName, "wb") as outFile:

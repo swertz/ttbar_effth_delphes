@@ -79,7 +79,7 @@ class tryMisChief(Thread):
         Thread.__init__(self)
         self.box = box
         self.locks = locks
-
+    
     def run(self):
         self.box.log("Starting try.")
 
@@ -109,6 +109,7 @@ class tryMisChief(Thread):
             thread.start()
         for thread in threads:
             thread.join()
+        del threads
         
         self.box.log("Threads finished.")
 
@@ -140,6 +141,7 @@ class tryMisChief(Thread):
 
             for thread in nextThreads:
                 thread.join()
+            del threads
 
         self.box.log("Try finished successfully.")
 
@@ -228,13 +230,17 @@ def applySkimming(config):
             skimmedEntries = skimChain.GetEntries()
             print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
             skimFile.Close()
-            inChain.Reset()
+            inChain.IsA().Destructor(inChain)
+            formula.IsA().Destructor(formula)
+            skimFile.IsA().Destructor(skimFile)
+            skimChain.IsA().Destructor(skimChain)
         else :
             print name + " has already been skimmed with this formula."
         process["path"] = [skimFileName]
 
 ######## MAIN #############################################################
 
+#@profile
 def driverMain(cfgFile):
     print "============================================="
     print "================= MISchief =================="

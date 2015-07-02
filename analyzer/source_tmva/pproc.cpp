@@ -122,10 +122,12 @@ double PProc::GetEffEntries(const std::string& condition){
     else
       myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*" + myEvtWeightString).c_str(), "goff");
     TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-    // This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
-    tempHist->BufferEmpty();
+    if(!tempHist){
+      cerr << "Error when retrieving yield histogram for process " << myName << ".\n";
+      exit(1);
+    }
     effEntries = tempHist->Integral();
-    delete tempHist; tempHist = NULL;
+    delete tempHist; tempHist = nullptr;
   }
 
   if(!wasOpen)
@@ -158,9 +160,12 @@ double PProc::GetEffEntriesAbs(const std::string& condition){
     else
       myChain->Draw("Entries$>>tempHist", ("(" + condition + ")*abs("+myEvtWeightString+")").c_str(), "goff");
     TH1F* tempHist = (TH1F*)gDirectory->Get("tempHist");
-    tempHist->BufferEmpty();
+    if(!tempHist){
+      cerr << "Error when retrieving yield histogram for process " << myName << ".\n";
+      exit(1);
+    }
     effEntries = tempHist->Integral();
-    delete tempHist; tempHist = NULL;
+    delete tempHist; tempHist = nullptr;
   }
 
   if(!wasOpen)

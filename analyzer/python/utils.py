@@ -239,38 +239,34 @@ def weightsToString(weights):
 def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
 
     entriesEffEntriesYield = []
+    
     myChain = ROOT.TChain(procDict["treename"])
     if type(fileName) is list:
         for file in fileName:
             myChain.Add(file)
     else:
         myChain.Add(fileName) 
-    entries = int(myChain.GetEntries())
+    
+    entries = myChain.GetEntries()
     entriesEffEntriesYield.append(entries)
-    #histName = str(hash(fileName[0]))
-    #myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
-    #gotHist = ROOT.gDirectory.Get(histName)
-    #if gotHist is None:
-    #    return None
-    #tempHist = ROOT.TH1F(gotHist)
-    ## This has to be done because otherwise TH1F::Integral() might return 0.0 (bug reported, fix shipped in next ROOT release)
-    #tempHist.BufferEmpty()
-    #effEntries = tempHist.Integral()
+    
+    histName = str(hash(fileName[0]))
+    myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
+    tempHist = ROOT.gDirectory.Get(histName)
+    if tempHist is None or not isinstance(tempHist, ROOT.TH1):
+        raise Exception("Could not retrieve yield histogram properly when reading {}".format(fileName))
+    effEntries = tempHist.Integral()
+    
     if procDict["signal"] != -5: 
-        effEntries = 0
-        formulaName = str(hash(procDict["evtweight"]))
-        formula = ROOT.TTreeFormula(formulaName, procDict["evtweight"], myChain)
-        formula.GetNdata()
-        myChain.SetNotify(formula)
-        for entry in myChain:
-            effEntries += formula.EvalInstance()
         entriesEffEntriesYield.append(effEntries)
         entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
-        formula.IsA().Destructor(formula)
     else:
         entriesEffEntriesYield.append(entries)
         entriesEffEntriesYield.append(entries)
+    
     myChain.IsA().Destructor(myChain)
+    tempHist.IsA().Destructor(tempHist)
+    
     return entriesEffEntriesYield
  
 

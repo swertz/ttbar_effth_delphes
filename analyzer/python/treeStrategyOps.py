@@ -177,7 +177,6 @@ def analyseResults(box, locks):
         for mva in [ mva for mva in goodMVA if mva.cfg.mvaCfg["name"] != bestMVA.cfg.mvaCfg["name"] ]:
             os.system("rm " + mva.cfg.mvaCfg["outputdir"] + "/" + mva.cfg.mvaCfg["name"] + "*")
     
-
 def defineSigAndBkgBoxes(box, locks, bestMVA, sigIsEnd, bkgIsEnd):
         
     box.goodMVA = bestMVA

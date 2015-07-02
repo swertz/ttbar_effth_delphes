@@ -79,7 +79,7 @@ class tryMisChief(Thread):
         Thread.__init__(self)
         self.box = box
         self.locks = locks
-
+    
     def run(self):
         self.box.log("Starting try.")
 
@@ -109,6 +109,7 @@ class tryMisChief(Thread):
             thread.start()
         for thread in threads:
             thread.join()
+        del threads
         
         self.box.log("Threads finished.")
 
@@ -140,6 +141,7 @@ class tryMisChief(Thread):
 
             for thread in nextThreads:
                 thread.join()
+            del threads
 
         self.box.log("Try finished successfully.")
 
@@ -238,6 +240,7 @@ def applySkimming(config):
 
 ######## MAIN #############################################################
 
+#@profile
 def driverMain(cfgFile):
     print "============================================="
     print "================= MISchief =================="

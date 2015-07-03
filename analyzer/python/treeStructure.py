@@ -81,9 +81,11 @@ class MISAnalysis:
             print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "."
             self.log("Analysis failed: efficiencies don't make sense.")
 
-    def printLog(self):
-        print "MVA " + self.cfg.mvaCfg["name"] + ":"
-        print self._log
+    def printLog(self, mask = False):
+        _str = "MVA " + self.cfg.mvaCfg["name"] + ":\n" + self._log
+        if not mask:
+            print _str
+        return _str
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -138,21 +140,31 @@ class MISBox:
             self.name = self.cfg.mvaCfg["name"]
 
     def __str__(self):
-        _str = ""
-        if self.isEnd:
-            _str += "=="
+        _str = "=="
+        
+        for i in range(self.level):
+            _str += "="
+        _str += " Box " + self.name + ", level " + str(self.level) + ":\n"
+        
+        for name in self.cfg.procCfg.keys():
+            _str += "==="
             for i in range(self.level):
                 _str += "="
-            _str += " Box " + self.name + ", level " + str(self.level) + ":\n"
-            for name, proc in self.cfg.procCfg.items():
-                _str += "==="
-                for i in range(self.level):
-                    _str += "="
-                _str += " Process " + name + ": " + str(proc["entries"]) + " MC events, " + str(proc["yield"]) + " expected events.\n"
-            _str += "\n\n"
-        else:
+            _str += " Process {}: {} MC events, {:.2f} expected events.\n".format(name, self.entries[name], self.yields[name])
+        _str += "\n"
+        
+        return _str
+
+    def printBelow(self, mask = False):
+        _str = self.__str__()
+        
+        if not self.isEnd:
             for box in self.daughters:
-                _str += box.__str__()
+                _str += box.printBelow(mask = True)
+
+        if not mask:
+            print _str
+
         return _str
 
     def fillEndBoxes(self, endBoxes):
@@ -172,17 +184,22 @@ class MISBox:
             for box in self.daughters:
                 box.write(outFile)
     
-    def printLog(self):
-        print "Box " + self.name + ", level" + str(self.level) + ":"
-        print self._log
-        print "\n"
+    def printLog(self, mask = False):
+        _str = "Box " + self.name + ", level" + str(self.level) + ":\n" + self._log + "\n"
+        if not mask:
+            print _str
+        return _str
 
-        for mva in self.MVA:
-            mva.printLog()
-            print "\n"
-
-        for box in self.daughters:
-            box.printLog()
+    def printLogBelow(self, mask = False):
+        _str = self.printLog(mask = True)
+        
+        if not self.isEnd:
+            for box in self.daughters:
+                _str += box.printLogBelow(mask = True)
+        
+        if not mask:
+            print _str
+        return _str
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -210,7 +227,13 @@ class MISTree:
             sys.exit(1)
 
     def __str__(self):
-        return "= Tree " + self.cfg.mvaCfg["name"] + ":\n" + self.firstBox.__str__()
+        return "= Tree " + self.cfg.mvaCfg["name"] + ":\n"
+    
+    def printBelow(self, mask = False):
+        _str = self.__str__() + self.firstBox.printBelow(mask = True)
+        if not mask:
+            print _str
+        return _str
 
     # ====> Maybe keep a variable in MISTree, updated each time a box is set to "isEnd"?
     def getEndBoxes(self):
@@ -333,7 +356,7 @@ class MISTree:
 
         if ROOT.gROOT.GetVersionInt() >= 60400:
             ROOT.gStyle.SetPalette(57)
-        else
+        else:
             ROOT.gStyle.SetPalette(54)
    
         branchEffs.Write()
@@ -385,11 +408,18 @@ class MISTree:
 
         file.Close()
 
-    def printLog(self):
-        print "Tree Log:"
-        print self._log
-        print "\n"
-        self.firstBox.printLog()
+    def printLog(self, mask = False):
+        _str = "Tree Log:\n" + self._log + "\n"
+        if not mask:
+            print _str
+        return _str
+
+    def printLogBelow(self, mask = False):
+        _str = self.printLog(mask = True)
+        _str += self.firstBox.printLogBelow(mask = True)
+        if not mask:
+            print _str
+        return _str
 
     def save(self, fileName = ""):
         if fileName == "":

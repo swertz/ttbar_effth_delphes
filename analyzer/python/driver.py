@@ -141,7 +141,7 @@ class tryMisChief(Thread):
 
             for thread in nextThreads:
                 thread.join()
-            del threads
+            del nextThreads
 
         self.box.log("Try finished successfully.")
 
@@ -240,7 +240,6 @@ def applySkimming(config):
 
 ######## MAIN #############################################################
 
-#@profile
 def driverMain(cfgFile):
     print "============================================="
     print "================= MISchief =================="
@@ -270,7 +269,7 @@ def driverMain(cfgFile):
     mainThread.join()
     print "== Main thread stopped."
     
-    print myTree
+    myTree.printBelow()
     myTree.write()
     myTree.plotResults()
     myTree.save()

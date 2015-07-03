@@ -90,9 +90,9 @@ class tryMisChief(Thread):
         strategyModule.defineNewCfgs(self.box, self.locks)
 
         if len(self.box.MVA) == 0:
-            self.box.log("Something went wrong in defining the tmva's.")
+            self.box.log("No mva could be defined.")
             with self.locks["stdout"]:
-                print "== Level {0}, box {1}: Something went wrong when defining the tmva's.".format(self.box.level, self.box.name)
+                print "== Level {0}, box {1}: No mva could be defined.".format(self.box.level, self.box.name)
         
         # Define threads with the new configurations
         threads = []
@@ -116,10 +116,10 @@ class tryMisChief(Thread):
         # Exclude the ones that didn't end successfully (no result tuple)
         goodMVAs = [ mva for mva in self.box.MVA if mva.result is not None ]
         if len(goodMVAs) == 0:
-            self.box.log("All analysis failed. Stopping branch.")
+            self.box.log("All analysis failed or none was defined. Stopping branch.")
             self.box.isEnd = True
             with self.locks["stdout"]:
-                print "== Level {0}, box {1}: All analyses seem to have failed. Stopping branch.".format(self.box.level, self.box.name)
+                print "== Level {0}, box {1}: All analyses failed or none was defined. Stopping branch.".format(self.box.level, self.box.name)
             return 0
 
         # Decide what to do next and define next boxes. Boxes which are not "isEnd" will define new tries.
@@ -229,11 +229,11 @@ def applySkimming(config):
             skimChain.Write()
             skimmedEntries = skimChain.GetEntries()
             print "Skimmed rootFile written under " + skimFileName + ". It has now ", skimmedEntries, " entries."
+            skimChain.IsA().Destructor(skimChain)
             skimFile.Close()
             inChain.IsA().Destructor(inChain)
             formula.IsA().Destructor(formula)
             skimFile.IsA().Destructor(skimFile)
-            skimChain.IsA().Destructor(skimChain)
         else :
             print name + " has already been skimmed with this formula."
         process["path"] = [skimFileName]

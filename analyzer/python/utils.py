@@ -249,7 +249,10 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     
     entries = myChain.GetEntries()
     entriesEffEntriesYield.append(entries)
-    
+    if entries == 0 : 
+        entriesEffEntriesYield.append(0)
+        entriesEffEntriesYield.append(0)
+        return entriesEffEntriesYield
     histName = str(hash(fileName[0]))
     myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
     tempHist = ROOT.gDirectory.Get(histName)

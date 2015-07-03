@@ -52,3 +52,7 @@ $ python/driver.py -c config_file.yml -t relative_path_to_tmva_executable -s str
 $ python/replay.py config_file.yml
 ```
 
+ * python/mcstudy.py: Do pseudo-experiments and fits on signal strengths. See examples/mcstudy_updated.conf and examples/template_fit_boxYields.yml. Usage:
+```
+$ python/mcstudy.py fit_config.conf
+```

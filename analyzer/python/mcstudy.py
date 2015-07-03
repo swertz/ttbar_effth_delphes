@@ -50,41 +50,39 @@ def mcStudyMain(mcStudyFile):
         corrList = {}
 
         weightedNormHist = ROOT.TH1D("Weighted_Norm_hist", "Weighted Norm", 100, 0, 10)
-        weightedNormHist.SetBit(ROOT.TH1.kCanRebin)
+        weightedNormHist.SetCanExtend(ROOT.TH1.kXaxis) # in ROOT6, this replaces TH1::SetBit(TH1::kCanRebin)
         weightedNormHist.SetDirectory(subDir)
         histDict["weightedNorm"] = weightedNormHist
         
         resHist = ROOT.TH1D("Chi_Square_hist", "Chi Square", 100, 0, 10)
-        resHist.SetBit(ROOT.TH1.kCanRebin)
+        resHist.SetCanExtend(ROOT.TH1.kXaxis)
         resHist.SetDirectory(subDir)
         histDict["chisq"] = resHist
 
         varVect = []
-        for i,proc in enumerate(myConfig.procCfg):
+        for name,proc in myConfig.procCfg.items():
             
-            if proc["signal"] == "1":
+            if proc["signal"] == 1:
                 
-                procN = proc["name"]
-                
-                myHist = ROOT.TH1D(procN+"_hist", procN+"/\Lambda^2 (TeV^{-2})", 100, -0.1, 0.1)
-                myHist.SetBit(ROOT.TH1.kCanRebin)
+                myHist = ROOT.TH1D(name+"_hist", name+"/\Lambda^2 (TeV^{-2})", 100, -0.1, 0.1)
+                myHist.SetCanExtend(ROOT.TH1.kXaxis)
                 myHist.SetDirectory(subDir)
-                histDict[procN] = myHist
+                histDict[name] = myHist
 
-                myVarHist = ROOT.TH1D(procN+"_StdDev_hist", \
-                    procN+" Std. Dev. (TeV^{-2})", 100, 0., 0.1)
-                myVarHist.SetBit(ROOT.TH1.kCanRebin)
+                myVarHist = ROOT.TH1D(name+"_StdDev_hist", \
+                    name+" Std. Dev. (TeV^{-2})", 100, 0., 1)
+                myVarHist.SetCanExtend(ROOT.TH1.kXaxis)
                 myVarHist.SetDirectory(subDir)
-                histDict[procN+"_StdDev"] = myVarHist
+                histDict[name+"_StdDev"] = myVarHist
                 
-                varVect.append(procN)
+                varVect.append(name)
             
                 # corrList is added to the histDict to be passed to the MC study function,
                 # but will really be filled with numbers.
                 # The real correlation histogram will be defined later, based on these numbers
-                for j,proc2 in enumerate(myConfig.procCfg):
-                    if proc2["signal"] == "1":
-                        corrList[procN+"/"+proc2["name"]] = 0.
+                for name2,proc2 in myConfig.procCfg.items():
+                    if proc2["signal"] == 1:
+                        corrList[name+"/"+name2] = 0.
 
         histDict["corrList"] = corrList
         
@@ -102,7 +100,7 @@ def mcStudyMain(mcStudyFile):
         
         elif myMCStudy.cfg["mode"] == "template":
             myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
-            myHist.SetBit(ROOT.TH1.kCanRebin)
+            myHist.SetCanExtend(ROOT.TH1.kXaxis)
             myHist.SetDirectory(subDir)
             histDict["minNLL"] = myHist
             
@@ -117,7 +115,7 @@ def mcStudyMain(mcStudyFile):
             myMCResult.iniFromFile(resultFile)
             
             myHist = ROOT.TH1D("minNLL_hist", "-log(L) at minimum", 100, -400000, -300000)
-            myHist.SetBit(ROOT.TH1.kCanRebin)
+            myHist.SetCanExtend(ROOT.TH1.kXaxis)
             myHist.SetDirectory(subDir)
             histDict["minNLL"] = myHist
             
@@ -163,8 +161,8 @@ def mcStudyMain(mcStudyFile):
         
     if myMCStudy.cfg["mode"] == "template":
         outFile.cd()
-        for proc in sorted(myConfig.procCfg, key = lambda proc: proc["name"]):
-            proc["histo"].Write()
+        for name in sorted(myConfig.procCfg.keys()):
+            myConfig.procCfg[name]["histo"].Write()
 
     outFile.Close()
 
@@ -174,7 +172,7 @@ def mcStudyMain(mcStudyFile):
 def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
     print "== Doing MC Study: template fits on " + templateCfg.mvaCfg["inputvar"] + "."
 
-    if "histo" not in templateCfg.procCfg[0]:
+    if "histo" not in templateCfg.procCfg.values()[0]:
         
         if templateCfg.mvaCfg["options"].find("fill") >= 0:
             # Fill histograms with the variable used for the fit, and store them in the
@@ -193,16 +191,16 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
         
     inputVar = templateCfg.mvaCfg["inputvar"]
 
-    dataHist = templateCfg.procCfg[0]["histo"].Clone("MCdata_" + inputVar)
+    dataHist = templateCfg.procCfg.values()[0]["histo"].Clone("MCdata_" + inputVar)
     dataHist.Reset()
     dataHist.SetTitle("MC data: " + inputVar)
     
     mcSumHist = dataHist.Clone("MCsum_" + inputVar)
     mcSumHist.SetTitle("MC sum: " + inputVar)
 
-    for proc in templateCfg.procCfg:
-        if proc["signal"] == "1":
-            mcSumHist.Add(proc["histo"], params[ proc["name"] ])
+    for name,proc in templateCfg.procCfg.items():
+        if proc["signal"] == 1:
+            mcSumHist.Add(proc["histo"], params[name])
         else:
             mcSumHist.Add(proc["histo"])
 
@@ -233,22 +231,19 @@ def mcStudyTemplate(templateCfg, params, histDict, pseudoNumber):
 
         weighteddsquare = 0.
         
-        for proc in templateCfg.procCfg:
-            if proc["signal"] == "1":
-                procN = proc["name"]
+        for name,proc in templateCfg.procCfg.items():
+            if proc["signal"] == 1:
+                weighteddsquare += (result[name]/err[name])**2
                 
-                weighteddsquare += (result[procN]/err[procN])**2
-                
-                for proc2 in templateCfg.procCfg:
-                    if proc2["signal"] == "1":
-                        proc2N = proc2["name"]
-                        if procN == proc2N:
-                            histDict["corrList"][procN+"/"+proc2N] += err[procN]
+                for name2,proc2 in templateCfg.procCfg.items():
+                    if proc2["signal"] == 1:
+                        if name == name2:
+                            histDict["corrList"][name+"/"+name2] += err[name]
                         else:
-                            histDict["corrList"][procN+"/"+proc2N] += corr[procN+"/"+proc2N]
+                            histDict["corrList"][name+"/"+name2] += corr[name+"/"+name2]
                 
-                histDict[procN].Fill(result[procN])
-                histDict[procN+"_StdDev"].Fill(err[procN])
+                histDict[name].Fill(result[name])
+                histDict[name+"_StdDev"].Fill(err[name])
         
         histDict["weightedNorm"].Fill(math.sqrt(weighteddsquare))
         histDict["chisq"].Fill(chisq)
@@ -283,7 +278,7 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
     for proc in allVarVec:
         for proc2 in myConfig.procCfg:
             if proc2["name"] == proc:
-                if proc2["signal"] == "1":
+                if proc2["signal"] == 1:
                     varVec.append(proc)
                 break
 
@@ -293,7 +288,7 @@ def mcStudyCounting(myConfig, myMCResult, params, histDict, pseudoNumber):
         for proc in branch[2].keys():
             for proc2 in myConfig.procCfg:
                 if proc2["name"] == proc:
-                    if proc2["signal"] == "1":
+                    if proc2["signal"] == 1:
                         mean.setVal(branch[2][proc]*params[proc] + mean.getVal())
                     else:
                         mean.setVal(branch[2][proc] + mean.getVal())

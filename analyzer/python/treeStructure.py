@@ -324,7 +324,6 @@ class MISTree:
             i += 1
     
         branchTotals.Merge(lst)
-        binCount = 0
         for j in range(1, nBr+1):
             for i in range(1, nProcForBrComp+1):
                     branchComps.SetBinContent(j, i, 100.* branchYieldsForComp.GetBinContent(j, i) / branchTotals.GetBinContent(j) )
@@ -333,7 +332,7 @@ class MISTree:
 
         if ROOT.gROOT.GetVersionInt() >= 60400:
             ROOT.gStyle.SetPalette(57)
-        else
+        else:
             ROOT.gStyle.SetPalette(54)
    
         branchEffs.Write()

@@ -141,7 +141,7 @@ class tryMisChief(Thread):
 
             for thread in nextThreads:
                 thread.join()
-            del threads
+            del nextThreads
 
         self.box.log("Try finished successfully.")
 

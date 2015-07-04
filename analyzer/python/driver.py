@@ -134,7 +134,7 @@ class tryMisChief(Thread):
                 thisThread = tryMisChief(thisBox, self.locks)
                 nextThreads.append(thisThread)
 
-                self.box.log("Will launch " + str(len(nextThreads)) + " new tries and pass the hand.")
+            self.box.log("Will launch " + str(len(nextThreads)) + " new tries and pass the hand.")
 
             for thread in nextThreads:
                 thread.start()
@@ -182,6 +182,11 @@ class launchMisChief(Thread):
         self.MVA.log("Calling " + commandString + ".")
 
         result = call(commandString, shell=True)
+
+        self.MVA.log("\n====== Start tmva log file =======")
+        with open(os.path.join(self.MVA.cfg.mvaCfg["outputdir"], self.MVA.cfg.mvaCfg["outputname"]) + ".log") as logFile:
+            self.MVA.log(logFile.read())
+        self.MVA.log("====== End tmva log file =========\n")
 
         self.MVA.log("Finished. Output code = " + str(result) + ".")
         self.MVA.outcode = result
@@ -240,7 +245,6 @@ def applySkimming(config):
 
 ######## MAIN #############################################################
 
-#@profile
 def driverMain(cfgFile):
     print "============================================="
     print "================= MISchief =================="
@@ -270,7 +274,7 @@ def driverMain(cfgFile):
     mainThread.join()
     print "== Main thread stopped."
     
-    print myTree
+    myTree.printBelow()
     myTree.write()
     myTree.plotResults()
     myTree.save()

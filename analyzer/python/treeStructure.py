@@ -22,6 +22,7 @@ class MISAnalysis:
 
     def __init__(self, box, cfg):
         self.cfg = cfg # PConfig object
+        self.name = box.name + "/" + self.cfg.mvaCfg["name"]
         self.box = box # MISBox object
         self.outcode = 0
         self.result = None
@@ -78,12 +79,14 @@ class MISAnalysis:
 
         else:
             # Something went wrong. Leave self.result = None, meaning that the MVA will not be considered anymore => investigate what went wrong.
-            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "."
+            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.name + "."
             self.log("Analysis failed: efficiencies don't make sense.")
 
+    def __str__(self):
+        return "MVA " + self.name
+
     def printLog(self):
-        print "MVA " + self.cfg.mvaCfg["name"] + ":"
-        print self._log
+        print "MVA " + self.name + ":\n" + self._log
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -138,22 +141,39 @@ class MISBox:
             self.name = self.cfg.mvaCfg["name"]
 
     def __str__(self):
-        _str = ""
-        if self.isEnd:
-            _str += "=="
+        _str = "=="
+        
+        for i in range(self.level):
+            _str += "="
+        _str += " Box " + self.name + ", level " + str(self.level) + ":\n"
+        
+        for name in self.cfg.procCfg.keys():
+            _str += "==="
             for i in range(self.level):
                 _str += "="
-            _str += " Box " + self.name + ", level " + str(self.level) + ":\n"
-            for name, proc in self.cfg.procCfg.items():
-                _str += "==="
-                for i in range(self.level):
-                    _str += "="
-                _str += " Process " + name + ": " + str(proc["entries"]) + " MC events, " + str(proc["yield"]) + " expected events.\n"
-            _str += "\n\n"
-        else:
-            for box in self.daughters:
-                _str += box.__str__()
+            _str += " Process {}: {} MC events, {:.2f} expected events.\n".format(name, self.entries[name], self.yields[name])
+        _str += "\n"
+        
         return _str
+
+    def printBelow(self):
+        print self
+        
+        if not self.isEnd:
+            for box in self.daughters:
+                box.printBelow()
+    
+    def returnByPath(self, path):
+        path = path.strip()
+        path = path.strip("/")
+
+        for configurable in self.daughters + self.MVA:
+            if path == configurable.name:
+                return configurable
+            elif configurable.name in path:
+                return configurable.returnByPath(path)
+
+        raise Exception("Could not find object {} in {}.".format(path, self.name))
 
     def fillEndBoxes(self, endBoxes):
         if self.isEnd:
@@ -173,16 +193,14 @@ class MISBox:
                 box.write(outFile)
     
     def printLog(self):
-        print "Box " + self.name + ", level" + str(self.level) + ":"
-        print self._log
-        print "\n"
+        print "Box " + self.name + ", level" + str(self.level) + ":\n" + self._log + "\n"
 
-        for mva in self.MVA:
-            mva.printLog()
-            print "\n"
-
-        for box in self.daughters:
-            box.printLog()
+    def printLogBelow(self):
+        self.printLog()
+        
+        if not self.isEnd:
+            for box in self.daughters:
+                box.printLogBelow()
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -210,13 +228,33 @@ class MISTree:
             sys.exit(1)
 
     def __str__(self):
-        return "= Tree " + self.cfg.mvaCfg["name"] + ":\n" + self.firstBox.__str__()
+        return "= Tree " + self.cfg.mvaCfg["name"] + "\n"
+    
+    def printBelow(self):
+        print self
+        self.firstBox.printBelow()
 
     # ====> Maybe keep a variable in MISTree, updated each time a box is set to "isEnd"?
     def getEndBoxes(self):
         endBoxes = []
         self.firstBox.fillEndBoxes(endBoxes)
         return endBoxes
+
+    def returnByPath(self, path):
+        path = path.strip()
+        path = path.strip("/")
+
+        if path == self.firstBox.name:
+            return self.firstBox
+        else:
+            return self.firstBox.returnByPath(path)
+
+    def printLog(self):
+        print "Tree Log:\n" + self._log
+
+    def printLogBelow(self):
+        self.printLog()
+        self.firstBox.printLogBelow()
 
     ######## PLOT RESULTS #############################################################
     # Create ROOT file with, for each process, plots:
@@ -383,12 +421,6 @@ class MISTree:
         del cnv
 
         file.Close()
-
-    def printLog(self):
-        print "Tree Log:"
-        print self._log
-        print "\n"
-        self.firstBox.printLog()
 
     def save(self, fileName = ""):
         if fileName == "":

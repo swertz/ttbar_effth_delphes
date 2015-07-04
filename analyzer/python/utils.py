@@ -249,15 +249,17 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     
     entries = myChain.GetEntries()
     entriesEffEntriesYield.append(entries)
+    
     if entries == 0 : 
         entriesEffEntriesYield.append(0)
         entriesEffEntriesYield.append(0)
         return entriesEffEntriesYield
+    
     histName = str(hash(fileName[0]))
     myChain.Draw("Entries$>>" + histName, procDict["evtweight"], "goff")
     tempHist = ROOT.gDirectory.Get(histName)
     if tempHist is None or not isinstance(tempHist, ROOT.TH1):
-        raise Exception("Could not retrieve yield histogram properly when reading {}".format(fileName))
+        return None
     effEntries = tempHist.Integral()
     
     if procDict["signal"] != -5: 

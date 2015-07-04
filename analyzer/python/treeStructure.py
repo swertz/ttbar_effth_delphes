@@ -22,7 +22,7 @@ class MISAnalysis:
 
     def __init__(self, box, cfg):
         self.cfg = cfg # PConfig object
-        self.name = self.cfg.mvaCfg["name"]
+        self.name = box.name + "/" + self.cfg.mvaCfg["name"]
         self.box = box # MISBox object
         self.outcode = 0
         self.result = None
@@ -79,14 +79,14 @@ class MISAnalysis:
 
         else:
             # Something went wrong. Leave self.result = None, meaning that the MVA will not be considered anymore => investigate what went wrong.
-            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.name + "."
+            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.name + "."
             self.log("Analysis failed: efficiencies don't make sense.")
 
-    def printLog(self, mask = False):
-        _str = "MVA " + self.name + ":\n" + self._log
-        if not mask:
-            print _str
-        return _str
+    def __str__(self):
+        return "MVA " + self.name
+
+    def printLog(self):
+        print "MVA " + self.name + ":\n" + self._log
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -156,32 +156,24 @@ class MISBox:
         
         return _str
 
-    def printBelow(self, mask = False):
-        _str = self.__str__()
+    def printBelow(self):
+        print self
         
         if not self.isEnd:
             for box in self.daughters:
-                _str += box.printBelow(mask = True)
-
-        if not mask:
-            print _str
-
-        return _str
+                box.printBelow()
     
     def returnByPath(self, path):
-        if isinstance(path, str):
-            splitPath = [ node.strip() for node in path.split("/") if node.strip() is not "" ]
-        if not len(splitPath):
-            raise Exception("Provided path is not valid.")
+        path = path.strip()
+        path = path.strip("/")
 
         for configurable in self.daughters + self.MVA:
-            if path[0] == configurable.cfg.mvaCfg["name"]:
-                if len(splitPath) == 1:
-                    return configurable
-                else:
-                    return configurable.returnByPath(splitPath[1:])
+            if path == configurable.name:
+                return configurable
+            elif configurable.name in path:
+                return configurable.returnByPath(path)
 
-        raise Exception("Could not find object {} in {}.".format(splitPath[0], self.name))
+        raise Exception("Could not find object {} in {}.".format(path, self.name))
 
     def fillEndBoxes(self, endBoxes):
         if self.isEnd:
@@ -200,22 +192,15 @@ class MISBox:
             for box in self.daughters:
                 box.write(outFile)
     
-    def printLog(self, mask = False):
-        _str = "Box " + self.name + ", level" + str(self.level) + ":\n" + self._log + "\n"
-        if not mask:
-            print _str
-        return _str
+    def printLog(self):
+        print "Box " + self.name + ", level" + str(self.level) + ":\n" + self._log + "\n"
 
-    def printLogBelow(self, mask = False):
-        _str = self.printLog(mask = True)
+    def printLogBelow(self):
+        self.printLog()
         
         if not self.isEnd:
             for box in self.daughters:
-                _str += box.printLogBelow(mask = True)
-        
-        if not mask:
-            print _str
-        return _str
+                box.printLogBelow()
 
     def log(self, line = ""):
         self._log += line + "\n"
@@ -243,13 +228,11 @@ class MISTree:
             sys.exit(1)
 
     def __str__(self):
-        return "= Tree " + self.cfg.mvaCfg["name"] + ":\n"
+        return "= Tree " + self.cfg.mvaCfg["name"] + "\n"
     
-    def printBelow(self, mask = False):
-        _str = self.__str__() + self.firstBox.printBelow(mask = True)
-        if not mask:
-            print _str
-        return _str
+    def printBelow(self):
+        print self
+        self.firstBox.printBelow()
 
     # ====> Maybe keep a variable in MISTree, updated each time a box is set to "isEnd"?
     def getEndBoxes(self):
@@ -258,15 +241,20 @@ class MISTree:
         return endBoxes
 
     def returnByPath(self, path):
-        splitPath = [ node.strip() for node in path.split("/") if node.strip() is not "" ]
-        if not len(splitPath):
-            raise Exception("Provided path is not valid.")
+        path = path.strip()
+        path = path.strip("/")
 
-        if len(splitPath) == 1 and splitPath[0] == self.firstBox.name:
+        if path == self.firstBox.name:
             return self.firstBox
-
         else:
-            return self.firstBox.returnByPath(splitPath[1:])
+            return self.firstBox.returnByPath(path)
+
+    def printLog(self):
+        print "Tree Log:\n" + self._log
+
+    def printLogBelow(self):
+        self.printLog()
+        self.firstBox.printLogBelow()
 
     ######## PLOT RESULTS #############################################################
     # Create ROOT file with, for each process, plots:
@@ -434,19 +422,6 @@ class MISTree:
         del cnv
 
         file.Close()
-
-    def printLog(self, mask = False):
-        _str = "Tree Log:\n" + self._log + "\n"
-        if not mask:
-            print _str
-        return _str
-
-    def printLogBelow(self, mask = False):
-        _str = self.printLog(mask = True)
-        _str += self.firstBox.printLogBelow(mask = True)
-        if not mask:
-            print _str
-        return _str
 
     def save(self, fileName = ""):
         if fileName == "":

@@ -22,6 +22,7 @@ class MISAnalysis:
 
     def __init__(self, box, cfg):
         self.cfg = cfg # PConfig object
+        self.name = self.cfg.mvaCfg["name"]
         self.box = box # MISBox object
         self.outcode = 0
         self.result = None
@@ -78,11 +79,11 @@ class MISAnalysis:
 
         else:
             # Something went wrong. Leave self.result = None, meaning that the MVA will not be considered anymore => investigate what went wrong.
-            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.cfg.mvaCfg["name"] + "."
+            print "== Level " + str(self.box.level) + ": Something went wrong in analysis " + self.cfg.mvaCfg["outputdir"] + "/" + self.name + "."
             self.log("Analysis failed: efficiencies don't make sense.")
 
     def printLog(self, mask = False):
-        _str = "MVA " + self.cfg.mvaCfg["name"] + ":\n" + self._log
+        _str = "MVA " + self.name + ":\n" + self._log
         if not mask:
             print _str
         return _str
@@ -166,6 +167,21 @@ class MISBox:
             print _str
 
         return _str
+    
+    def returnByPath(self, path):
+        if isinstance(path, str):
+            splitPath = [ node.strip() for node in path.split("/") if node.strip() is not "" ]
+        if not len(splitPath):
+            raise Exception("Provided path is not valid.")
+
+        for configurable in self.daughters + self.MVA:
+            if path[0] == configurable.cfg.mvaCfg["name"]:
+                if len(splitPath) == 1:
+                    return configurable
+                else:
+                    return configurable.returnByPath(splitPath[1:])
+
+        raise Exception("Could not find object {} in {}.".format(splitPath[0], self.name))
 
     def fillEndBoxes(self, endBoxes):
         if self.isEnd:
@@ -240,6 +256,17 @@ class MISTree:
         endBoxes = []
         self.firstBox.fillEndBoxes(endBoxes)
         return endBoxes
+
+    def returnByPath(self, path):
+        splitPath = [ node.strip() for node in path.split("/") if node.strip() is not "" ]
+        if not len(splitPath):
+            raise Exception("Provided path is not valid.")
+
+        if len(splitPath) == 1 and splitPath[0] == self.firstBox.name:
+            return self.firstBox
+
+        else:
+            return self.firstBox.returnByPath(splitPath[1:])
 
     ######## PLOT RESULTS #############################################################
     # Create ROOT file with, for each process, plots:

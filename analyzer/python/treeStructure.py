@@ -362,7 +362,6 @@ class MISTree:
             i += 1
     
         branchTotals.Merge(lst)
-        binCount = 0
         for j in range(1, nBr+1):
             for i in range(1, nProcForBrComp+1):
                     branchComps.SetBinContent(j, i, 100.* branchYieldsForComp.GetBinContent(j, i) / branchTotals.GetBinContent(j) )

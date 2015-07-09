@@ -56,3 +56,8 @@ $ python/replay.py config_file.yml
 ```
 $ python/mcstudy.py fit_config.conf
 ```
+
+* python/readTree.py: Open pickle file and navigate in Tree object in an interactive python console. Some examples on how to find information in the Tree are printed out when loading a pickle file. To start looking a tree, do:
+```
+$ python -i python/readTree.py path_to_pickle_file
+```

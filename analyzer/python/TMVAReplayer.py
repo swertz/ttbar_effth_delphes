@@ -42,7 +42,7 @@ class TMVAReplayer:
             self.name = name
             self.mva = mva
             self.reader = None
-            if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+            if self.mva.cfg.mvaCfg["mvamethod"] != "Singleton":
                 self.reader = ROOT.TMVA.Reader("Silent")
             self.inputVariables = {}
             self.mvaValue = array.array('f', [0])
@@ -55,21 +55,22 @@ class TMVAReplayer:
                 if not var in self.inputVariables.keys():
                     a = array.array('f', [0])
                     self.inputVariables[var] = a
-                    if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+                    if self.mva.cfg.mvaCfg["mvamethod"] != "Singleton":
                         self.reader.AddVariable(var, a)
 
                 # variablesCache is TTreeFormula, inputVariables is float
                 self.inputVariables[var][0] = variablesCache[var].EvalInstance()
 
         def book(self):
-            if self.mva.cfg.mvaCfg["mvamethod"] is not "Singleton":
+            if self.mva.cfg.mvaCfg["mvamethod"] != "Singleton":
                 self.reader.BookMVA("MVA", TMVAReplayer.getXMLPath(self.mva))
 
         def evaluate(self):
-            if self.mva.cfg.mvaCfg["mvamethod"] is "Singleton":
+            if self.mva.cfg.mvaCfg["mvamethod"] == "Singleton":
                 # in case of "Singleton" mode we only have one variable
                 var = self.inputVariables.keys()[0]
-                return self.inputVariables[var]
+                self.mvaValue[0] = self.inputVariables[var][0]
+                return self.mvaValue[0]
             else:
                 self.mvaValue[0] = self.reader.EvaluateMVA("MVA")
                 return self.transformOutput(self.mvaValue[0])

@@ -147,7 +147,7 @@ def mcStudyMain(mcStudyFile):
         ROOT.gROOT.SetBatch(ROOT.kTRUE);
         if ROOT.gROOT.GetVersionInt() >= 60400:
             ROOT.gStyle.SetPalette(57)
-        else
+        else:
             ROOT.gStyle.SetPalette(54)
 
         cnv = ROOT.TCanvas("cnv_correlations", "Correlations", 900, 600)

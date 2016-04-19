@@ -1,0 +1,69 @@
+# Datasets:
+
+datasets:
+  TT:
+    # 0 --> not fitted, 1 --> fitted
+    signal: 1
+    range: [0.5,1.5]
+    histname: TT_yields
+  DY:
+    signal: 1
+    range: [0.5,1.5]
+    histname: DY_yields
+  ZZ:
+    signal: 1
+    range: [-20,20]
+    histname: ZZ_yields
+  ZH:
+    signal: 1
+    range: [-50,50]
+    histname: ZH_yields
+  WW:
+    signal: 0
+    range: [-10,10]
+    histname: WW_yields
+  WZ:
+    signal: 0
+    range: [-10,10]
+    histname: WZ_yields
+
+#  OtG:
+#    # Fitted
+#    signal: 1
+#    # range: define fit range as (range[0]*nevents, range[1]*nevents)
+#    # the fit might crash if the total PDF gets negative for some fit parameters
+#    # : > has to be tuned
+#    range: [-0.2,0.2]
+#    histname: OtG_yields
+#  
+#  OG:
+#    signal: 1
+#    range: [-1.,1.]
+#    histname: OG_yields
+#  
+#  OC81qq:
+#    signal: 1
+#    range: [-20,20]
+#    histname: OC81qq_yields
+#  
+#  OC8ut:
+#    signal: 1
+#    range: [-50,50]
+#    histname: OC8ut_yields
+#
+# Analysis, i.e. fit configuration
+
+analysis:
+
+  # variable used for fitting 
+  inputvar: Box_yields
+  
+  numcpu: 1
+  # options:
+  #      - get: get histogram (histname) from file (histfile)
+  #		   - verbose: print all the fit information (default off)
+  options: get
+  
+  # If "get" mode: specify file containing all the histograms.
+  # If every process has a different file, put a "histfile" for each process INSTEAD of here
+  histfile: results/tests/MIS_hists.root

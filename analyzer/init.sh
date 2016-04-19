@@ -16,7 +16,7 @@ else
 
     module load python/python27_sl6_gcc49
     module load gcc/gcc-4.9.1-sl6_amd64
-    #module load root/6.02.05-sl6_gcc49
+    module load root/6.06.02-sl6_gcc49
     source /home/fynu/swertz/soft/root-6.02.12/bin/thisroot.sh
     export PYTHONPATH="/home/fynu/sbrochet/.local/lib/python2.7/site-packages:$PYTHONPATH"
 

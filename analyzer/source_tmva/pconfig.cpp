@@ -60,6 +60,9 @@ PConfig::PConfig(const std::string& configFile){
   plotBins = analysis["plotbins"].as<int16_t>();
   writeOptions = analysis["writeoptions"].as<std::vector<std::string>>();
   outputTasks = analysis["outputtasks"].as<std::vector<std::string>>();
+  splitMode = "";
+  if (analysis["splitmode"])
+    splitMode = analysis["splitmode"].as<std::string>();
   splitName = analysis["splitname"].as<std::string>();
   logName = analysis["log"].as<std::string>();
 
@@ -193,6 +196,10 @@ std::vector<std::string> PConfig::GetWriteOptions(void) const{
 
 std::vector<std::string> PConfig::GetOutputTasks(void) const{
   return outputTasks;
+}
+
+std::string PConfig::GetSplitMode(void) const{
+  return splitMode;
 }
 
 std::string PConfig::GetSplitName(void) const{

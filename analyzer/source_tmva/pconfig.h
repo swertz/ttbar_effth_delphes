@@ -41,6 +41,7 @@ class PConfig{
   double GetHistHiX(void) const;
   std::vector<std::string> GetWriteOptions(void) const;
   std::vector<std::string> GetOutputTasks(void) const;
+  std::string GetSplitMode(void) const;
   std::string GetSplitName(void) const;
   std::string GetLogName(void) const;
   std::string GetInputVar(uint32_t i) const;
@@ -63,7 +64,7 @@ class PConfig{
   double workingPoint, lumi;
   int16_t histBins, plotBins;
   double histLoX, histHiX;
-  std::string splitName, logName, commonEvtWeight;
+  std::string splitName, logName, commonEvtWeight, splitMode;
   std::vector<std::string> inputVars, writeOptions, outputTasks;
 
   std::map<std::string, int16_t> colorMap;

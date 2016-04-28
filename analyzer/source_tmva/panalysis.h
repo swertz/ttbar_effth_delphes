@@ -31,7 +31,8 @@ class PAnalysis{
   void DoPlot(void);
   void DoROC(void);
   void BkgEffWPPrecise(void);
-  //void FiguresOfMerit(void);
+  std::map<std::string, std::vector<double>> FiguresOfMerit(void);
+  void WPFromFigureOfMerit(void);
   void WriteOutput(void);
   void WriteSplitRootFiles(void);
   void WriteResult(void);

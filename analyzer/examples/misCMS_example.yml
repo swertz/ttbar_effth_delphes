@@ -52,7 +52,7 @@ datasets:
     ZH:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/ZH125_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         signal: -1
-        color: kWhite
+        color: kRed
         #reel value 0.0249
         xsection: 0.0249      
         genevents: 999462
@@ -89,7 +89,7 @@ datasets:
 #    DYbb:
 #        path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/DYbb_Summer12_final_skimed_llbbX_withWeights_V1.root"]
 #        signal: -1
-#        color: 416-7
+#        color: 600
 #        xsection: 3503.71
 #        genevents: 46515036
 #        treename: rds_zbb
@@ -104,7 +104,7 @@ datasets:
 #        treename: rds_zbb
 #        weightname: [MinusLogW_gg_Zbb]
 #        evtweight: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*1.359
-    Data:
+    data_obs:
         path: ["/home/fynu/bfrancois/storage/RDS/5320_CSV_Skimmed_V5/llbbX/Data2012_Summer12_final_skimed_llbbX_withWeights_V1.root"]
         signal: -5
         color: kBlack
@@ -117,19 +117,21 @@ datasets:
 
 # Analysis: define options relative to the tree building (used by driver.py) and the MVA training (used by tmva)
 analysis:
-    name: purMinMax_withZh   #DYbbxx_vs_bx_noZh_PurityPM
-    outputdir: results/purMinMax_withZh   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
+    name:   MIS_signif   #purMinMax_withZh   #DYbbxx_vs_bx_noZh_PurityPM
+    #outputdir: results/smallestYieldsFirst_keepSmallYield_fullPhaseSpace_SF_noZh_DYxx_DYbx_DYbb_Sig01_1Lvl   #results/purMinMax_withZh   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
+    outputdir: results/dummy #results/significance_v0   #results/purMinMax_withZh   #results/DYbbxx_vs_bx_noZh_PurityPM    #zh_LogDiff_with60weight_keepBigYield_withZh
     # Use these variables for training, in addition to the MEM-weights (if given)
     otherinputvars: []
     # Weights common to all the processes, which will be passed to TMVA during training
     commonweights: btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight
-    # Apply a skimming on the input rootfiles before to start the whole chain. 
-    # WARNING : modifying the formula will update the skimmed file but modifying the input path will NOT --> you need to delete the existing skimmed files
+    # Apply a skimming on the input rootfiles before to start the whole chain
     applySkimming: true
-    skimmingFormula: (rc_stage_6_idx || rc_stage_16_idx) && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 &&  MinusLogW_ZH_cor0>0 && jetmetMETsignificance < 10 && IncLepslep1pt > 20 && IncLepslep2pt > 20 &&  eventSelectiondilepM_inc > 60 &&  eventSelectiondilepM_inc < 120  && jetmetbjet1pt > 30 && jetmetbjet2pt > 30 
+    #skimmingFormula: (rc_stage_6_idx || rc_stage_16_idx) && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 && IncLepslep1pt > 20 && IncLepslep2pt > 20 && jetmetbjet1pt > 30 && jetmetbjet2pt > 30
+    skimmingFormula: (rc_stage_6_idx || rc_stage_16_idx || rc_stage_26_idx) && MinusLogW_TT>0 && MinusLogW_gg_Zbb>0 && MinusLogW_ZZ_cor0>0 &&  MinusLogW_ZH_cor0>0 && IncLepslep1pt > 20 && IncLepslep2pt > 20  && jetmetbjet1pt > 30 && jetmetbjet2pt > 30 
+    #&& jetmetMETsignificance < 10 && IncLepslep1pt > 20 && IncLepslep2pt > 20 &&  eventSelectiondilepM_inc > 60 &&  eventSelectiondilepM_inc < 120  && jetmetbjet1pt > 30 && jetmetbjet2pt > 30 
     #&& MinusLogW_ZH_cor0<60 && MinusLogW_TT<60 && MinusLogW_gg_Zbb<60 && MinusLogW_ZZ_cor0<60 && MinusLogW_WWbb < 60
     # Limit total number of tmva run in parallel:
-    maxTMVA: 8
+    maxTMVA: 15
     # MLP, BDT or Singleton
     # "Singleton" means no MVA training, only cutting on a single variable
     mvamethod: Singleton
@@ -144,7 +146,9 @@ analysis:
     # Do we choose the analysis based on Yield or discrimination :  "DiscriBased" or "YieldsBased" 
     analysisChoiceMode: "YieldsBased"  
     # Consider analysis valid if the purity significance is imporved byt at least puritySigImprovementCriteria units
-    puritySigImprovementCriteria: 1
+    puritySigImprovementCriteria: 3
+    purityImprovementCriteria: 0.3
+    minmcevents_afterCut: 10
     # pb-1
     lumi: 19700
     # Bins in the histos used to draw the ROC curve and find cut value
@@ -160,7 +164,7 @@ analysis:
     # Min. number of expected events in a bin of any MVA template
     minbincontent: 1
     # Remove analysis results that were found to be non-optimal (true / false)
-    removebadana: true
+    removebadana: false
     # Remove from list of signals those that have already been trained against (true / false). NOTE: not yet implemented
     removefrompool: false
     # Stop branching when at least one sample has less MC events than this
@@ -168,9 +172,11 @@ analysis:
     minmcevents: 100
     # If not enough MC events to train a new NN, still keep the previous results if there
     # are at least that many events. Otherwise, stop branching. Set to 0 if no check needed.
-    minkeepevents: 500
+    minkeepevents: 0
     # Stop branching when reached level (1=two subsets; 2=four subsets, ...):
-    maxlevel: 12
+    maxlevel: 30
     writeoptions: [plot, hist, ROC]
     outputtasks: [output, result, split]
+    # Chose how to define the cuts, can be : "SoverB" "SoverSqrtB" or "SoverSqrtSB", if not set, then cut to keep 50% of signal
+    splitmode: "SoverB"
 

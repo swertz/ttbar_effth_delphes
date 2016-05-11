@@ -30,7 +30,14 @@ int main(int argc, char **argv){
   if( contains(myConfig->GetWriteOptions(), "ROC") )
     myAna->DoROC();
 
-  myAna->BkgEffWPPrecise();
+  if( myConfig->GetSplitMode() == "SoverB" || myConfig->GetSplitMode() == "SoverSqrtB" || myConfig->GetSplitMode() == "SoverSqrtSB" )
+    myAna->WPFromFigureOfMerit();
+  else if( myConfig->GetSplitMode() == "fixedSigEff" )  
+    myAna->BkgEffWPPrecise();
+  else{
+    cerr << "No splitmode specified!" << endl;
+    exit(1);
+  }
   
   if( contains(myConfig->GetOutputTasks(), "output") )
     myAna->WriteOutput();

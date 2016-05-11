@@ -18,12 +18,12 @@ splitMode = "bothCSV_njets" #bothCSV_njets, CSVprod, jetNumb
 #inFile = "results/%s/MIS_results.out"%(nameOutDir)
 procList = ["DY","TT","ZZ","ZH","WW","WZ", "data_obs"]
 createHistoOrderedYields(inFile,"TT", 0, procList, "data_obs")
-createHistoOrderedYields(inFile,"DY", 0, procList, "")
+createHistoOrderedYields(inFile,"DY", 0, procList, "data_obs")
 
 (Dict, nbox) = getDictProc_rootFileList_nbox(myConfig, inFile)
 
 #createRootFilesSplitted(inFile, splitMode, procList, myConfig)
-fileout = writeHistoSplitted(inFile, splitMode, procList, myConfig, nameout, nameplus)
-rootfileout = createHistoStat(fileout, procList, splitMode, nameout)
+#fileout = writeHistoSplitted(inFile, splitMode, procList, myConfig, nameout, nameplus)
+#rootfileout = createHistoStat(fileout, procList, splitMode, nameout)
 
-drawMCdata("histoMIS/histoSplittedCSV_and_nJets_%s.root"%nameout, procList, splitMode, myConfig, nbox, nameout+splitMode)
+#drawMCdata("histoMIS/histoSplittedCSV_and_nJets_%s.root"%nameout, procList, splitMode, myConfig, nbox, nameout+splitMode)

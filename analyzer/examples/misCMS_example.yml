@@ -178,5 +178,5 @@ analysis:
     writeoptions: [plot, hist, ROC]
     outputtasks: [output, result, split]
     # Chose how to define the cuts, can be : "SoverB" "SoverSqrtB" or "SoverSqrtSB", if not set, then cut to keep 50% of signal
-    #splitmode: "SoverB"
+    splitmode: "SoverB"
 

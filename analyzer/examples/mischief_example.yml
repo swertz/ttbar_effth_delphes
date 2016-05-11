@@ -82,7 +82,11 @@ analysis:
     iterations: 500
     # Number of events used for training (= number of events used for testing!)
     trainentries: 1000
-    # Will split events so as to keep this efficiency for the signal
+    # Chose how to define the cuts to split a box, can be : "SoverB", "SoverSqrtB", "SoverSqrtSB" or "fxedSigEff"
+    # The first three can be used to cut in order to maximize the down fluctuation of the chosen figure of merit
+    # The last one is to define the cut in order to keep a certain amount of signal (defined with "workingpoint")
+    splitmode: "fixedSigEff"
+    # Will split events so as to keep this efficiency for the signal (only relevant for "fxedSigEff" splitmode)
     workingpoint: 0.5
     # Consider analysis valid if background fraction < this value (set to 0 if no check needed):
     maxbkgeff: 0.35

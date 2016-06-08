@@ -1,0 +1,1 @@
+g++ -o preselection_llbbX preselection_llbbX.cpp $(root-config --cflags --libs --ldflags) -lGenVector -lMathCore -L/home/fynu/swertz/storage/Delphes/Delphes-3.3.0/ -lDelphes -I/home/fynu/swertz/storage/Delphes/Delphes-3.3.0/

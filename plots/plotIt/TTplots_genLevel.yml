@@ -1,0 +1,143 @@
+'Top Pt':
+  x-axis: "Pt_{t} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Top Eta':
+  x-axis: "#eta_{t}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.80, 0.6, 1.00, 0.91]
+
+'Top Rapidity':
+  x-axis: "y_{t}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.80, 0.6, 1.00, 0.91]
+
+'AntiTop Pt':
+  x-axis: "Pt_{#bar{t}} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'AntiTop Eta':
+  x-axis: "#eta_{#bar{t}}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'AntiTop Rapidity':
+  x-axis: "y_{#bar{t}}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'TTbar Mass':
+  x-axis: "M_{t#bar{t}} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'TTbar Eta':
+  x-axis: "#eta_{t#bar{t}}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.48, 0.6, 0.88, 0.91]
+
+'TTbar Rapidity':
+  x-axis: "y_{t#bar{t}}"
+  y-axis: "Normalized"
+  normalized: true
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.80, 0.6, 1.00, 0.91]
+
+'TTbar DeltaEta':
+  x-axis: "|#Delta#eta (t, #bar{t})|"
+  x-axis-range: [0,7]
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'CosStarPlusCosStarMinus':
+  x-axis: "cos #theta^{+} cos #theta^{-}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'CosStarPlus':
+  x-axis: "cos #theta^{+}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.48, 0.6, 0.88, 0.91]
+
+'CosStarMinus':
+  x-axis: "cos #theta^{-}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.48, 0.6, 0.88, 0.91]
+
+'LepPlusLepMinus CosPhi':
+  x-axis: "cos #phi^{*}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'LepPlusLepMinus DeltaPhi':
+  x-axis: "|#Delta#phi(l^{+},l^{-})|"
+  x-axis-range: [0.1,3.14]
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'LepPlusLepMinus DeltaEta':
+  x-axis: "|#Delta#eta (l^{+},l^{-})|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+

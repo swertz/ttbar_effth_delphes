@@ -1,0 +1,58 @@
+Retrieving MadGraph info.
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3012e-06, XS = 0.28114
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3102e-06, XS = 0.28191
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.2982e-06, XS = 0.28112
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.303e-06, XS = 0.28091
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3214e-06, XS = 0.28157
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3108e-06, XS = 0.28159
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.2984e-06, XS = 0.28111
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3256e-06, XS = 0.28161
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3106e-06, XS = 0.28138
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.2926e-06, XS = 0.28047
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3246e-06, XS = 0.28263
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3122e-06, XS = 0.28088
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3044e-06, XS = 0.28091
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3174e-06, XS = 0.28178
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3284e-06, XS = 0.28141
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3284e-06, XS = 0.28195
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.298e-06, XS = 0.28183
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.324e-06, XS = 0.28138
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3074e-06, XS = 0.28092
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3266e-06, XS = 0.28212
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3168e-06, XS = 0.28232
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.303e-06, XS = 0.28167
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3186e-06, XS = 0.28191
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3086e-06, XS = 0.28164
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.2928e-06, XS = 0.28076
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3124e-06, XS = 0.28153
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.323e-06, XS = 0.28184
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3026e-06, XS = 0.28124
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.307e-06, XS = 0.28183
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3326e-06, XS = 0.28209
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3208e-06, XS = 0.2816
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.337e-06, XS = 0.28224
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3142e-06, XS = 0.28193
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3154e-06, XS = 0.28147
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3042e-06, XS = 0.28135
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3162e-06, XS = 0.28137
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3142e-06, XS = 0.2823
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.315e-06, XS = 0.28141
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.332e-06, XS = 0.28179
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3024e-06, XS = 0.28173
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3132e-06, XS = 0.28148
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.316e-06, XS = 0.28155
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3126e-06, XS = 0.28098
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3166e-06, XS = 0.28174
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3198e-06, XS = 0.28115
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3164e-06, XS = 0.28161
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.321e-06, XS = 0.2816
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3182e-06, XS = 0.28208
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3216e-06, XS = 0.2816
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3146e-06, XS = 0.28178
+File tempLHE_O8ut.lhe: 50000 events, weight = 8.3188e-06, XS = 0.2828
+
+## Summary ##
+
+Production cross section:  0.281588431373
+Production event weight:  0,00000016302229911572472656057877261892574694002178
+Production nEvents:        2550000

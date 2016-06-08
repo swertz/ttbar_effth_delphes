@@ -1,0 +1,88 @@
+'genHistos_TTbar.root':
+  type: signal
+  #cross-section: 39.98
+  generated-events: 1581518
+  legend: 'TTbar'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 1
+  line-color: '#FF0000'
+  order: 0
+
+'genHistos_OtG.root':
+  type: signal
+  #cross-section: 13.606
+  generated-events: 924221
+  legend: 'OtG'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#FF6600'
+  order: 1
+
+'genHistos_OG.root':
+  type: signal
+  #cross-section: 1.123
+  generated-events: 457719
+  legend: 'OG'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#006600'
+  order: 2
+
+'genHistos_OphiG.root':
+  type: signal
+  #cross-section: 0.37
+  generated-events: 581255
+  legend: '-OphiG'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#00CC00'
+  #scale: -1
+  order: 3
+
+'genHistos_O81qq.root':
+  type: signal
+  #cross-section: 0.258
+  generated-events: 856292
+  legend: 'O81qq'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#EA00EA'
+  order: 4
+
+'genHistos_O83qq.root':
+  type: signal
+  #cross-section: 6025.2
+  generated-events: 381931
+  legend: 'O83qq'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#AA00AA'
+  order: 5
+
+'genHistos_O8ut.root':
+  type: signal
+  #cross-section: 0.155
+  generated-events: 948004
+  legend: 'O8ut'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#0000CC'
+  order: 6
+
+'genHistos_O8dt.root':
+  type: signal
+  #cross-section: 0.103
+  generated-events: 980438
+  legend: 'O8dt'
+  #fill-color: '#CF00A0B0'
+  line-width: 3
+  line-type: 7
+  line-color: '#2DB5B5'
+  order: 7

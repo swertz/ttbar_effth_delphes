@@ -1,0 +1,654 @@
+### LEPTON 1 ###
+
+'lep1_Pt':
+  x-axis: "Leading lepton Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [20, 400]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false 
+
+'lep1_Eta':
+  x-axis: "Leading lepton #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### LEPTON 2 ###
+
+'lep2_Pt':
+  x-axis: "Subleading lepton Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [20, 250]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'lep2_Eta':
+  x-axis: "Subleading lepton #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### DILEPTON ###
+
+'ll_M':
+  x-axis: "M_{ll} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 1000]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'ll_Pt':
+  x-axis: "Pt_{ll} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 600]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'ll_Eta':
+  x-axis: "#eta_{ll}"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-5, 5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'ll_DR':
+  x-axis: "#DeltaR(l,l)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 6]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'ll_DEta':
+  x-axis: "|#Delta#eta(l,l)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 5]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'ll_DPhi':
+  x-axis: "|#Delta#phi(l,l)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+### B-JET 1 ###
+
+'bjet1_Pt':
+  x-axis: "Leading b-jet Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [30, 500]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bjet1_Eta':
+  x-axis: "Leading b-jet #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### B-JET 2 ###
+
+'bjet2_Pt':
+  x-axis: "Subleading b-jet Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [30, 300]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bjet2_Eta':
+  x-axis: "Subleading b-jet #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### JET 3 ###
+
+'jet3_Pt':
+  x-axis: "Third jet Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [30, 600]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'jet3_Eta':
+  x-axis: "Third jet #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### JET 4 ###
+
+'jet4_Pt':
+  x-axis: "Fourth jet Pt (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [30, 300]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'jet4_Eta':
+  x-axis: "Fourth jet #eta"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-2.5, 2.5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+### DI-B-JETS ###
+
+'bb_M':
+  x-axis: "M_{bb} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 800]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bb_Pt':
+  x-axis: "Pt_{bb} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 400]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bb_Eta':
+  x-axis: "#eta_{bb}"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-5, 5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bb_DR':
+  x-axis: "#DeltaR(b,b)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 6]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bb_DEta':
+  x-axis: "|#Delta#eta(b,b)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'bb_DPhi':
+  x-axis: "|#Delta#phi(b,b)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+## MET ##
+
+'MET_met':
+  x-axis: "MET (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  binning-x: 1
+  x-axis-range: [0, 400]
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+## n(B)Jets ##
+
+'nExtraJet':
+  x-axis: "# Extra Jets"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 7]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'nBJet':
+  x-axis: "# B-Jets"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [2, 5]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+## llbb objects ##
+
+'llbb_M':
+  x-axis: "M_{llbb} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [100, 1200]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'llbb_Pt':
+  x-axis: "Pt_{llbb} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 400]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'llbb_Eta':
+  x-axis: "#eta_{llbb}"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [-5, 5]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'DR_ll_bb':
+  x-axis: "#DeltaR(ll,bb)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 6]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'DEta_ll_bb':
+  x-axis: "|#Delta#eta(ll,bb)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 6]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'DPhi_ll_bb':
+  x-axis: "|#Delta#phi(ll,bb)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'DRbl_min':
+  x-axis: "min #DeltaR(b,l)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 4]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'DRbl_max':
+  x-axis: "max #DeltaR(b,l)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [1, 5]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+## llbb MET objects ##
+
+'ScalHT':
+  x-axis: "Scalar HT (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [100, 1100]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'llbbMet_Mt':
+  x-axis: "Mt_{llbbMet} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [100, 1500]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'llbbMet_Pt':
+  x-axis: "Pt_{llbbMet} (GeV)"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 400]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'DPhi_ll_Met':
+  x-axis: "|#Delta#phi(ll,Met)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'DPhi_bb_Met':
+  x-axis: "|#Delta#phi(bb,Met)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'DPhi_llbb_Met':
+  x-axis: "|#Delta#phi(llbb,Met)|"
+  y-axis: "Normalized"
+  normalized: true
+  x-axis-range: [0, 3.14159]
+  binning-x: 1
+  rebin: 2
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+## WEIGHTS ##
+
+'Weight_TTbar*':
+  x-axis: "-log(W_{tt})"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+
+'RelPrec_Weight_TTbar':
+  x-axis: "#sigma(W_{tt})/W_{tt}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_OtG*':
+  x-axis: "-log(|W_{OtG}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_OtG':
+  x-axis: "D_{OtG}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'RelPrec_Weight_OtG':
+  x-axis: "#sigma(W_{OtG})/|W_{OtG}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_OG*':
+  x-axis: "-log(|W_{OG}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_OG':
+  x-axis: "D_{OG}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'RelPrec_Weight_OG':
+  x-axis: "#sigma(W_{OG})/|W_{OG}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_OphiG*':
+  x-axis: "-log(|W_{OphiG}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_OphiG':
+  x-axis: "D_{OphiG}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  legend-position: [0.20, 0.6, 0.55, 0.91]
+
+'RelPrec_Weight_OphiG':
+  x-axis: "#sigma(W_{OphiG})/|W_{OphiG}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_O81qq*':
+  x-axis: "-log(|W_{O81qq}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_O81qq':
+  x-axis: "D_{O81qq}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'RelPrec_Weight_O81qq':
+  x-axis: "#sigma(W_{O81qq})/|W_{O81qq}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_O83qq*':
+  x-axis: "-log(|W_{O83qq}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_O83qq':
+  x-axis: "D_{O83qq}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'RelPrec_Weight_O83qq':
+  x-axis: "#sigma(W_{O83qq})/|W_{O83qq}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_O8ut*':
+  x-axis: "-log(|W_{O8ut}|)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_O8ut':
+  x-axis: "D_{O8ut}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+  override: true
+
+'RelPrec_Weight_O8ut':
+  x-axis: "#sigma(W_{O8ut})/|W_{O8ut}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Weight_O8dt*':
+  x-axis: "-log(|W_{O8dt}|)"
+  y-axis: "Normalized"
+  normalized: true
+  binning-x: 1
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Discr_O8dt':
+  x-axis: "D_{O8dt}"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'RelPrec_Weight_O8dt':
+  x-axis: "#sigma(W_{O8dt})/|W_{O8dt}|"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false
+
+'Time_Weights':
+  x-axis: "Time (s)"
+  y-axis: "Normalized"
+  normalized: true
+  log-y: both
+  save-extensions: ["png"]
+  show-ratio: false

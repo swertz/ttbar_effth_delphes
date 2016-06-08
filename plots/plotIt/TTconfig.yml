@@ -1,0 +1,31 @@
+configuration:
+  width: 800
+  height: 800
+  #luminosity-label: '%lumi% fb^{-1} (13 TeV)'
+  luminosity-label: '13 TeV'
+  experiment: "MadGraph5 + Pythia8 + Delphes3"
+  #experiment: "MadGraph5 + Pythia8"
+  #extra-label: "(parton level)"
+  #root: "/home/fynu/swertz/llbb/CommonTools/histFactory"
+  root: "/home/fynu/swertz/ttbar_effth_delphes/15_November/histos/"
+  #root: "/home/fynu/swertz/ttbar_effth_delphes/15_November/histos/genLevel/"
+  #root: "/home/fynu/swertz/ttbar_effth_delphes/15_November/histos/posneg/"
+  luminosity: 100000
+  #luminosity-error: 0.12
+  error-fill-style: 3154
+  error-fill-color: "#ee556270"
+  ratio-fit-error-fill-style: 1001
+  ratio-fit-error-fill-color: "#aa556270"
+  ratio-fit-line-color: "#0B486B"
+
+files:
+  #include: ['TTfiles_genLevel.yml']
+  include: ['TTfiles.yml']
+
+plots:
+  #include: ['TTplots_genLevel.yml']
+  include: ['TTplots_normalized.yml']
+
+legend:
+  position: [0.6, 0.7, 0.98, 0.91]
+  #position: [0.75, 0.6, 0.98, 0.91]

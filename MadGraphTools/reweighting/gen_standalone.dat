@@ -1,0 +1,64 @@
+#launch dim6_2_OR3PhiQ_0
+#set dim6 2 1.0
+
+#launch dim6_3_OI3PhiQ_0
+#set dim6 2 0.0
+#set dim6 3 1.0
+
+launch dim6_4_ORtW_0
+#set dim6 2 0.0
+set dim6 4 1.0
+
+#launch dim6_5_OitW_0
+#set dim6 4 0.0
+#set dim6 5 1.0
+
+launch dim6_6_ORtG_0
+set dim6 4 0.0
+set dim6 6 1.0
+
+#launch dim6_7_OItG_0
+#set dim6 6 0.0
+#set dim6 7 1.0
+
+launch dim6_8_OG_0
+set dim6 6 0.0
+set dim6 8 1.0
+
+launch dim6_9_OPhiG_0
+set dim6 8 0.0
+set dim6 9 1.0
+
+#launch fourf_1_O13QQ_0
+#set dim6 9 0.0
+#set fourfermion 1 1.0
+
+launch fourf_2_O81QQ_0
+#set fourfermion 1 0.0
+set dim6 9 0.0
+set fourfermion 2 1.0
+
+launch fourf_3_O83QQ_0
+set fourfermion 2 0.0
+set fourfermion 3 1.0
+
+launch fourf_4_O8ut_0
+set fourfermion 3 0.0
+set fourfermion 4 1.0
+
+launch fourf_5_O8dt_0
+set fourfermion 4 0.0
+set fourfermion 5 1.0
+
+launch fourf_6_O1Qu_0
+set fourfermion 5 0.0
+set fourfermion 6 1.0
+
+launch fourf_7_O1Qd_0
+set fourfermion 6 0.0
+set fourfermion 7 1.0
+
+launch fourf_8_O1Qt_0
+set fourfermion 7 0.0
+set fourfermion 8 1.0
+

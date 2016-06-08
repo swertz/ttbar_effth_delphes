@@ -1,0 +1,34 @@
+***************
+*** 21,26 ****
+--- 21,27 ----
+  C     
+  C     CONSTANTS
+  C     
++       INCLUDE 'coupl.inc'
+        INCLUDE 'genps.inc'
+        INCLUDE 'maxconfigs.inc'
+        INCLUDE 'nexternal.inc'
+***************
+*** 379,384 ****
+--- 380,388 ----
+            IF (GOODHEL(I,IMIRROR) .OR. NTRY(IMIRROR).LE.MAXTRIES.OR.(ISU
+       $     M_HEL.NE.0)) THEN
+              T=MATRIX1(P ,NHEL(1,I),JC(1))
++             GC_27 = -GC_27
++             T=5D-1*(T-MATRIX1(P ,NHEL(1,I),JC(1)))
++             GC_27 = -GC_27
+              DO JJ=1,NINCOMING
+                IF(POL(JJ).NE.1D0.AND.NHEL(JJ,I).EQ.INT(SIGN(1D0
+       $         ,POL(JJ)))) THEN
+***************
+*** 436,441 ****
+--- 446,454 ----
+          I = HEL_PICKED
+  
+          T=MATRIX1(P ,NHEL(1,I),JC(1))
++         GC_27 = -GC_27
++         T=5D-1*(T-MATRIX1(P ,NHEL(1,I),JC(1)))
++         GC_27 = -GC_27
+  
+          DO JJ=1,NINCOMING
+            IF(POL(JJ).NE.1D0.AND.NHEL(JJ,I).EQ.INT(SIGN(1D0,POL(JJ)))

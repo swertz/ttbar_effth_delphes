@@ -1,0 +1,28 @@
+***************
+*** 32,37 ****
+--- 32,38 ----
+  C     GLOBAL
+  C     
+        INCLUDE 'helamp.inc'
++       INCLUDE 'coupl.inc'
+  C     
+  C     LOCAL VARIABLES 
+  C     
+***************
+*** 311,316 ****
+--- 312,326 ----
+        DO IHEL=1,NCOMB
+          IF (GOODHEL(IHEL) .OR. NTRY .LT. 100) THEN
+            T=MATRIX(P ,NHEL(1,IHEL),JC(1))
++           GC_28 = -GC_28
++           GC_44 = -GC_44
++           GC_49 = -GC_49
++           GC_50 = -GC_50
++           T = 5D-1*(T-MATRIX(P ,NHEL(1,IHEL),JC(1)))
++           GC_28 = -GC_28
++           GC_44 = -GC_44
++           GC_49 = -GC_49
++           GC_50 = -GC_50
+            ANS=ANS+T
+            HELAMP(IHEL)=T
+            IF (T .NE. 0D0) THEN

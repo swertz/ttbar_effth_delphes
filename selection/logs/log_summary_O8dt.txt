@@ -1,0 +1,65 @@
+Retrieving MadGraph info.
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_11/unweighted_events.lhe: 50000 events, weight = 5.247e-06, XS = 0.18453
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_23/unweighted_events.lhe: 50000 events, weight = 5.2578e-06, XS = 0.18448
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_29/unweighted_events.lhe: 50000 events, weight = 5.2482e-06, XS = 0.18452
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_3/unweighted_events.lhe: 50000 events, weight = 5.2488e-06, XS = 0.18438
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_9/unweighted_events.lhe: 50000 events, weight = 5.251e-06, XS = 0.18477
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_30/unweighted_events.lhe: 50000 events, weight = 5.2464e-06, XS = 0.1846
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_47/unweighted_events.lhe: 50000 events, weight = 5.256e-06, XS = 0.18502
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_40/unweighted_events.lhe: 50000 events, weight = 5.2504e-06, XS = 0.18503
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_37/unweighted_events.lhe: 50000 events, weight = 5.261e-06, XS = 0.18478
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_4/unweighted_events.lhe: 50000 events, weight = 5.2534e-06, XS = 0.18448
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_24/unweighted_events.lhe: 50000 events, weight = 5.2532e-06, XS = 0.18467
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_16/unweighted_events.lhe: 50000 events, weight = 5.2408e-06, XS = 0.1842
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_18/unweighted_events.lhe: 50000 events, weight = 5.252e-06, XS = 0.1842
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_12/unweighted_events.lhe: 50000 events, weight = 5.2502e-06, XS = 0.18428
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_0/unweighted_events.lhe: 50000 events, weight = 5.247e-06, XS = 0.18461
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_20/unweighted_events.lhe: 50000 events, weight = 5.2514e-06, XS = 0.18461
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_44/unweighted_events.lhe: 50000 events, weight = 5.2548e-06, XS = 0.18486
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_33/unweighted_events.lhe: 50000 events, weight = 5.2488e-06, XS = 0.18463
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_39/unweighted_events.lhe: 50000 events, weight = 5.2402e-06, XS = 0.18413
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_34/unweighted_events.lhe: 50000 events, weight = 5.2496e-06, XS = 0.18463
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_43/unweighted_events.lhe: 50000 events, weight = 5.2678e-06, XS = 0.18487
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_49/unweighted_events.lhe: 50000 events, weight = 5.2644e-06, XS = 0.18485
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_27/unweighted_events.lhe: 50000 events, weight = 5.2438e-06, XS = 0.18395
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_7/unweighted_events.lhe: 50000 events, weight = 5.2548e-06, XS = 0.18485
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_15/unweighted_events.lhe: 50000 events, weight = 5.2488e-06, XS = 0.18421
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_5/unweighted_events.lhe: 50000 events, weight = 5.2542e-06, XS = 0.18438
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_25/unweighted_events.lhe: 50000 events, weight = 5.252e-06, XS = 0.18441
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_17/unweighted_events.lhe: 50000 events, weight = 5.2506e-06, XS = 0.18459
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_36/unweighted_events.lhe: 50000 events, weight = 5.259e-06, XS = 0.18473
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_41/unweighted_events.lhe: 50000 events, weight = 5.2456e-06, XS = 0.18427
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_46/unweighted_events.lhe: 50000 events, weight = 5.2414e-06, XS = 0.18399
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_31/unweighted_events.lhe: 50000 events, weight = 5.2508e-06, XS = 0.18442
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_10/unweighted_events.lhe: 50000 events, weight = 5.2594e-06, XS = 0.18485
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_28/unweighted_events.lhe: 50000 events, weight = 5.252e-06, XS = 0.18434
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_22/unweighted_events.lhe: 50000 events, weight = 5.2494e-06, XS = 0.18429
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_8/unweighted_events.lhe: 50000 events, weight = 5.2548e-06, XS = 0.18465
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_2/unweighted_events.lhe: 50000 events, weight = 5.2692e-06, XS = 0.18519
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_26/unweighted_events.lhe: 50000 events, weight = 5.2588e-06, XS = 0.18463
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_6/unweighted_events.lhe: 50000 events, weight = 5.2528e-06, XS = 0.18427
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_14/unweighted_events.lhe: 50000 events, weight = 5.2538e-06, XS = 0.18521
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_48/unweighted_events.lhe: 50000 events, weight = 5.2578e-06, XS = 0.18481
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_42/unweighted_events.lhe: 50000 events, weight = 5.2558e-06, XS = 0.18468
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_35/unweighted_events.lhe: 50000 events, weight = 5.2542e-06, XS = 0.18445
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_38/unweighted_events.lhe: 50000 events, weight = 5.2454e-06, XS = 0.18449
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_32/unweighted_events.lhe: 50000 events, weight = 5.2402e-06, XS = 0.1842
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_45/unweighted_events.lhe: 50000 events, weight = 5.256e-06, XS = 0.18441
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_13/unweighted_events.lhe: 50000 events, weight = 5.24e-06, XS = 0.18415
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_19/unweighted_events.lhe: 50000 events, weight = 5.2388e-06, XS = 0.18409
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_1/unweighted_events.lhe: 50000 events, weight = 5.2544e-06, XS = 0.18442
+File /home/fynu/swertz/scratch/Madgraph/madgraph_TopEffTh/TTbar_2j_TopEffTh_O8dt_NPleq2_QED1_MEdecay/Events/try0_21/unweighted_events.lhe: 50000 events, weight = 5.2434e-06, XS = 0.18469
+
+Retrieving Delphes info.
+
+Retrieving selection info.
+
+## Summary ##
+
+Production cross section:  0.184535
+Production sum of weights: 0,00000000525154799999999949279777202880079012281556
+Production nEvents:        2500000
+Matched sum of weights:    980438
+Matched nEvents:           1231316
+Selected sum of weights:   65147
+Selected nEvents:          85911

@@ -1,0 +1,15 @@
+=== modified file 'models/import_ufo.py'
+--- models/import_ufo.py  2015-10-02 02:01:19 +0000
++++ models/import_ufo.py  2015-11-02 23:22:10 +0000     
+@@ -1879,6 +1880,12 @@
+                     if coupling in zero_couplings:
+                         modify=True
+                         del vertex['couplings'][key]
++                    elif coupling.startswith('-'):
++                        coupling = coupling[1:]
++                        if coupling in zero_couplings:
++                            modify=True
++                            del vertex['couplings'][key]                      
++                        
+                 if modify:
+                     mod_vertex.append(vertex)

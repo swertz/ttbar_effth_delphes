@@ -1,0 +1,80 @@
+967c967
+<         tag = proc_list[0].get_initial_final_ids()        
+---
+>         tag = proc_list[0].get_initial_final_ids()
+989c989
+<         
+---
+>        
+1767,1768c1767,1775
+<             if item =="," and list_branch[index+1]!="(": 
+<                 if list_branch[index-2]==list_branch[index+1]:
+---
+> 
+>             if item[-1] =="," and list_branch[index+1]!="(":
+>                 # search pos of B and C 
+>                 counter=1
+>                 while 1:
+>                   if list_branch[index-counter].find("=")<0:
+>                      break
+>                   counter+=1
+>                 if list_branch[index-counter-1]==list_branch[index+1]:
+1770,1774c1777,1787
+<                     temp=list_branch[index-2]
+<                     list_branch[index-2]=list_branch[index-1]
+<                     list_branch[index-1]=temp
+<             if item =="," and list_branch[index+1]=="(":
+<                 if list_branch[index-2]==list_branch[index+2]:
+---
+>                     temp=list_branch[index-counter-1]
+>                     list_branch[index-counter-1]=list_branch[index-counter]
+>                     list_branch[index-counter]=temp
+>             if item[-1] =="," and list_branch[index+1]=="(":
+>                 # search pos of B and C 
+>                 counter=1
+>                 while 1:
+>                   if list_branch[index-counter].find("=")<0:
+>                      break
+>                   counter+=1
+>                 if list_branch[index-counter -1]==list_branch[index+2]:
+1776,1779c1789,1791
+<                     temp=list_branch[index-2]
+<                     list_branch[index-2]=list_branch[index-1]
+<                     list_branch[index-1]=temp
+< 
+---
+>                     temp=list_branch[index-counter-1]
+>                     list_branch[index-counter-1]=list_branch[index-counter]
+>                     list_branch[index-counter]=temp
+2255a2268,2270
+>             #### TEST WEIGHTS HERE ####
+>             if weight < 0:
+>                 print "*** Negative weight found ***"
+2283c2298,2299
+<                     """ % (report['over_weight'], event_nb, 100 * report['over_weight']/event_nb )  
+---
+>                     """ % (report['over_weight'], event_nb, 100 * report['over_weight']/event_nb )
+>                     logger.warning(error)
+2294a2311
+>                     logger.warning(error)
+2743c2760
+<             
+---
+>             processes = [l.replace('NP^2==2', 'NP=2') for l in processes] ##
+2902a2920,2927
+>       
+>         #### PATCH MATRIX ELEMENT ####
+>         if not os.path.isfile( pjoin(self.path_me, 'full_me', 'SubProcesses', 'done_patch') ):
+>             os.system('pushd ' + pjoin(self.path_me, 'full_me', 'SubProcesses') + ' && for dir in P*; do patch ${dir}/matrix_prod.f -b -i ' + pjoin(self.path_me, '..', 'MadSpin_patches', 'patch_MadSpin_prodME.patch') + ' ; done && popd')
+>             os.system('pushd ' + pjoin(self.path_me, 'full_me', 'SubProcesses') + ' && for dir in P*; do patch ${dir}/matrix.f -b -i ' + pjoin(self.path_me, '..', 'MadSpin_patches', 'patch_MadSpin_getInterference.patch') + ' ; done && popd')
+>             os.system('pushd ' + pjoin(self.path_me, 'production_me', 'SubProcesses') + ' && for dir in P*; do patch ${dir}/matrix_prod.f -b -i ' + pjoin(self.path_me, '..', 'MadSpin_patches', 'patch_MadSpin_prodME.patch') + ' ; done && popd')
+>         os.system('touch ' + pjoin(self.path_me, 'full_me', 'SubProcesses', 'done_patch') )
+>         
+3212c3237
+<                     if dec['decay_tag']:                                                
+---
+>                     if dec['decay_tag']:   
+3283c3308
+<         
+---
+>       

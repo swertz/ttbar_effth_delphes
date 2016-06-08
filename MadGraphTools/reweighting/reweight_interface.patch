@@ -1,0 +1,62 @@
+=== modified file 'madgraph/interface/reweight_interface.py'
+--- madgraph/interface/reweight_interface.py	2015-08-17 14:16:47 +0000
++++ madgraph/interface/reweight_interface.py	2015-08-25 07:45:02 +0000
+@@ -506,22 +506,22 @@
+                 cross += weight
+                 ratio += weight/event.wgt
+                 ratio_square += (weight/event.wgt)**2
+-                if self.output_type == "default":
+-                    event.reweight_data[tag_name] = weight
+-                    #write this event with weight
+-                    output.write(str(event))
+-                    if self.mother:
+-                        event.wgt = weight
+-                        event.reweight_data = {}
+-                        output2.write(str(event))
+-    
+-                else:
+-                    event.wgt = weight
+-                    event.reweight_data = {}
+-                    if self.mother:
+-                        output2.write(str(event))
+-                    else:
+-                        output.write(str(event))
++            #CHANGED if self.output_type == "default":
++            event.reweight_data[tag_name] = weight
++            #write this event with weight
++            output.write(str(event))
++            if self.mother:
++                event.wgt = weight
++                event.reweight_data = {}
++                output2.write(str(event))
++            #CHANGED 
++            #else:
++            #    event.wgt = weight
++            #    event.reweight_data = {}
++            #    if self.mother:
++            #        output2.write(str(event))
++            #    else:
++            #        output.write(str(event))
+                 
+         # check normalisation of the events:
+         if 'event_norm' in self.run_card:
+@@ -578,7 +578,8 @@
+                 #self.mother.run_name = old_name
+         self.lhe_input.close()
+         if not self.mother or self.output_type != "default" :
+-            target = pjoin(self.mother.me_dir, 'Events', run_name, 'events.lhe')
++            #### CHANGED
++            target = pjoin(self.mother.me_dir, 'Events', run_name, 'events_reweight_%s.lhe' % rewgtid)
+         else:
+             target = self.lhe_input.name
+         
+@@ -588,6 +589,8 @@
+             output2.close()
+             lhe = lhe_parser.EventFile(output2.name)
+             nb_event = lhe.unweight(target)
++            #### ADDED
++            files.mv(output.name, self.lhe_input.name)
+             if self.mother and  hasattr(self.mother, 'results'):
+                 results = self.mother.results
+                 results.add_detail('nb_event', nb_event)
+

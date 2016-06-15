@@ -237,6 +237,11 @@ def weightsToString(weights):
     return " * ".join(weights)
 
 def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
+    """Return a tuple with information about the box population :
+        - tuple[0] : absolute number of entry
+        - tuple[1] : effective number of entry
+        - tuple[2] : yield using lumi, xsec and #gen events
+        - tuple[3] : error on the yield"""
 
     entriesEffEntriesYield = []
     
@@ -253,6 +258,7 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     if entries == 0 : 
         entriesEffEntriesYield.append(0)
         entriesEffEntriesYield.append(0)
+        entriesEffEntriesYield.append(0)
         return entriesEffEntriesYield
     
     histName = str(hash(fileName[0]))
@@ -260,12 +266,15 @@ def getEntriesEffentriesYieldTuple(fileName, procDict, lumi):
     tempHist = ROOT.gDirectory.Get(histName)
     if tempHist is None or not isinstance(tempHist, ROOT.TH1):
         return None
-    effEntries = tempHist.Integral()
+    effEntriesError = ROOT.Double(0)
+    effEntries = tempHist.IntegralAndError(0, tempHist.GetNbinsX()+1, effEntriesError);
     
     if procDict["signal"] != -5: 
         entriesEffEntriesYield.append(effEntries)
         entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntries/procDict["genevents"])
+        entriesEffEntriesYield.append(lumi*procDict["xsection"]*effEntriesError/procDict["genevents"])
     else:
+        entriesEffEntriesYield.append(entries)
         entriesEffEntriesYield.append(entries)
         entriesEffEntriesYield.append(entries)
     

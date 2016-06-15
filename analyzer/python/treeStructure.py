@@ -30,6 +30,7 @@ class MISAnalysis:
         self.entries = {} # Holds the number of entries for sig and bkg-like subsets
         self.effEntries = {} # Holds the effective number of entries (sum of weights) for sig and bkg-like subsets
         self.yields = {} # Holds the yields for sig and bkg-like subsets
+        self.yieldsErrors = {} # Holds the yields errors for sig and bkg-like subsets
         self.sigLike = None # MISBox object
         self.bkgLike = None # MISBox object
         self._log = ""
@@ -58,6 +59,7 @@ class MISAnalysis:
                 self.entries[split] = {}
                 self.effEntries[split] = {}
                 self.yields[split] = {}
+                self.yieldsErrors[split] = {}
 
                 for name, proc in self.cfg.procCfg.items():
 
@@ -72,6 +74,7 @@ class MISAnalysis:
                     self.entries[split][name] = yieldTuple[0]
                     self.effEntries[split][name] = yieldTuple[1]
                     self.yields[split][name] = yieldTuple[2]
+                    self.yieldsErrors[split][name] = yieldTuple[3]
 
                     self.log("Process " + name + ": " + str(self.entries[split][name]) + " MC events, " + "{0:.1f}".format(self.yields[split][name]) + " expected events.")
                 
@@ -115,6 +118,7 @@ class MISBox:
         self.effEntries = {}
         self.entries = {}
         self.yields = {}
+        self.yieldsErrors = {}
         
         if self.parent is not None:
             self.level = self.parent.level + 1
@@ -134,6 +138,7 @@ class MISBox:
             self.effEntries = self.parent.goodMVA.effEntries[type]
             self.entries = self.parent.goodMVA.entries[type]
             self.yields = self.parent.goodMVA.yields[type]
+            self.yieldsErrors = self.parent.goodMVA.yieldsErrors[type]
         
         else:
             self.cfg = cfg
@@ -218,6 +223,7 @@ class MISTree:
                 self.firstBox.entries[name] = yieldTuple[0]
                 self.firstBox.effEntries[name] = yieldTuple[1]
                 self.firstBox.yields[name] = yieldTuple[2]
+                self.firstBox.yieldsErrors[name] = yieldTuple[3]
             self._log = ""
         elif fileName != "":
             with open(fileName, "rb") as outFile:
@@ -325,11 +331,13 @@ class MISTree:
 
                 branchEffEntries = box.effEntries[name]
                 branchYield = box.yields[name]
+                branchYieldError = box.yieldsErrors[name]
             
                 branchEffs.SetBinContent(j+1, i+1, 100.*branchEffEntries/procTotEffEntriesAbs)
                 branchEffs.GetXaxis().SetBinLabel(j+1, box.name)
     
                 treeYields[name].SetBinContent(j+1, branchYield)
+                treeYields[name].SetBinError(j+1, branchYieldError)
                 treeYields[name].GetXaxis().SetBinLabel(j+1, box.name)
     
                 branchYields.SetBinContent(j+1, i+1, branchYield)

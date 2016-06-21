@@ -1,0 +1,98 @@
+***************
+*** 38,43 ****
+--- 38,44 ----
+  C     
+        INCLUDE 'genps.inc'
+        INCLUDE 'maxconfigs.inc'
++       INCLUDE 'coupl.inc'
+        INCLUDE 'nexternal.inc'
+        INCLUDE 'maxamps.inc'
+        INTEGER                 NCOMB
+***************
+*** 398,403 ****
+--- 399,439 ----
+            IF (GOODHEL(I,IMIRROR) .OR. NTRY(IMIRROR).LE.MAXTRIES.OR.(ISU
+       $M_HEL.NE.0).OR.THIS_NTRY(IMIRROR).LE.2) THEN
+              T=MATRIX1(P ,NHEL(1,I),JC(1))
++             GC_10=-GC_10
++             GC_11=-GC_11
++             GC_12=-GC_12
++             GC_13=-GC_13
++             GC_15=-GC_15
++             GC_16=-GC_16
++             GC_23=-GC_23
++             GC_24=-GC_24
++             GC_26=-GC_26
++             GC_27=-GC_27
++             GC_28=-GC_28
++             GC_29=-GC_29
++             GC_78=-GC_78
++             GC_79=-GC_79
++             GC_85=-GC_85
++             GC_145=-GC_145
++             GC_146=-GC_146
++             T=(5D-1)*(T-MATRIX1(P ,NHEL(1,I),JC(1)))
++             GC_10=-GC_10
++             GC_11=-GC_11
++             GC_12=-GC_12
++             GC_13=-GC_13
++             GC_15=-GC_15
++             GC_16=-GC_16
++             GC_23=-GC_23
++             GC_24=-GC_24
++             GC_26=-GC_26
++             GC_27=-GC_27
++             GC_28=-GC_28
++             GC_29=-GC_29
++             GC_78=-GC_78
++             GC_79=-GC_79
++             GC_85=-GC_85
++             GC_145=-GC_145
++             GC_146=-GC_146
+              DO JJ=1,NINCOMING
+                IF(POL(JJ).NE.1D0.AND.NHEL(JJ,I).EQ.INT(SIGN(1D0,POL(JJ))
+       $         )) THEN
+***************
+*** 455,460 ****
+--- 491,531 ----
+          I = HEL_PICKED
+  
+          T=MATRIX1(P ,NHEL(1,I),JC(1))
++         GC_10=-GC_10
++         GC_11=-GC_11
++         GC_12=-GC_12
++         GC_13=-GC_13
++         GC_15=-GC_15
++         GC_16=-GC_16
++         GC_23=-GC_23
++         GC_24=-GC_24
++         GC_26=-GC_26
++         GC_27=-GC_27
++         GC_28=-GC_28
++         GC_29=-GC_29
++         GC_78=-GC_78
++         GC_79=-GC_79
++         GC_85=-GC_85
++         GC_145=-GC_145
++         GC_146=-GC_146
++         T=(5D-1)*(T-MATRIX1(P ,NHEL(1,I),JC(1)))
++         GC_10=-GC_10
++         GC_11=-GC_11
++         GC_12=-GC_12
++         GC_13=-GC_13
++         GC_15=-GC_15
++         GC_16=-GC_16
++         GC_23=-GC_23
++         GC_24=-GC_24
++         GC_26=-GC_26
++         GC_27=-GC_27
++         GC_28=-GC_28
++         GC_29=-GC_29
++         GC_78=-GC_78
++         GC_79=-GC_79
++         GC_85=-GC_85
++         GC_145=-GC_145
++         GC_146=-GC_146
+  
+          DO JJ=1,NINCOMING
+            IF(POL(JJ).NE.1D0.AND.NHEL(JJ,I).EQ.INT(SIGN(1D0,POL(JJ))))

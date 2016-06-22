@@ -37,6 +37,7 @@ int main(int argv, char** argc){
     
     float ptlep = 20, ptjet = 30, etalep = 2.4, etajet = 2.4, minDRjlCut = 0.3, mll_cut = 20, mll_ZVetoLow = 76, mll_ZVetoHigh = 106, met_sf_cut = 40;   
     LorentzVector bjet1_p4, bjet2_p4, jet3_p4, jet4_p4, lep1_p4, lep2_p4, bb_p4, ll_p4, llbb_p4, llbbMet_p4t;
+    LorentzVector gen_t_p4, gen_tbar_p4;
     float MET_met, MET_phi;
     float ll_DR, ll_DEta, ll_DPhi;
     float bb_DR, bb_DEta, bb_DPhi;
@@ -92,10 +93,15 @@ int main(int argv, char** argc){
     outputTree->Branch("leadLepPID", &leadLepPID);
     outputTree->Branch("subleadLepPID", &subleadLepPID);
     
+    outputTree->Branch("gen_t_p4", &gen_t_p4);
+    outputTree->Branch("gen_tbar_p4", &gen_tbar_p4);
+    
     outputTree->Branch("GenWeight", &GenWeight);
 
     TClonesArray *branchEvent( nullptr );
     chain->SetBranchAddress("Event", &branchEvent);
+    TClonesArray *branchParticle( nullptr );
+    chain->SetBranchAddress("Particle", &branchParticle);
     TClonesArray *branchElectron( nullptr );
     chain->SetBranchAddress("Electron", &branchElectron);
     TClonesArray *branchMuon( nullptr );
@@ -317,6 +323,24 @@ int main(int argv, char** argc){
         if(branchScalarHT->GetEntriesFast() > 0){
             sht = (ScalarHT*) branchScalarHT->At(0);
             ScalHT = sht->HT;
+        }
+        
+        TIter itParticles( (TCollection*)branchParticle );
+        GenParticle* part;
+        bool found_t = false, found_tbar = false;
+        while( part = (GenParticle*) itParticles.Next() ){
+            if (part->Status == 22) {
+                if (part->PID == 6 && !found_t) {
+                    gen_t_p4.SetCoordinates(part->PT, part->Eta, part->Phi, part->Mass);
+                    found_t = true;
+                }
+                if (part->PID == -6 && !found_tbar) {
+                    gen_tbar_p4.SetCoordinates(part->PT, part->Eta, part->Phi, part->Mass);
+                    found_tbar = true;
+                }
+            }
+            if (found_t && found_tbar)
+                continue;
         }
         
         selectedEvtAll++;

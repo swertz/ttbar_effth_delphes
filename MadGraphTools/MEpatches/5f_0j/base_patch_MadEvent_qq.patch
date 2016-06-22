@@ -10,7 +10,7 @@
         INTEGER                 NCOMB
 ***************
 *** 398,403 ****
---- 399,439 ----
+--- 399,441 ----
             IF (GOODHEL(I,IMIRROR) .OR. NTRY(IMIRROR).LE.MAXTRIES.OR.(ISU
        $M_HEL.NE.0).OR.THIS_NTRY(IMIRROR).LE.2) THEN
               T=MATRIX1(P ,NHEL(1,I),JC(1))
@@ -20,6 +20,7 @@
 +             GC_13=-GC_13
 +             GC_15=-GC_15
 +             GC_16=-GC_16
++             GC_17=-GC_17
 +             GC_23=-GC_23
 +             GC_24=-GC_24
 +             GC_26=-GC_26
@@ -54,7 +55,7 @@
        $         )) THEN
 ***************
 *** 455,460 ****
---- 491,531 ----
+--- 491,533 ----
           I = HEL_PICKED
   
           T=MATRIX1(P ,NHEL(1,I),JC(1))
@@ -64,6 +65,7 @@
 +         GC_13=-GC_13
 +         GC_15=-GC_15
 +         GC_16=-GC_16
++         GC_17=-GC_17
 +         GC_23=-GC_23
 +         GC_24=-GC_24
 +         GC_26=-GC_26
@@ -82,6 +84,7 @@
 +         GC_13=-GC_13
 +         GC_15=-GC_15
 +         GC_16=-GC_16
++         GC_17=-GC_17
 +         GC_23=-GC_23
 +         GC_24=-GC_24
 +         GC_26=-GC_26
